@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' 
+  baseURL: process.env.REACT_APP_API_URL || (process.env.NODE_ENV === 'production' 
     ? 'https://booking4u-backend.onrender.com/api'
-    : 'http://localhost:5001/api',
+    : 'http://localhost:5001/api'),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

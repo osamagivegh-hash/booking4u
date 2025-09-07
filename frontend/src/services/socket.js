@@ -17,8 +17,13 @@ class SocketService {
       return this.socket;
     }
 
-    // Use the same port as the API service
-    this.socket = io('http://localhost:5001', {
+    // Use environment variable for socket URL or fallback to localhost
+    const socketUrl = process.env.REACT_APP_SOCKET_URL || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://booking4u-backend.onrender.com'
+        : 'http://localhost:5001');
+    
+    this.socket = io(socketUrl, {
       auth: {
         token: token
       },

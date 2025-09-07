@@ -5,13 +5,14 @@ const testFrontendLogin = async () => {
   try {
     // Test API connection
     console.log('1. Testing API connection...');
-    const response = await fetch('http://localhost:5000/api/health');
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const response = await fetch(`${apiUrl}/health`);
     const healthData = await response.json();
     console.log('✅ API Health Check:', healthData);
     
     // Test login API directly
     console.log('2. Testing Login API...');
-    const loginResponse = await fetch('http://localhost:5000/api/auth/login', {
+    const loginResponse = await fetch(`${apiUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
