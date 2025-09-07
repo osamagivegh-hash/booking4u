@@ -2,7 +2,7 @@
   "name": "booking4u",
   "version": "1.0.0",
   "description": "نظام حجز المواعيد الذكي للمملكة العربية السعودية",
-  "main": "index.js",
+  "main": "backend/server.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
@@ -33,5 +33,8 @@
   "bugs": {
     "url": "https://github.com/your-username/booking4u/issues"
   },
-  "homepage": "https://github.com/your-username/booking4u#readme"
+  "homepage": "https://github.com/your-username/booking4u#readme",
+  "dependencies": {
+    "mongodb": "^6.19.0"
+  }
 }
