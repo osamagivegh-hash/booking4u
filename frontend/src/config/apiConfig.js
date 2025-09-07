@@ -1,10 +1,11 @@
 // API Configuration with fallback URLs
 const API_CONFIG = {
   // Primary backend URL
-  PRIMARY: 'https://booking4u-backend.onrender.com',
+  PRIMARY: 'https://booking4u-1.onrender.com',
   
   // Fallback URLs (you can add more if needed)
   FALLBACKS: [
+    'https://booking4u-backend.onrender.com',
     'https://booking4u-backend-1.onrender.com',
     'https://booking4u-backend-2.onrender.com',
     'https://booking4u-backend-3.onrender.com'
