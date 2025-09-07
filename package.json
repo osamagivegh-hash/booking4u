@@ -2,7 +2,7 @@
   "name": "booking4u",
   "version": "1.0.0",
   "description": "نظام حجز المواعيد الذكي للمملكة العربية السعودية",
-  "main": "backend/server.js",
+  "main": "start.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
@@ -10,6 +10,7 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
