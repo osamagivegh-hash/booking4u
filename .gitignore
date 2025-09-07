@@ -125,3 +125,5 @@ docker-compose.yml
 
 # Render
 render.yaml
+# Local Netlify folder
+.netlify

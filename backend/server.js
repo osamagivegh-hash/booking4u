@@ -59,6 +59,8 @@ app.use(cors({
       'http://localhost:3001',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3001',
+      'https://hilarious-sprinkles-a5a438.netlify.app',
+      'https://booking4u-frontend.netlify.app',
       config.server.corsOrigin
     ];
     
@@ -176,6 +178,31 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'مرحباً بك في Booking4U API - نظام حجز المواعيد الذكي',
+    message_en: 'Welcome to Booking4U API - Smart Appointment Booking System',
+    version: require('./package.json').version,
+    environment: config.server.nodeEnv,
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      bookings: '/api/bookings',
+      services: '/api/services',
+      businesses: '/api/businesses',
+      users: '/api/users',
+      messages: '/api/messages',
+      reviews: '/api/reviews',
+      news: '/api/news',
+      notifications: '/api/notifications'
+    },
+    documentation: '/api-docs'
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
@@ -237,8 +264,15 @@ if (config.server.nodeEnv !== 'test') {
   // Initialize Socket.IO for real-time messaging
   const io = new Server(server, {
     cors: {
-      origin: config.server.corsOrigin,
-      methods: ["GET", "POST"]
+      origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'https://hilarious-sprinkles-a5a438.netlify.app',
+        'https://booking4u-frontend.netlify.app',
+        config.server.corsOrigin
+      ],
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

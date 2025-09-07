@@ -25,7 +25,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build && npm run copy-netlify-files",
-    "copy-netlify-files": "copy public\\_redirects build\\_redirects && copy public\\_headers build\\_headers",
+    "copy-netlify-files": "copy public\\_redirects build\\_redirects && copy public\\_headers build\\_headers && copy _redirects build\\_redirects",
     "test": "craco test",
     "eject": "react-scripts eject",
     "analyze": "ANALYZE=true npm run build",

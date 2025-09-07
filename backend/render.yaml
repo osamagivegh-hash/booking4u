@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: booking4u-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node ../start.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: your-super-secret-jwt-key-change-this-in-production
+      - key: JWT_EXPIRE
+        value: 30d
+      - key: JWT_REFRESH_EXPIRE
+        value: 7d
+      - key: CORS_ORIGIN
+        value: https://hilarious-sprinkles-a5a438.netlify.app
+      - key: ENABLE_SWAGGER
+        value: false
+      - key: ENABLE_LOGGING
+        value: true
+      - key: LOG_LEVEL
+        value: info
+      - key: DEBUG
+        value: false
+      - key: DB_MAX_POOL_SIZE
+        value: 10
+      - key: DB_SERVER_SELECTION_TIMEOUT
+        value: 5000
+      - key: DB_SOCKET_TIMEOUT
+        value: 45000
+
+databases:
+  - name: booking4u-db
+    databaseName: booking4u
+    user: booking4u_user
