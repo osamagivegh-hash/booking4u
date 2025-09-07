@@ -4,6 +4,7 @@
   "description": "Frontend for Booking4U appointment booking system",
   "private": true,
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@testing-library/jest-dom": "^5.17.0",
@@ -50,7 +51,6 @@
     ]
   },
   "devDependencies": {
-    "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.15",
     "postcss": "^8.4.29",
     "tailwindcss": "^3.3.3",
