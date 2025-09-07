@@ -1,0 +1,37 @@
+{
+  "name": "booking4u",
+  "version": "1.0.0",
+  "description": "نظام حجز المواعيد الذكي للمملكة العربية السعودية",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "booking",
+    "appointments",
+    "saudi-arabia",
+    "react",
+    "nodejs",
+    "mongodb",
+    "express"
+  ],
+  "author": "Booking4U Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-username/booking4u.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/booking4u/issues"
+  },
+  "homepage": "https://github.com/your-username/booking4u#readme"
+}
