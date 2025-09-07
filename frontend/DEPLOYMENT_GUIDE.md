@@ -191,3 +191,4 @@ To enable debug logging, set `REACT_APP_DEBUG=true` in your environment variable
 3. **Caching**
    - Static assets are cached by the browser
    - API responses include appropriate cache headers
+

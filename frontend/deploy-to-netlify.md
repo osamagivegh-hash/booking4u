@@ -77,3 +77,4 @@ netlify deploy --prod --dir=build
 2. Configure SSL certificate (automatic with Netlify)
 3. Set up form handling if needed
 4. Configure redirects for SPA routing
+

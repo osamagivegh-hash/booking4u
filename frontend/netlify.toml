@@ -26,3 +26,7 @@
   REACT_APP_BASE_URL = "https://booking4u-backend.onrender.com"
   REACT_APP_SOCKET_URL = "https://booking4u-backend.onrender.com"
   REACT_APP_NODE_ENV = "production"
+  REACT_APP_DEBUG = "false"
+  REACT_APP_ENABLE_LOGGING = "true"
+  REACT_APP_ENABLE_HTTPS = "true"
+  REACT_APP_ENABLE_PWA = "true"

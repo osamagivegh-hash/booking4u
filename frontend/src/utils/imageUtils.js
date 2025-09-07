@@ -1,19 +1,9 @@
 // Image utility functions for handling service images
+import { getBaseUrl } from '../config/apiConfig';
 
 // Get the backend base URL from environment or default
 const getBackendUrl = () => {
-  // Use environment variable if available
-  if (process.env.REACT_APP_BASE_URL) {
-    return process.env.REACT_APP_BASE_URL;
-  }
-  
-  // In development, use localhost:5001
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5001';
-  }
-  
-  // In production, use the actual backend URL
-  return 'https://booking4u-backend.onrender.com';
+  return getBaseUrl();
 };
 
 // Convert relative image path to full URL

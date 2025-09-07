@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './stores/authStore';
 import { LanguageProvider } from './contexts/LanguageContext';
+import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -48,8 +49,9 @@ function App() {
 
   return (
     <LanguageProvider>
-      <div className="App">
-        <Routes>
+      <ApiErrorBoundary>
+        <div className="App">
+          <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -110,8 +112,9 @@ function App() {
 
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </div>
+          </Routes>
+        </div>
+      </ApiErrorBoundary>
     </LanguageProvider>
   );
 }

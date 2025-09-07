@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { getSocketUrl } from '../config/apiConfig';
 
 class SocketService {
   constructor() {
@@ -17,11 +18,8 @@ class SocketService {
       return this.socket;
     }
 
-    // Use environment variable for socket URL or fallback to localhost
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || 
-      (process.env.NODE_ENV === 'production' 
-        ? 'https://booking4u-backend.onrender.com'
-        : 'http://localhost:5001');
+    // Use the configured socket URL
+    const socketUrl = getSocketUrl();
     
     this.socket = io(socketUrl, {
       auth: {

@@ -1,11 +1,20 @@
 // Debug script to test frontend login
+import { getApiUrl, testApiConnectivity } from './config/apiConfig';
+
 const testFrontendLogin = async () => {
   console.log('🔍 Debugging Frontend Login...');
   
   try {
     // Test API connection
     console.log('1. Testing API connection...');
-    const apiUrl = process.env.REACT_APP_API_URL || 'https://booking4u-backend.onrender.com/api';
+    const connectivity = await testApiConnectivity();
+    
+    if (!connectivity.success) {
+      console.error('❌ No API servers available');
+      return;
+    }
+    
+    const apiUrl = `${connectivity.url}/api`;
     const response = await fetch(`${apiUrl}/health`);
     const healthData = await response.json();
     console.log('✅ API Health Check:', healthData);
