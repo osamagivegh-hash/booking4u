@@ -5,7 +5,7 @@ const testFrontendLogin = async () => {
   try {
     // Test API connection
     console.log('1. Testing API connection...');
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://booking4u-backend.onrender.com/api';
     const response = await fetch(`${apiUrl}/health`);
     const healthData = await response.json();
     console.log('✅ API Health Check:', healthData);
