@@ -4,7 +4,6 @@
   "description": "Frontend for Booking4U appointment booking system",
   "private": true,
   "dependencies": {
-    "@craco/craco": "^7.1.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@testing-library/jest-dom": "^5.17.0",
@@ -24,11 +23,9 @@
     "zustand": "^4.4.1"
   },
   "scripts": {
-    "start": "craco start",
-    "build": "craco build",
-    "build:standard": "react-scripts build",
-    "build:render": "npm ci && craco build",
-    "test": "craco test",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
     "eject": "react-scripts eject",
     "analyze": "ANALYZE=true npm run build",
     "serve": "npx serve -s build"
