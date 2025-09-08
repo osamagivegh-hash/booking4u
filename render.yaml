@@ -2,7 +2,20 @@ services:
   - type: web
     name: booking4u-frontend
     env: static
-    buildCommand: ./frontend/build-render.sh
+    buildCommand: |
+      echo "Current directory: $(pwd)"
+      echo "Listing contents:"
+      ls -la
+      echo "Changing to frontend directory..."
+      cd frontend
+      echo "Frontend directory contents:"
+      ls -la
+      echo "Installing dependencies..."
+      npm ci
+      echo "Building application..."
+      npm run build
+      echo "Build completed. Build directory contents:"
+      ls -la build/
     staticPublishPath: ./frontend/build
     envVars:
       - key: NODE_ENV
