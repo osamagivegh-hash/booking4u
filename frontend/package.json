@@ -27,6 +27,7 @@
     "start": "craco start",
     "build": "craco build",
     "build:standard": "react-scripts build",
+    "build:render": "npm ci && craco build",
     "test": "craco test",
     "eject": "react-scripts eject",
     "analyze": "ANALYZE=true npm run build",
