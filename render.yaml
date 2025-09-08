@@ -2,7 +2,7 @@ services:
   - type: web
     name: booking4u-frontend
     env: static
-    buildCommand: cd frontend && npm ci && npm run build
+    buildCommand: ./frontend/build-render.sh
     staticPublishPath: ./frontend/build
     envVars:
       - key: NODE_ENV

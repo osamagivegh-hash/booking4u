@@ -7,6 +7,12 @@ set -e
 
 echo "🚀 Starting Render build process..."
 
+# Change to frontend directory if we're in the project root
+if [ -d "frontend" ] && [ ! -f "package.json" ]; then
+    echo "📁 Changing to frontend directory..."
+    cd frontend
+fi
+
 # Ensure we're in the correct directory
 if [ ! -f "package.json" ]; then
     echo "❌ Error: package.json not found. Current directory: $(pwd)"
