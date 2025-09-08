@@ -1,29 +1,30 @@
 services:
   - type: web
-    name: booking4u-frontend
+    name: booking4u-frontend-alt
     env: static
     buildCommand: |
-      echo "=== RENDER BUILD START ==="
+      echo "=== ALTERNATIVE BUILD START ==="
       echo "Current directory: $(pwd)"
-      echo "Listing root contents:"
-      ls -la
-      echo "Checking if frontend directory exists:"
-      ls -la frontend/ || echo "Frontend directory not found!"
+      echo "Listing all contents:"
+      find . -name "package.json" -type f
+      echo "Looking for frontend directory:"
+      find . -name "frontend" -type d
       echo "Changing to frontend directory..."
       cd frontend
-      echo "Frontend directory contents:"
+      echo "Current directory after cd: $(pwd)"
+      echo "Frontend contents:"
       ls -la
-      echo "Checking public directory:"
+      echo "Public directory contents:"
       ls -la public/
       echo "Installing dependencies..."
-      npm ci
+      npm install
       echo "Building application..."
       npm run build
-      echo "Build completed. Build directory contents:"
+      echo "Build directory contents:"
       ls -la build/
-      echo "Checking if index.html exists in build:"
-      ls -la build/index.html || echo "index.html NOT FOUND in build!"
-      echo "=== RENDER BUILD END ==="
+      echo "Verifying index.html:"
+      cat build/index.html | head -5
+      echo "=== ALTERNATIVE BUILD END ==="
     staticPublishPath: ./frontend/build
     envVars:
       - key: NODE_ENV
