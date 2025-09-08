@@ -6,8 +6,8 @@ services:
       echo "Current directory: $(pwd)"
       echo "Listing contents:"
       ls -la
-      echo "Changing to src/frontend directory..."
-      cd src/frontend
+      echo "Changing to frontend directory..."
+      cd frontend
       echo "Frontend directory contents:"
       ls -la
       echo "Installing dependencies..."
@@ -16,7 +16,7 @@ services:
       npm run build
       echo "Build completed. Build directory contents:"
       ls -la build/
-    staticPublishPath: ./src/frontend/build
+    staticPublishPath: ./frontend/build
     envVars:
       - key: NODE_ENV
         value: production
