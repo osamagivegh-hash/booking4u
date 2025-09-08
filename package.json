@@ -1,3 +1,4 @@
+
 {
   "name": "booking4u",
   "version": "1.0.0",
@@ -10,8 +11,12 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build",
     "start": "cd backend && npm start",
-    "postinstall": "cd backend && npm install",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:render": "cd frontend && npm install && npm run build",
+    "frontend:start": "cd frontend && craco start",
+    "frontend:build": "cd frontend && craco build",
+    "frontend:test": "cd frontend && craco test"
   },
   "keywords": [
     "booking",
@@ -36,6 +41,7 @@
   },
   "homepage": "https://github.com/your-username/booking4u#readme",
   "dependencies": {
+    "@craco/craco": "^7.1.0",
     "axios": "^1.11.0",
     "mongodb": "^6.19.0"
   }
