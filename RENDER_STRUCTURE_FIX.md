@@ -146,3 +146,4 @@ If issues persist:
 4. Confirm publish directory is: `src/frontend/build`
 
 The structure fix is now complete and should resolve the "Could not find index.html" error! 🎉
+
