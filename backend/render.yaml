@@ -19,7 +19,7 @@ services:
       - key: JWT_REFRESH_EXPIRE
         value: 7d
       - key: CORS_ORIGIN
-        value: https://hilarious-sprinkles-a5a438.netlify.app
+        value: https://booking4u-1.onrender.com
       - key: ENABLE_SWAGGER
         value: false
       - key: ENABLE_LOGGING

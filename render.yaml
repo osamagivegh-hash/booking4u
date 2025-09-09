@@ -35,3 +35,5 @@ services:
         value: your-super-secret-jwt-key-here
       - key: JWT_EXPIRE
         value: 30d
+      - key: CORS_ORIGIN
+        value: https://booking4u-1.onrender.com
