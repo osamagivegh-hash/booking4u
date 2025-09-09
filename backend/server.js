@@ -4,7 +4,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
-const { Server } = require('socket.io');
 
 // Import configuration and utilities
 const config = require('./config');
@@ -48,12 +47,28 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// EMERGENCY CORS Configuration - Immediate Fix
+// Comprehensive CORS Configuration
 console.log('🔧 CORS Configuration Loading...');
 console.log('🌍 NODE_ENV:', config.server.nodeEnv);
 console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
 
-// Emergency CORS configuration that will work immediately
+// Define allowed origins
+const allowedOrigins = [
+  'https://booking4u-1.onrender.com',
+  'https://booking4u.onrender.com',
+  'https://booking4u-frontend.onrender.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001'
+];
+
+// Add configured CORS_ORIGIN if it exists
+if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigin)) {
+  allowedOrigins.push(config.server.corsOrigin);
+}
+
+// Clean CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 CORS Request from origin:', origin);
@@ -64,37 +79,27 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // EMERGENCY: Allow all onrender.com domains in production
-    if (config.server.nodeEnv === 'production') {
-      if (origin.includes('onrender.com')) {
-        console.log('✅ Allowing onrender.com origin:', origin);
-        return callback(null, true);
-      }
-    }
-    
-    // Development: Allow localhost
-    if (config.server.nodeEnv === 'development') {
-      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        console.log('✅ Allowing development origin:', origin);
-        return callback(null, true);
-      }
-    }
-    
-    // Allow the configured CORS_ORIGIN
-    if (config.server.corsOrigin && origin === config.server.corsOrigin) {
-      console.log('✅ Allowing configured CORS_ORIGIN:', origin);
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ Allowing origin:', origin);
       return callback(null, true);
     }
     
-    // EMERGENCY FALLBACK: Allow the specific frontend URL
-    if (origin === 'https://booking4u-1.onrender.com') {
-      console.log('✅ EMERGENCY: Allowing frontend URL:', origin);
+    // In development, allow any localhost origin
+    if (config.server.nodeEnv === 'development' && 
+        (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      console.log('✅ Allowing development origin:', origin);
+      return callback(null, true);
+    }
+    
+    // In production, allow any onrender.com subdomain
+    if (config.server.nodeEnv === 'production' && origin.includes('onrender.com')) {
+      console.log('✅ Allowing onrender.com origin:', origin);
       return callback(null, true);
     }
     
     console.log('❌ CORS blocked origin:', origin);
-    console.log('📋 Environment:', config.server.nodeEnv);
-    console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
+    console.log('📋 Allowed origins:', allowedOrigins);
     callback(new Error('Not allowed by CORS policy'));
   },
   credentials: true,
@@ -105,52 +110,25 @@ const corsOptions = {
     'Content-Type',
     'Accept',
     'Authorization',
-    'X-Request-ID'
+    'X-Request-ID',
+    'Cache-Control',
+    'Pragma'
   ],
   exposedHeaders: [
     'Content-Length',
     'Content-Type',
-    'Access-Control-Allow-Origin'
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials'
   ],
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 204,
   preflightContinue: false
 };
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
 
-// EMERGENCY: Additional CORS headers as fallback
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('🔍 Additional CORS middleware - Origin:', origin, 'Method:', req.method);
-  
-  // EMERGENCY: Set CORS headers for onrender.com domains
-  if (origin && origin.includes('onrender.com')) {
-    console.log('🚨 EMERGENCY: Setting CORS headers for:', origin);
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID');
-  }
-  
-  // EMERGENCY: Also allow the specific frontend URL
-  if (origin === 'https://booking4u-1.onrender.com') {
-    console.log('🚨 EMERGENCY: Setting CORS headers for frontend URL:', origin);
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID');
-  }
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('✅ Handling preflight request for origin:', origin);
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
+// Handle preflight requests globally
+app.options('*', cors(corsOptions));
 
 // CORS is now handled by the main cors middleware above
 
@@ -279,6 +257,8 @@ app.get('/api/health', async (req, res) => {
       uptime: process.uptime(),
       environment: config.server.nodeEnv,
       version: require('./package.json').version,
+      corsOrigin: req.headers.origin,
+      allowedOrigins: allowedOrigins,
       checks: {}
     };
 
@@ -327,167 +307,6 @@ if (config.server.nodeEnv !== 'test') {
     console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
   });
 
-  // Initialize Socket.IO for real-time messaging with matching CORS config
-  const io = new Server(server, {
-    cors: {
-      origin: function (origin, callback) {
-        console.log('🔍 Socket.IO CORS Request from origin:', origin);
-        
-        // Allow requests with no origin (like mobile apps, Postman, curl)
-        if (!origin) {
-          console.log('✅ Socket.IO: Allowing request with no origin');
-          return callback(null, true);
-        }
-        
-        // EMERGENCY: Allow all onrender.com domains in production
-        if (config.server.nodeEnv === 'production') {
-          if (origin.includes('onrender.com')) {
-            console.log('✅ Socket.IO: Allowing onrender.com origin:', origin);
-            return callback(null, true);
-          }
-        }
-        
-        // Development: Allow localhost
-        if (config.server.nodeEnv === 'development') {
-          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-            console.log('✅ Socket.IO: Allowing development origin:', origin);
-            return callback(null, true);
-          }
-        }
-        
-        // Allow the configured CORS_ORIGIN
-        if (config.server.corsOrigin && origin === config.server.corsOrigin) {
-          console.log('✅ Socket.IO: Allowing configured CORS_ORIGIN:', origin);
-          return callback(null, true);
-        }
-        
-        // EMERGENCY FALLBACK: Allow the specific frontend URL
-        if (origin === 'https://booking4u-1.onrender.com') {
-          console.log('✅ Socket.IO: EMERGENCY: Allowing frontend URL:', origin);
-          return callback(null, true);
-        }
-        
-        console.log('❌ Socket.IO: CORS blocked origin:', origin);
-        return callback(new Error('Not allowed by CORS'));
-      },
-      methods: ["GET", "POST"],
-      credentials: true
-    }
-  });
-
-  // Socket.IO authentication middleware
-  io.use(async (socket, next) => {
-    try {
-      const token = socket.handshake.auth.token;
-      if (!token) {
-        return next(new Error('Authentication token required'));
-      }
-
-      const jwt = require('jsonwebtoken');
-      const User = require('./models/User');
-      
-      const decoded = jwt.verify(token, config.jwt.secret);
-      const user = await User.findById(decoded.id).select('-password');
-      
-      if (!user) {
-        return next(new Error('User not found'));
-      }
-
-      socket.userId = user._id.toString();
-      socket.user = user;
-      next();
-    } catch (error) {
-      next(new Error('Invalid authentication token'));
-    }
-  });
-
-  // Socket.IO connection handling
-  io.on('connection', (socket) => {
-    console.log(`📱 User connected: ${socket.user.name} (${socket.userId})`);
-    
-    // Join user to their own room for private messages
-    socket.join(`user_${socket.userId}`);
-    
-    // Handle joining conversation rooms
-    socket.on('join_conversation', (conversationId) => {
-      socket.join(`conversation_${conversationId}`);
-      console.log(`👥 User ${socket.userId} joined conversation ${conversationId}`);
-    });
-    
-    // Handle leaving conversation rooms
-    socket.on('leave_conversation', (conversationId) => {
-      socket.leave(`conversation_${conversationId}`);
-      console.log(`👋 User ${socket.userId} left conversation ${conversationId}`);
-    });
-    
-    // Handle new message events
-    socket.on('new_message', (data) => {
-      // Emit to receiver's room
-      socket.to(`user_${data.receiverId}`).emit('message_received', data);
-      console.log(`📩 Message sent from ${socket.userId} to ${data.receiverId}`);
-    });
-
-    // Handle message delivery confirmation
-    socket.on('message_delivered', (data) => {
-      socket.to(`user_${data.senderId}`).emit('message_delivery_confirmed', {
-        messageId: data.messageId,
-        deliveredAt: new Date(),
-        deliveredTo: socket.userId
-      });
-      console.log(`✅ Message ${data.messageId} delivered to ${socket.userId}`);
-    });
-    
-    // Handle typing indicators
-    socket.on('typing_start', (data) => {
-      socket.to(`user_${data.receiverId}`).emit('user_typing', {
-        userId: socket.userId,
-        userName: socket.user.name,
-        conversationId: data.conversationId
-      });
-      console.log(`⌨️ User ${socket.userId} started typing to ${data.receiverId}`);
-    });
-    
-    socket.on('typing_stop', (data) => {
-      socket.to(`user_${data.receiverId}`).emit('user_stopped_typing', {
-        userId: socket.userId,
-        conversationId: data.conversationId
-      });
-      console.log(`⌨️ User ${socket.userId} stopped typing to ${data.receiverId}`);
-    });
-
-    // Handle user online status
-    socket.on('user_online', () => {
-      socket.broadcast.emit('user_status_changed', {
-        userId: socket.userId,
-        status: 'online',
-        timestamp: new Date()
-      });
-    });
-
-    // Handle user away status
-    socket.on('user_away', () => {
-      socket.broadcast.emit('user_status_changed', {
-        userId: socket.userId,
-        status: 'away',
-        timestamp: new Date()
-      });
-    });
-    
-    // Handle disconnect
-    socket.on('disconnect', () => {
-      console.log(`📱 User disconnected: ${socket.user.name} (${socket.userId})`);
-      
-      // Notify other users that this user went offline
-      socket.broadcast.emit('user_status_changed', {
-        userId: socket.userId,
-        status: 'offline',
-        timestamp: new Date()
-      });
-    });
-  });
-
-  // Store io instance for use in routes
-  app.set('io', io);
 
   // Graceful shutdown handling
   process.on('SIGTERM', gracefulShutdown(server));
