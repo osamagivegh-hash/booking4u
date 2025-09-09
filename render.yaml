@@ -2,23 +2,24 @@ services:
   - type: web
     name: booking4u-frontend
     env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/build
-    rootDir: .
+    buildCommand: npm install && npm run build
+    staticPublishPath: build
+    rootDir: frontend
     envVars:
       - key: NODE_ENV
         value: production
       - key: REACT_APP_API_URL
-        value: https://booking4u-1.onrender.com/api
+        value: https://booking4u-backend.onrender.com/api
       - key: REACT_APP_BASE_URL
-        value: https://booking4u-1.onrender.com
+        value: https://booking4u-backend.onrender.com
       - key: REACT_APP_SOCKET_URL
-        value: https://booking4u-1.onrender.com
+        value: https://booking4u-backend.onrender.com
   - type: web
     name: booking4u-backend
     env: node
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
+    rootDir: .
     envVars:
       - key: NODE_ENV
         value: production
