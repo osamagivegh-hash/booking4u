@@ -48,42 +48,54 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// CORS Configuration - Clean and Production Ready
+// EMERGENCY CORS Configuration - Immediate Fix
+console.log('🔧 CORS Configuration Loading...');
+console.log('🌍 NODE_ENV:', config.server.nodeEnv);
+console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
+
+// Emergency CORS configuration that will work immediately
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('🔍 CORS Request from origin:', origin);
+    
     // Allow requests with no origin (like mobile apps, Postman, curl)
     if (!origin) {
+      console.log('✅ Allowing request with no origin');
       return callback(null, true);
     }
     
-    // Define allowed origins based on environment
-    const allowedOrigins = [];
+    // EMERGENCY: Allow all onrender.com domains in production
+    if (config.server.nodeEnv === 'production') {
+      if (origin.includes('onrender.com')) {
+        console.log('✅ Allowing onrender.com origin:', origin);
+        return callback(null, true);
+      }
+    }
     
+    // Development: Allow localhost
     if (config.server.nodeEnv === 'development') {
-      // Development: Allow localhost and the configured CORS_ORIGIN
-      allowedOrigins.push(
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://127.0.0.1:3000',
-        'http://127.0.0.1:3001'
-      );
+      if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        console.log('✅ Allowing development origin:', origin);
+        return callback(null, true);
+      }
     }
     
-    // Always include the configured CORS_ORIGIN if it exists
-    if (config.server.corsOrigin) {
-      allowedOrigins.push(config.server.corsOrigin);
+    // Allow the configured CORS_ORIGIN
+    if (config.server.corsOrigin && origin === config.server.corsOrigin) {
+      console.log('✅ Allowing configured CORS_ORIGIN:', origin);
+      return callback(null, true);
     }
     
-    // Check if origin is allowed
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`❌ CORS blocked origin: ${origin}`);
-      console.log(`📋 Allowed origins: ${allowedOrigins.join(', ')}`);
-      console.log(`🔧 CORS_ORIGIN env: ${config.server.corsOrigin}`);
-      console.log(`🌍 NODE_ENV: ${config.server.nodeEnv}`);
-      callback(new Error('Not allowed by CORS policy'));
+    // EMERGENCY FALLBACK: Allow the specific frontend URL
+    if (origin === 'https://booking4u-1.onrender.com') {
+      console.log('✅ EMERGENCY: Allowing frontend URL:', origin);
+      return callback(null, true);
     }
+    
+    console.log('❌ CORS blocked origin:', origin);
+    console.log('📋 Environment:', config.server.nodeEnv);
+    console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
+    callback(new Error('Not allowed by CORS policy'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -106,6 +118,30 @@ const corsOptions = {
 
 // Apply CORS middleware
 app.use(cors(corsOptions));
+
+// EMERGENCY: Additional CORS headers as fallback
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('🔍 Additional CORS middleware - Origin:', origin, 'Method:', req.method);
+  
+  // EMERGENCY: Set CORS headers for onrender.com domains
+  if (origin && origin.includes('onrender.com')) {
+    console.log('🚨 EMERGENCY: Setting CORS headers for:', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID');
+  }
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('✅ Handling preflight request');
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // CORS is now handled by the main cors middleware above
 

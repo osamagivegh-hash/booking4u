@@ -3,8 +3,8 @@ services:
     name: booking4u-backend
     env: node
     plan: free
-    buildCommand: cd .. && npm install && cd backend && npm install
-    startCommand: cd .. && node deploy-backend.js
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
     envVars:
       - key: NODE_ENV
         value: production
