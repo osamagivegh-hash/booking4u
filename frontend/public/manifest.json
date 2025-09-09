@@ -1,0 +1,22 @@
+{
+  "short_name": "Booking4U",
+  "name": "Booking4U - نظام حجز المواعيد الذكي",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "logo.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff",
+  "lang": "ar",
+  "dir": "rtl"
+}
