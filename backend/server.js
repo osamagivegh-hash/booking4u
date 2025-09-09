@@ -38,9 +38,10 @@ console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
 // Define allowed origins - PRECISE CONFIGURATION
 const allowedOrigins = [
-  'https://booking4u-1.onrender.com',  // Frontend production URL
-  'http://localhost:3000',             // Local development
-  'http://127.0.0.1:3000'              // Alternative local development
+  'https://booking4u-1.onrender.com',     // Frontend production URL (Render)
+  'https://booking4u-backend.onrender.com', // Alternative frontend URL
+  'http://localhost:3000',                // Local development
+  'http://127.0.0.1:3000'                 // Alternative local development
 ];
 
 // Add environment-specific origins if provided

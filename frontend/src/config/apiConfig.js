@@ -1,7 +1,7 @@
 // API Configuration - Single Backend URL
 const API_CONFIG = {
   // Primary backend URL - Use only ONE backend domain
-  PRIMARY: 'https://booking4u-backend.onrender.com',
+  PRIMARY: 'https://booking4u-1.onrender.com',
   
   // Development URL
   DEVELOPMENT: 'http://localhost:5001'

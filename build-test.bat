@@ -17,3 +17,4 @@ if exist "build\index.html" (
     echo ERROR: index.html NOT found in build directory
 )
 pause
+
