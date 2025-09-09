@@ -47,138 +47,78 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// BULLETPROOF CORS Configuration - Deep Fix
-console.log('🔧 BULLETPROOF CORS Configuration Loading...');
+// NUCLEAR CORS SOLUTION - ULTRA AGGRESSIVE FIX
+console.log('🚨 NUCLEAR CORS SOLUTION ACTIVATED');
 console.log('🌍 NODE_ENV:', config.server.nodeEnv);
 console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
 
-// Define allowed origins - Comprehensive list
-const allowedOrigins = [
-  'https://booking4u-1.onrender.com',
-  'https://booking4u.onrender.com',
-  'https://booking4u-frontend.onrender.com',
-  'https://booking4u-backend.onrender.com',
-  'https://booking4u-backend-1.onrender.com',
-  'https://booking4u-backend-2.onrender.com',
-  'https://booking4u-backend-3.onrender.com',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3001'
-];
-
-// Add configured CORS_ORIGIN if it exists
-if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigin)) {
-  allowedOrigins.push(config.server.corsOrigin);
-}
-
-// BULLETPROOF CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    console.log('🔍 CORS Request from origin:', origin);
-    console.log('🔍 Request method:', 'OPTIONS' || 'GET' || 'POST');
-    
-    // Allow requests with no origin (like mobile apps, Postman, curl)
-    if (!origin) {
-      console.log('✅ Allowing request with no origin');
-      return callback(null, true);
-    }
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ Allowing origin:', origin);
-      return callback(null, true);
-    }
-    
-    // In development, allow any localhost origin
-    if (config.server.nodeEnv === 'development' && 
-        (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-      console.log('✅ Allowing development origin:', origin);
-      return callback(null, true);
-    }
-    
-    // In production, allow any onrender.com subdomain (BROAD ALLOWANCE)
-    if (config.server.nodeEnv === 'production' && origin.includes('onrender.com')) {
-      console.log('✅ Allowing onrender.com origin:', origin);
-      return callback(null, true);
-    }
-    
-    // EMERGENCY: Allow any https origin in production (TEMPORARY)
-    if (config.server.nodeEnv === 'production' && origin.startsWith('https://')) {
-      console.log('🚨 EMERGENCY: Allowing HTTPS origin:', origin);
-      return callback(null, true);
-    }
-    
-    console.log('❌ CORS blocked origin:', origin);
-    console.log('📋 Allowed origins:', allowedOrigins);
-    callback(new Error('Not allowed by CORS policy'));
-  },
+// NUCLEAR CORS - Allow EVERYTHING (TEMPORARY FOR DEBUGGING)
+const nuclearCorsOptions = {
+  origin: true, // Allow ALL origins
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
-  allowedHeaders: [
-    'Origin',
-    'X-Requested-With',
-    'Content-Type',
-    'Accept',
-    'Authorization',
-    'X-Request-ID',
-    'Cache-Control',
-    'Pragma',
-    'X-HTTP-Method-Override',
-    'X-CSRF-Token'
-  ],
-  exposedHeaders: [
-    'Content-Length',
-    'Content-Type',
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials',
-    'Access-Control-Allow-Methods',
-    'Access-Control-Allow-Headers'
-  ],
-  optionsSuccessStatus: 200, // Changed from 204 to 200 for better compatibility
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD', 'CONNECT', 'TRACE'],
+  allowedHeaders: '*', // Allow ALL headers
+  exposedHeaders: '*', // Expose ALL headers
+  optionsSuccessStatus: 200,
   preflightContinue: false
 };
 
-// Apply CORS middleware FIRST (before any other middleware)
-app.use(cors(corsOptions));
+// Apply NUCLEAR CORS middleware FIRST
+app.use(cors(nuclearCorsOptions));
 
-// BULLETPROOF: Handle preflight requests globally
-app.options('*', cors(corsOptions));
+// NUCLEAR: Handle ALL OPTIONS requests globally
+app.options('*', (req, res) => {
+  console.log('🚨 NUCLEAR OPTIONS handler activated for:', req.url);
+  const origin = req.headers.origin;
+  
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  res.header('Access-Control-Expose-Headers', '*');
+  
+  console.log('✅ NUCLEAR OPTIONS response sent for origin:', origin);
+  res.status(200).end();
+});
 
-// BULLETPROOF: Additional CORS middleware as backup
+// NUCLEAR: Additional CORS middleware for ALL requests
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  console.log('🔍 Additional CORS middleware - Origin:', origin, 'Method:', req.method);
+  console.log('🚨 NUCLEAR CORS middleware - Origin:', origin, 'Method:', req.method, 'URL:', req.url);
   
-  // Set CORS headers for ALL requests
-  if (origin) {
-    // Allow any onrender.com origin
-    if (origin.includes('onrender.com')) {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
-      res.header('Access-Control-Max-Age', '86400'); // 24 hours
-    }
-    
-    // Allow localhost in development
-    if (config.server.nodeEnv === 'development' && 
-        (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-      res.header('Access-Control-Allow-Origin', origin);
-      res.header('Access-Control-Allow-Credentials', 'true');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
-    }
+  // Set CORS headers for EVERY request
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Expose-Headers', '*');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // Special handling for preflight requests
+  if (req.method === 'OPTIONS') {
+    console.log('🚨 NUCLEAR preflight handling for:', req.url);
+    res.status(200).end();
+    return;
   }
   
-  // Handle preflight requests explicitly
+  next();
+});
+
+// NUCLEAR: Additional middleware specifically for API routes
+app.use('/api', (req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('🚨 NUCLEAR API CORS - Origin:', origin, 'Method:', req.method, 'Path:', req.path);
+  
+  // Force CORS headers for all API routes
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
+  res.header('Access-Control-Allow-Headers', '*');
+  res.header('Access-Control-Expose-Headers', '*');
+  
   if (req.method === 'OPTIONS') {
-    console.log('✅ Handling preflight request for origin:', origin);
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400');
+    console.log('🚨 NUCLEAR API OPTIONS response');
     res.status(200).end();
     return;
   }
