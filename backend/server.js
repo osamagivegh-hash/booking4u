@@ -61,6 +61,8 @@ app.use(cors({
       'http://127.0.0.1:3001',
       'https://hilarious-sprinkles-a5a438.netlify.app',
       'https://booking4u-frontend.netlify.app',
+      'https://booking4u-frontend.onrender.com',
+      'https://booking4u-1.onrender.com',
       config.server.corsOrigin
     ];
     
@@ -269,6 +271,8 @@ if (config.server.nodeEnv !== 'test') {
         'http://localhost:3001',
         'https://hilarious-sprinkles-a5a438.netlify.app',
         'https://booking4u-frontend.netlify.app',
+        'https://booking4u-frontend.onrender.com',
+        'https://booking4u-1.onrender.com',
         config.server.corsOrigin
       ],
       methods: ["GET", "POST"],
