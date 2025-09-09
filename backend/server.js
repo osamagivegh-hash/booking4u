@@ -47,86 +47,49 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// NUCLEAR CORS SOLUTION - ULTRA AGGRESSIVE FIX
-console.log('🚨 NUCLEAR CORS SOLUTION ACTIVATED');
-console.log('🌍 NODE_ENV:', config.server.nodeEnv);
-console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
+// CORS Configuration - Secure and Production Ready
+console.log('🌍 Environment:', config.server.nodeEnv);
+console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// NUCLEAR CORS - Allow EVERYTHING (TEMPORARY FOR DEBUGGING)
-const nuclearCorsOptions = {
-  origin: true, // Allow ALL origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD', 'CONNECT', 'TRACE'],
-  allowedHeaders: '*', // Allow ALL headers
-  exposedHeaders: '*', // Expose ALL headers
-  optionsSuccessStatus: 200,
-  preflightContinue: false
+// Define allowed origins based on environment
+const allowedOrigins = [
+  'https://booking4u-1.onrender.com',  // Frontend production URL
+  'http://localhost:3000',             // Local development
+  'http://127.0.0.1:3000'              // Alternative local development
+];
+
+// Add environment-specific origins
+if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigin)) {
+  allowedOrigins.push(config.server.corsOrigin);
+}
+
+// CORS options with proper security
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Allowed origin:', origin);
+      return callback(null, true);
+    } else {
+      console.log('❌ CORS: Blocked origin:', origin);
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true, // Allow cookies/auth tokens
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
-// Apply NUCLEAR CORS middleware FIRST
-app.use(cors(nuclearCorsOptions));
+// Apply CORS middleware FIRST - before any other middleware
+app.use(cors(corsOptions));
 
-// NUCLEAR: Handle ALL OPTIONS requests globally
-app.options('*', (req, res) => {
-  console.log('🚨 NUCLEAR OPTIONS handler activated for:', req.url);
-  const origin = req.headers.origin;
-  
-  res.header('Access-Control-Allow-Origin', origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400');
-  res.header('Access-Control-Expose-Headers', '*');
-  
-  console.log('✅ NUCLEAR OPTIONS response sent for origin:', origin);
-  res.status(200).end();
-});
-
-// NUCLEAR: Additional CORS middleware for ALL requests
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('🚨 NUCLEAR CORS middleware - Origin:', origin, 'Method:', req.method, 'URL:', req.url);
-  
-  // Set CORS headers for EVERY request
-  res.header('Access-Control-Allow-Origin', origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Expose-Headers', '*');
-  res.header('Access-Control-Max-Age', '86400');
-  
-  // Special handling for preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('🚨 NUCLEAR preflight handling for:', req.url);
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
-
-// NUCLEAR: Additional middleware specifically for API routes
-app.use('/api', (req, res, next) => {
-  const origin = req.headers.origin;
-  console.log('🚨 NUCLEAR API CORS - Origin:', origin, 'Method:', req.method, 'Path:', req.path);
-  
-  // Force CORS headers for all API routes
-  res.header('Access-Control-Allow-Origin', origin || '*');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD, CONNECT, TRACE');
-  res.header('Access-Control-Allow-Headers', '*');
-  res.header('Access-Control-Expose-Headers', '*');
-  
-  if (req.method === 'OPTIONS') {
-    console.log('🚨 NUCLEAR API OPTIONS response');
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
-
-// CORS is now handled by the main cors middleware above
+// Handle OPTIONS requests globally
+app.options('*', cors(corsOptions));
 
 // Request logging middleware
 app.use(requestLogger);

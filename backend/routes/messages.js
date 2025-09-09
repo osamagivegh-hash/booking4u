@@ -111,44 +111,8 @@ router.post('/', [
     { path: 'receiverId', select: 'name email avatar' }
   ]);
 
-  // Emit real-time message to receiver
-  const io = req.app.get('io');
-  if (io) {
-    console.log(`📤 Emitting message to receiver: ${receiverId}`);
-    console.log(`📤 Message data:`, {
-      id: message._id,
-      subject: message.subject,
-      senderId: message.senderId._id,
-      receiverId: message.receiverId._id
-    });
-
-    // Emit to receiver's room
-    io.to(`user_${receiverId}`).emit('message_received', {
-      message,
-      notification: {
-        title: 'رسالة جديدة',
-        body: `رسالة جديدة من ${message.senderId.name}: ${subject}`,
-        type: 'message'
-      }
-    });
-
-    // Emit to sender for confirmation
-    io.to(`user_${req.user._id}`).emit('message_sent', {
-      message,
-      status: 'sent'
-    });
-
-    // Emit to conversation room if it exists
-    if (message.threadId) {
-      io.to(`conversation_${message.threadId}`).emit('message_added_to_thread', {
-        message
-      });
-    }
-
-    console.log(`✅ Real-time notifications emitted successfully`);
-  } else {
-    console.warn('⚠️ Socket.IO instance not available for real-time notifications');
-  }
+  // Note: Real-time notifications removed - using REST API only
+  console.log(`📤 Message sent successfully to receiver: ${receiverId}`);
 
   logInfo('Message sent successfully', {
     messageId: message._id,
@@ -313,15 +277,8 @@ router.put('/:id/read', asyncHandler(async (req, res) => {
     message.readAt = new Date();
     await message.save();
 
-    // Emit read receipt to sender
-    const io = req.app.get('io');
-    if (io) {
-      io.to(`user_${message.senderId}`).emit('message_read', {
-        messageId: message._id,
-        readAt: message.readAt,
-        readBy: req.user._id
-      });
-    }
+    // Note: Real-time read receipts removed - using REST API only
+    console.log(`📖 Message ${message._id} marked as read by ${req.user._id}`);
   }
 
   return ApiResponse.success(res, { message }, 'تم تحديث حالة الرسالة بنجاح');

@@ -61,7 +61,8 @@ export const testApiConnectivity = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      mode: 'cors'
+      mode: 'cors',
+      credentials: 'include' // Include credentials for CORS
     });
     if (response.ok) {
       console.log(`✅ Primary API working: ${baseUrl}`);

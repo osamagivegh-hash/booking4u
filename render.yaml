@@ -16,8 +16,6 @@ services:
         value: https://booking4u-backend.onrender.com/api
       - key: REACT_APP_BASE_URL
         value: https://booking4u-backend.onrender.com
-      - key: REACT_APP_SOCKET_URL
-        value: https://booking4u-backend.onrender.com
   - type: web
     name: booking4u-backend
     env: node
