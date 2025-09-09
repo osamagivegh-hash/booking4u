@@ -48,7 +48,7 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// CORS middleware with enhanced debugging
+// CORS middleware with enhanced debugging and comprehensive origin handling
 app.use(cors({
   origin: function (origin, callback) {
     console.log('🔍 CORS check - Origin:', origin);
@@ -70,6 +70,10 @@ app.use(cors({
       'https://booking4u-frontend.netlify.app',
       'https://booking4u-frontend.onrender.com',
       'https://booking4u-1.onrender.com',
+      'https://booking4u-backend.onrender.com',
+      'https://booking4u-backend-1.onrender.com',
+      'https://booking4u-backend-2.onrender.com',
+      'https://booking4u-backend-3.onrender.com',
       config.server.corsOrigin
     ];
     
@@ -114,17 +118,33 @@ app.use((req, res, next) => {
   // Set CORS headers for all responses
   const origin = req.headers.origin;
   
+  console.log('🔍 Additional CORS middleware - Origin:', origin);
+  console.log('🔍 Additional CORS middleware - Method:', req.method);
+  
   // Allow all Render and Netlify domains in production
   if (config.server.nodeEnv === 'production' && origin && 
       (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
+    console.log('✅ Setting CORS headers for production origin:', origin);
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Access-Control-Allow-Origin');
+  }
+  
+  // Also allow the specific CORS_ORIGIN if set
+  if (config.server.corsOrigin && origin === config.server.corsOrigin) {
+    console.log('✅ Setting CORS headers for configured origin:', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Access-Control-Allow-Origin');
   }
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ Handling preflight request');
     res.status(200).end();
     return;
   }
@@ -336,6 +356,10 @@ if (config.server.nodeEnv !== 'test') {
           'https://booking4u-frontend.netlify.app',
           'https://booking4u-frontend.onrender.com',
           'https://booking4u-1.onrender.com',
+          'https://booking4u-backend.onrender.com',
+          'https://booking4u-backend-1.onrender.com',
+          'https://booking4u-backend-2.onrender.com',
+          'https://booking4u-backend-3.onrender.com',
           config.server.corsOrigin
         ];
         
