@@ -1,64 +1,58 @@
-// Test script to verify build configuration
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const testBuild = () => {
-  console.log('🔨 Testing Build Configuration...\n');
-  
-  try {
-    // Test 1: Check if build directory exists
-    console.log('1. Checking build directory...');
-    if (fs.existsSync('build')) {
-      console.log('   ✅ Build directory exists');
-    } else {
-      console.log('   ⚠️  Build directory does not exist (run npm run build first)');
-    }
-    
-    // Test 2: Check for _redirects file in build
-    console.log('\n2. Checking _redirects file...');
-    const redirectsPath = path.join('build', '_redirects');
-    if (fs.existsSync(redirectsPath)) {
-      const content = fs.readFileSync(redirectsPath, 'utf8');
-      console.log('   ✅ _redirects file exists in build directory');
-      console.log(`   Content: ${content.trim()}`);
-    } else {
-      console.log('   ❌ _redirects file missing from build directory');
-    }
-    
-    // Test 3: Check for _headers file in build
-    console.log('\n3. Checking _headers file...');
-    const headersPath = path.join('build', '_headers');
-    if (fs.existsSync(headersPath)) {
-      console.log('   ✅ _headers file exists in build directory');
-    } else {
-      console.log('   ❌ _headers file missing from build directory');
-    }
-    
-    // Test 4: Check index.html
-    console.log('\n4. Checking index.html...');
-    const indexPath = path.join('build', 'index.html');
-    if (fs.existsSync(indexPath)) {
-      console.log('   ✅ index.html exists in build directory');
-    } else {
-      console.log('   ❌ index.html missing from build directory');
-    }
-    
-    // Test 5: Check static assets
-    console.log('\n5. Checking static assets...');
-    const staticPath = path.join('build', 'static');
-    if (fs.existsSync(staticPath)) {
-      console.log('   ✅ Static assets directory exists');
-    } else {
-      console.log('   ❌ Static assets directory missing');
-    }
-    
-    console.log('\n🎉 Build test completed!');
-    
-  } catch (error) {
-    console.error('❌ Build test failed:', error.message);
-  }
-};
+console.log('Testing frontend build process...');
 
-// Run the test
-testBuild();
+try {
+  // Check if we're in the right directory
+  console.log('Current directory:', process.cwd());
+  
+  // Check if package.json exists
+  if (!fs.existsSync('package.json')) {
+    console.error('package.json not found!');
+    process.exit(1);
+  }
+  
+  // Check if src directory exists
+  if (!fs.existsSync('src')) {
+    console.error('src directory not found!');
+    process.exit(1);
+  }
+  
+  // Check if public directory exists
+  if (!fs.existsSync('public')) {
+    console.error('public directory not found!');
+    process.exit(1);
+  }
+  
+  // Check if index.html exists in public
+  if (!fs.existsSync('public/index.html')) {
+    console.error('public/index.html not found!');
+    process.exit(1);
+  }
+  
+  console.log('All required files and directories found!');
+  
+  // Try to run the build
+  console.log('Running npm run build...');
+  execSync('npm run build', { stdio: 'inherit' });
+  
+  // Check if build directory was created
+  if (fs.existsSync('build')) {
+    console.log('Build directory created successfully!');
+    
+    // Check if index.html exists in build
+    if (fs.existsSync('build/index.html')) {
+      console.log('index.html found in build directory!');
+    } else {
+      console.error('index.html not found in build directory!');
+    }
+  } else {
+    console.error('Build directory was not created!');
+  }
+  
+} catch (error) {
+  console.error('Build failed:', error.message);
+  process.exit(1);
+}

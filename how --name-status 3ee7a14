@@ -1,0 +1,5 @@
+[33mb98d531[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Add enhanced debugging and alternative deployment configurations for Render
+[33m3ee7a14[m Fix Render deployment: correct build paths and remove duplicate src directory
+[33m14ad737[m Add src directory and update render.yaml configuration
+[33m9e7296a[m Remove CRACO and revert to standard Create React App build
+[33m525dd41[m Fix Render deployment: add detailed logging and explicit directory navigation to resolve index.html path issue
