@@ -57,5 +57,6 @@
   },
   "engines": {
     "node": "18.x"
-  }
+  },
+  "proxy": "https://booking4u-backend.onrender.com"
 }
