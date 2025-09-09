@@ -32,38 +32,23 @@ try {
 
 const app = express();
 
-// Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http://localhost:5001", "http://127.0.0.1:5001"],
-    },
-  },
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  xssFilter: true // Enable XSS protection
-}));
-
-// CORS Configuration - Secure and Production Ready
+// CORS Configuration - PRECISE PRODUCTION-READY SETUP
 console.log('🌍 Environment:', config.server.nodeEnv);
 console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// Define allowed origins based on environment
+// Define allowed origins - PRECISE CONFIGURATION
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',  // Frontend production URL
   'http://localhost:3000',             // Local development
   'http://127.0.0.1:3000'              // Alternative local development
 ];
 
-// Add environment-specific origins
+// Add environment-specific origins if provided
 if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigin)) {
   allowedOrigins.push(config.server.corsOrigin);
 }
 
-// CORS options with proper security
+// PRECISE CORS options - EXACTLY as requested
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -80,16 +65,31 @@ const corsOptions = {
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: true, // Allow cookies/auth tokens
+  credentials: true,
   preflightContinue: false,
   optionsSuccessStatus: 204
 };
 
-// Apply CORS middleware FIRST - before any other middleware
+// CRITICAL: Apply CORS middleware IMMEDIATELY after express() - BEFORE ALL OTHER MIDDLEWARE
 app.use(cors(corsOptions));
 
-// Handle OPTIONS requests globally
+// CRITICAL: Handle preflight requests globally - BEFORE ALL OTHER MIDDLEWARE
 app.options('*', cors(corsOptions));
+
+// Security middleware - AFTER CORS
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:", "http://localhost:5001", "http://127.0.0.1:5001"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  xssFilter: true // Enable XSS protection
+}));
 
 // Request logging middleware
 app.use(requestLogger);
