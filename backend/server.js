@@ -48,11 +48,18 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// CORS middleware
+// CORS middleware with enhanced debugging
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('🔍 CORS check - Origin:', origin);
+    console.log('🔍 CORS check - NODE_ENV:', config.server.nodeEnv);
+    console.log('🔍 CORS check - CORS_ORIGIN env:', config.server.corsOrigin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log('✅ CORS allowing request with no origin');
+      return callback(null, true);
+    }
     
     const allowedOrigins = [
       'http://localhost:3000',
@@ -63,14 +70,13 @@ app.use(cors({
       'https://booking4u-frontend.netlify.app',
       'https://booking4u-frontend.onrender.com',
       'https://booking4u-1.onrender.com',
-      'https://booking4u-1.onrender.com', // Explicitly add the current frontend URL
       config.server.corsOrigin
     ];
     
     // In development, be more permissive
     if (config.server.nodeEnv === 'development') {
       if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-        console.log('✅ CORS allowing origin:', origin);
+        console.log('✅ CORS allowing development origin:', origin);
         return callback(null, true);
       }
     }
@@ -78,18 +84,22 @@ app.use(cors({
     // In production, allow any Render subdomain for flexibility
     if (config.server.nodeEnv === 'production') {
       if (origin && (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
-        console.log('✅ CORS allowing Render/Netlify origin:', origin);
+        console.log('✅ CORS allowing production origin:', origin);
         return callback(null, true);
       }
     }
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('✅ CORS allowing origin:', origin);
-      callback(null, true);
-    } else {
-      console.log('❌ CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+    // Check against allowed origins list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS allowing origin from list:', origin);
+      return callback(null, true);
     }
+    
+    console.log('❌ CORS blocked origin:', origin);
+    console.log('📋 Allowed origins:', allowedOrigins);
+    console.log('🔧 CORS_ORIGIN env var:', config.server.corsOrigin);
+    console.log('🌍 NODE_ENV:', config.server.nodeEnv);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -98,6 +108,29 @@ app.use(cors({
   optionsSuccessStatus: 200,
   preflightContinue: false
 }));
+
+// Additional CORS headers for production fallback
+app.use((req, res, next) => {
+  // Set CORS headers for all responses
+  const origin = req.headers.origin;
+  
+  // Allow all Render and Netlify domains in production
+  if (config.server.nodeEnv === 'production' && origin && 
+      (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Request-ID, X-Requested-With, Accept, Origin');
+  }
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // Request logging middleware
 app.use(requestLogger);
@@ -276,18 +309,22 @@ if (config.server.nodeEnv !== 'test') {
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
+        console.log('🔍 Socket.IO CORS check - Origin:', origin);
+        
         // Allow requests with no origin
         if (!origin) return callback(null, true);
         
         // Allow localhost in development
         if (config.server.nodeEnv === 'development' && 
             (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+          console.log('✅ Socket.IO allowing development origin:', origin);
           return callback(null, true);
         }
         
         // Allow Render and Netlify domains in production
         if (config.server.nodeEnv === 'production' && 
             (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
+          console.log('✅ Socket.IO allowing production origin:', origin);
           return callback(null, true);
         }
         
@@ -303,9 +340,11 @@ if (config.server.nodeEnv !== 'test') {
         ];
         
         if (allowedOrigins.includes(origin)) {
+          console.log('✅ Socket.IO allowing origin from list:', origin);
           return callback(null, true);
         }
         
+        console.log('❌ Socket.IO blocked origin:', origin);
         return callback(new Error('Not allowed by CORS'));
       },
       methods: ["GET", "POST"],
