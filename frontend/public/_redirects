@@ -1,8 +1,1 @@
-# SPA routing - redirect all routes to index.html
 /*    /index.html   200
-
-# API routes should not be redirected
-/api/*  /api/:splat  200
-
-# Static assets
-/static/*  /static/:splat  200
