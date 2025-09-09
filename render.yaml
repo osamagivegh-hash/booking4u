@@ -3,7 +3,7 @@ services:
     name: booking4u-frontend
     env: static
     buildCommand: npm install && npm run build
-    staticPublishPath: build
+    staticPublishPath: ./build
     rootDir: frontend
     envVars:
       - key: NODE_ENV
