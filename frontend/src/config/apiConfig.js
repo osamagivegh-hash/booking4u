@@ -1,15 +1,7 @@
-// API Configuration with fallback URLs
+// API Configuration - Single Backend URL
 const API_CONFIG = {
-  // Primary backend URL
+  // Primary backend URL - Use only ONE backend domain
   PRIMARY: 'https://booking4u-backend.onrender.com',
-  
-  // Fallback URLs (you can add more if needed)
-  FALLBACKS: [
-    'https://booking4u-backend.onrender.com',
-    'https://booking4u-backend-1.onrender.com',
-    'https://booking4u-backend-2.onrender.com',
-    'https://booking4u-backend-3.onrender.com'
-  ],
   
   // Development URL
   DEVELOPMENT: 'http://localhost:5001'
@@ -62,7 +54,7 @@ export const testApiConnectivity = async () => {
   const apiUrl = getApiUrl();
   const baseUrl = getBaseUrl();
   
-  // Try primary URL first
+  // Try primary URL only
   try {
     const response = await fetch(`${baseUrl}/api/health`, {
       method: 'GET',
@@ -76,29 +68,10 @@ export const testApiConnectivity = async () => {
       return { success: true, url: baseUrl };
     }
   } catch (error) {
-    console.warn('Primary API not available, trying fallbacks...', error.message);
+    console.warn('Primary API not available:', error.message);
   }
   
-  // Try fallback URLs
-  for (const fallback of API_CONFIG.FALLBACKS) {
-    try {
-      const response = await fetch(`${fallback}/api/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors'
-      });
-      if (response.ok) {
-        console.log(`✅ Using fallback API: ${fallback}`);
-        return { success: true, url: fallback };
-      }
-    } catch (error) {
-      console.warn(`Fallback ${fallback} not available:`, error.message);
-    }
-  }
-  
-  console.error('❌ No backend API available');
+  console.error('❌ Backend API not available');
   return { success: false, url: null };
 };
 
