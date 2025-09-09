@@ -133,9 +133,18 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID');
   }
   
+  // EMERGENCY: Also allow the specific frontend URL
+  if (origin === 'https://booking4u-1.onrender.com') {
+    console.log('🚨 EMERGENCY: Setting CORS headers for frontend URL:', origin);
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID');
+  }
+  
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    console.log('✅ Handling preflight request');
+    console.log('✅ Handling preflight request for origin:', origin);
     res.status(200).end();
     return;
   }
@@ -322,29 +331,43 @@ if (config.server.nodeEnv !== 'test') {
   const io = new Server(server, {
     cors: {
       origin: function (origin, callback) {
-        // Allow requests with no origin
-        if (!origin) return callback(null, true);
+        console.log('🔍 Socket.IO CORS Request from origin:', origin);
         
-        // Use the same CORS logic as the main app
-        const allowedOrigins = [];
-        
-        if (config.server.nodeEnv === 'development') {
-          allowedOrigins.push(
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:3001'
-          );
-        }
-        
-        if (config.server.corsOrigin) {
-          allowedOrigins.push(config.server.corsOrigin);
-        }
-        
-        if (allowedOrigins.includes(origin)) {
+        // Allow requests with no origin (like mobile apps, Postman, curl)
+        if (!origin) {
+          console.log('✅ Socket.IO: Allowing request with no origin');
           return callback(null, true);
         }
         
+        // EMERGENCY: Allow all onrender.com domains in production
+        if (config.server.nodeEnv === 'production') {
+          if (origin.includes('onrender.com')) {
+            console.log('✅ Socket.IO: Allowing onrender.com origin:', origin);
+            return callback(null, true);
+          }
+        }
+        
+        // Development: Allow localhost
+        if (config.server.nodeEnv === 'development') {
+          if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+            console.log('✅ Socket.IO: Allowing development origin:', origin);
+            return callback(null, true);
+          }
+        }
+        
+        // Allow the configured CORS_ORIGIN
+        if (config.server.corsOrigin && origin === config.server.corsOrigin) {
+          console.log('✅ Socket.IO: Allowing configured CORS_ORIGIN:', origin);
+          return callback(null, true);
+        }
+        
+        // EMERGENCY FALLBACK: Allow the specific frontend URL
+        if (origin === 'https://booking4u-1.onrender.com') {
+          console.log('✅ Socket.IO: EMERGENCY: Allowing frontend URL:', origin);
+          return callback(null, true);
+        }
+        
+        console.log('❌ Socket.IO: CORS blocked origin:', origin);
         return callback(new Error('Not allowed by CORS'));
       },
       methods: ["GET", "POST"],
