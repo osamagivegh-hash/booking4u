@@ -63,6 +63,7 @@ app.use(cors({
       'https://booking4u-frontend.netlify.app',
       'https://booking4u-frontend.onrender.com',
       'https://booking4u-1.onrender.com',
+      'https://booking4u-1.onrender.com', // Explicitly add the current frontend URL
       config.server.corsOrigin
     ];
     
@@ -70,6 +71,14 @@ app.use(cors({
     if (config.server.nodeEnv === 'development') {
       if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
         console.log('✅ CORS allowing origin:', origin);
+        return callback(null, true);
+      }
+    }
+    
+    // In production, allow any Render subdomain for flexibility
+    if (config.server.nodeEnv === 'production') {
+      if (origin && (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
+        console.log('✅ CORS allowing Render/Netlify origin:', origin);
         return callback(null, true);
       }
     }
@@ -266,15 +275,39 @@ if (config.server.nodeEnv !== 'test') {
   // Initialize Socket.IO for real-time messaging
   const io = new Server(server, {
     cors: {
-      origin: [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'https://hilarious-sprinkles-a5a438.netlify.app',
-        'https://booking4u-frontend.netlify.app',
-        'https://booking4u-frontend.onrender.com',
-        'https://booking4u-1.onrender.com',
-        config.server.corsOrigin
-      ],
+      origin: function (origin, callback) {
+        // Allow requests with no origin
+        if (!origin) return callback(null, true);
+        
+        // Allow localhost in development
+        if (config.server.nodeEnv === 'development' && 
+            (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+          return callback(null, true);
+        }
+        
+        // Allow Render and Netlify domains in production
+        if (config.server.nodeEnv === 'production' && 
+            (origin.includes('onrender.com') || origin.includes('netlify.app'))) {
+          return callback(null, true);
+        }
+        
+        // Check specific allowed origins
+        const allowedOrigins = [
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'https://hilarious-sprinkles-a5a438.netlify.app',
+          'https://booking4u-frontend.netlify.app',
+          'https://booking4u-frontend.onrender.com',
+          'https://booking4u-1.onrender.com',
+          config.server.corsOrigin
+        ];
+        
+        if (allowedOrigins.includes(origin)) {
+          return callback(null, true);
+        }
+        
+        return callback(new Error('Not allowed by CORS'));
+      },
       methods: ["GET", "POST"],
       credentials: true
     }
