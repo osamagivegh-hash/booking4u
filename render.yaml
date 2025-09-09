@@ -4,6 +4,7 @@ services:
     env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/build
+    rootDir: .
     envVars:
       - key: NODE_ENV
         value: production
