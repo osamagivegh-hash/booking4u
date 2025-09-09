@@ -47,16 +47,20 @@ app.use(helmet({
   xssFilter: true // Enable XSS protection
 }));
 
-// Comprehensive CORS Configuration
-console.log('🔧 CORS Configuration Loading...');
+// BULLETPROOF CORS Configuration - Deep Fix
+console.log('🔧 BULLETPROOF CORS Configuration Loading...');
 console.log('🌍 NODE_ENV:', config.server.nodeEnv);
 console.log('🔧 CORS_ORIGIN:', config.server.corsOrigin);
 
-// Define allowed origins
+// Define allowed origins - Comprehensive list
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',
   'https://booking4u.onrender.com',
   'https://booking4u-frontend.onrender.com',
+  'https://booking4u-backend.onrender.com',
+  'https://booking4u-backend-1.onrender.com',
+  'https://booking4u-backend-2.onrender.com',
+  'https://booking4u-backend-3.onrender.com',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
   'http://localhost:3001',
@@ -68,10 +72,11 @@ if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigi
   allowedOrigins.push(config.server.corsOrigin);
 }
 
-// Clean CORS configuration
+// BULLETPROOF CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     console.log('🔍 CORS Request from origin:', origin);
+    console.log('🔍 Request method:', 'OPTIONS' || 'GET' || 'POST');
     
     // Allow requests with no origin (like mobile apps, Postman, curl)
     if (!origin) {
@@ -92,9 +97,15 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // In production, allow any onrender.com subdomain
+    // In production, allow any onrender.com subdomain (BROAD ALLOWANCE)
     if (config.server.nodeEnv === 'production' && origin.includes('onrender.com')) {
       console.log('✅ Allowing onrender.com origin:', origin);
+      return callback(null, true);
+    }
+    
+    // EMERGENCY: Allow any https origin in production (TEMPORARY)
+    if (config.server.nodeEnv === 'production' && origin.startsWith('https://')) {
+      console.log('🚨 EMERGENCY: Allowing HTTPS origin:', origin);
       return callback(null, true);
     }
     
@@ -103,7 +114,7 @@ const corsOptions = {
     callback(new Error('Not allowed by CORS policy'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   allowedHeaders: [
     'Origin',
     'X-Requested-With',
@@ -112,23 +123,68 @@ const corsOptions = {
     'Authorization',
     'X-Request-ID',
     'Cache-Control',
-    'Pragma'
+    'Pragma',
+    'X-HTTP-Method-Override',
+    'X-CSRF-Token'
   ],
   exposedHeaders: [
     'Content-Length',
     'Content-Type',
     'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials'
+    'Access-Control-Allow-Credentials',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Headers'
   ],
-  optionsSuccessStatus: 204,
+  optionsSuccessStatus: 200, // Changed from 204 to 200 for better compatibility
   preflightContinue: false
 };
 
-// Apply CORS middleware
+// Apply CORS middleware FIRST (before any other middleware)
 app.use(cors(corsOptions));
 
-// Handle preflight requests globally
+// BULLETPROOF: Handle preflight requests globally
 app.options('*', cors(corsOptions));
+
+// BULLETPROOF: Additional CORS middleware as backup
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log('🔍 Additional CORS middleware - Origin:', origin, 'Method:', req.method);
+  
+  // Set CORS headers for ALL requests
+  if (origin) {
+    // Allow any onrender.com origin
+    if (origin.includes('onrender.com')) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
+      res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    }
+    
+    // Allow localhost in development
+    if (config.server.nodeEnv === 'development' && 
+        (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+      res.header('Access-Control-Allow-Origin', origin);
+      res.header('Access-Control-Allow-Credentials', 'true');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
+    }
+  }
+  
+  // Handle preflight requests explicitly
+  if (req.method === 'OPTIONS') {
+    console.log('✅ Handling preflight request for origin:', origin);
+    res.header('Access-Control-Allow-Origin', origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-ID, Cache-Control, Pragma, X-HTTP-Method-Override, X-CSRF-Token');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
 
 // CORS is now handled by the main cors middleware above
 
