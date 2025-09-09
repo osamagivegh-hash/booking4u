@@ -62,28 +62,43 @@ export const testApiConnectivity = async () => {
   const apiUrl = getApiUrl();
   const baseUrl = getBaseUrl();
   
+  // Try primary URL first
   try {
-    const response = await fetch(`${baseUrl}/api/health`);
+    const response = await fetch(`${baseUrl}/api/health`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      mode: 'cors'
+    });
     if (response.ok) {
+      console.log(`✅ Primary API working: ${baseUrl}`);
       return { success: true, url: baseUrl };
     }
   } catch (error) {
-    console.warn('Primary API not available, trying fallbacks...');
+    console.warn('Primary API not available, trying fallbacks...', error.message);
   }
   
   // Try fallback URLs
   for (const fallback of API_CONFIG.FALLBACKS) {
     try {
-      const response = await fetch(`${fallback}/api/health`);
+      const response = await fetch(`${fallback}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
       if (response.ok) {
         console.log(`✅ Using fallback API: ${fallback}`);
         return { success: true, url: fallback };
       }
     } catch (error) {
-      console.warn(`Fallback ${fallback} not available`);
+      console.warn(`Fallback ${fallback} not available:`, error.message);
     }
   }
   
+  console.error('❌ No backend API available');
   return { success: false, url: null };
 };
 
