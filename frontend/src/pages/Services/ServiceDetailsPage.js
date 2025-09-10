@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   StarIcon, 
@@ -44,13 +44,7 @@ const ServiceDetailsPage = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  useEffect(() => {
-    if (serviceId && businessId) {
-      fetchServiceDetails();
-    }
-  }, [serviceId, businessId]);
-
-  const fetchServiceDetails = async () => {
+  const fetchServiceDetails = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -97,7 +91,13 @@ const ServiceDetailsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [serviceId, businessId, navigate]);
+
+  useEffect(() => {
+    if (serviceId && businessId) {
+      fetchServiceDetails();
+    }
+  }, [serviceId, businessId, fetchServiceDetails]);
 
   const handleBookService = () => {
     if (!isAuthenticated) {
