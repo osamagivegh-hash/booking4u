@@ -36,9 +36,10 @@ const app = express();
 console.log('🌍 Environment:', config.server.nodeEnv);
 console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// Define allowed origins - more flexible
+// Define allowed origins - comprehensive list
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',  // Frontend production URL
+  'https://booking4u.onrender.com',    // Alternative production URL
   'http://localhost:3000',             // Local development
   'http://127.0.0.1:3000'              // Alternative local development
 ];
@@ -104,6 +105,30 @@ app.use((req, res, next) => {
     console.log('✅ Preflight request handled for origin:', req.headers.origin || 'no-origin');
     return res.status(200).end();
   }
+  next();
+});
+
+// Additional manual CORS middleware for comprehensive coverage
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Check if origin is in allowed list
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    console.log('✅ Manual CORS: Allowed origin:', origin);
+  }
+  
+  // Set comprehensive CORS headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    console.log('✅ Manual CORS: OPTIONS request handled');
+    return res.status(200).end();
+  }
+  
   next();
 });
 
@@ -243,12 +268,12 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check endpoint
+// Enhanced health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
     const health = {
       status: 'OK',
-      message: 'Booking4U API is running',
+      message: 'الخادم يعمل بشكل صحيح / Booking4U API is running',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: config.server.nodeEnv,
@@ -273,6 +298,13 @@ app.get('/api/health', async (req, res) => {
       total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
     };
 
+    // CORS status
+    health.checks.cors = {
+      origin: req.headers.origin,
+      allowed: allowedOrigins.includes(req.headers.origin),
+      testingMode: allowAllOriginsForTesting
+    };
+
     res.json(health);
   } catch (error) {
     res.status(500).json({
@@ -283,14 +315,52 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+// Test endpoint for CORS verification
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'اختبار الاتصال ناجح / Connection test successful',
+    timestamp: new Date().toISOString(),
+    origin: req.headers.origin,
+    corsStatus: 'Working'
+  });
+});
+
 // Error logging middleware
 app.use(errorLogger);
 
-// Error handling middleware
-app.use(errorHandler);
+// Enhanced error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Server Error:', err.stack);
+  
+  // Set CORS headers even for errors
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  res.status(500).json({ 
+    error: 'حدث خطأ في الخادم / Server error occurred',
+    message: err.message,
+    timestamp: new Date().toISOString()
+  });
+});
 
-// 404 handler
-app.use('*', notFoundHandler);
+// Enhanced 404 handler
+app.use('*', (req, res) => {
+  // Set CORS headers for 404 responses
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  res.status(404).json({ 
+    error: 'الصفحة غير موجودة / Page not found',
+    path: req.originalUrl,
+    timestamp: new Date().toISOString()
+  });
+});
 
 const PORT = config.server.port;
 
