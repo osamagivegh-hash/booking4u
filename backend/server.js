@@ -75,11 +75,36 @@ app.use(cors(corsOptions));
 // معالجة طلبات preflight بشكل صريح
 app.options('*', cors(corsOptions));
 
-// تكوين Helmet مع إعدادات آمنة
+// CORS middleware إضافي كنسخة احتياطية
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // التحقق من النطاقات المسموحة
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  
+  // معالجة طلبات preflight
+  if (req.method === 'OPTIONS') {
+    console.log('🔄 Handling preflight request for origin:', origin);
+    return res.status(200).end();
+  }
+  
+  next();
+});
+
+// تكوين Helmet مع إعدادات آمنة ومتوافقة مع CORS
 app.use(helmet({
   contentSecurityPolicy: false, // تعطيل مؤقت للتجربة
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: false,
+  hsts: false // تعطيل HSTS مؤقتاً للتجربة
 }));
 
 // middleware لتسجيل الطلبات
