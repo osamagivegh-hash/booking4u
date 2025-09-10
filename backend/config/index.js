@@ -6,7 +6,7 @@ dotenv.config();
 const config = {
   // Server Configuration
   server: {
-    port: process.env.PORT || 5001,
+    port: process.env.PORT || 10000,
     nodeEnv: process.env.NODE_ENV || 'development',
     corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     enableSwagger: process.env.ENABLE_SWAGGER === 'true',

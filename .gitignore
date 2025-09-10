@@ -22,6 +22,7 @@ dist/
 
 # Allow .env.production for deployment
 !.env.production
+!frontend/.env.production
 
 # Logs
 logs/
