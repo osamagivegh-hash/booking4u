@@ -32,41 +32,59 @@ try {
 
 const app = express();
 
-// CORS Configuration - Production Deployment Setup
+// CORS Configuration - Enhanced and Flexible Setup
 console.log('🌍 Environment:', config.server.nodeEnv);
 console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// Define allowed origins - exact specifications
+// Define allowed origins - more flexible
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',  // Frontend production URL
   'http://localhost:3000',             // Local development
   'http://127.0.0.1:3000'              // Alternative local development
 ];
 
-// CORS options - exact specifications
+// TEMPORARY: Allow all origins for testing (REMOVE IN PRODUCTION)
+// Set to true for testing, false for production
+const allowAllOriginsForTesting = false;
+
+// Enhanced CORS options with more flexibility
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // Allow requests with no origin (mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Allowed origin:', origin);
+    // TEMPORARY: Allow all origins for testing
+    if (allowAllOriginsForTesting) {
+      console.log('⚠️  CORS: Allowing all origins (TESTING MODE):', origin);
       return callback(null, true);
+    }
+    
+    // More flexible origin checking
+    const originIsWhitelisted = allowedOrigins.some(allowedOrigin => 
+      origin === allowedOrigin || 
+      origin.includes(allowedOrigin) ||
+      origin.replace(/\/$/, '') === allowedOrigin // Remove trailing slash
+    );
+    
+    if (originIsWhitelisted) {
+      console.log('✅ CORS: Allowed origin:', origin);
+      callback(null, true);
     } else {
       console.log('❌ CORS: Blocked origin:', origin);
-      return callback(new Error('Not allowed by CORS'), false);
+      callback(new Error('Not allowed by CORS'), false);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
     'Content-Type', 
     'Authorization', 
-    'X-Requested-With'
+    'X-Requested-With',
+    'Accept',
+    'Origin'
   ],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 200  // Return status 200 for OPTIONS requests
+  optionsSuccessStatus: 200
 };
 
 // CRITICAL: Apply CORS middleware IMMEDIATELY after express() - BEFORE ALL OTHER MIDDLEWARE
@@ -75,16 +93,31 @@ app.use(cors(corsOptions));
 // CRITICAL: Handle preflight requests globally - BEFORE ALL OTHER MIDDLEWARE
 app.options('*', cors(corsOptions));
 
-// Security middleware - AFTER CORS
+// Enhanced preflight handling for all routes
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400'); // 24 hours
+    console.log('✅ Preflight request handled for origin:', req.headers.origin || 'no-origin');
+    return res.status(200).end();
+  }
+  next();
+});
+
+// Enhanced logging for debugging
+app.use((req, res, next) => {
+  console.log('🔍 Request Origin:', req.headers.origin);
+  console.log('🔍 Request Method:', req.method);
+  console.log('🔍 Request Path:', req.path);
+  next();
+});
+
+// Security middleware - AFTER CORS (More flexible for CORS)
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:", "http://localhost:5001", "http://127.0.0.1:5001"],
-    },
-  },
+  contentSecurityPolicy: false, // Temporarily disabled for CORS testing
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   xssFilter: true // Enable XSS protection
@@ -101,16 +134,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const compression = require('compression');
 app.use(compression());
 
-// Static file serving for uploads with CORS headers
+// Enhanced static file serving with better CORS headers
 app.use('/uploads', (req, res, next) => {
-  // Set CORS headers for static files
+  // Enhanced CORS headers for static files
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'false');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ Static file preflight handled for:', req.path);
     res.status(200).end();
     return;
   }
@@ -123,15 +158,18 @@ app.use('/uploads', (req, res, next) => {
   
   next();
 }, express.static('uploads', {
-  // Additional static file options
+  // Enhanced static file options
   dotfiles: 'ignore',
   etag: true,
   lastModified: true,
   setHeaders: (res, path) => {
+    // Enhanced headers for all static files
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    
     // Set additional headers for image files
     if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
       res.setHeader('Content-Type', 'image/webp');
-      res.setHeader('Access-Control-Allow-Origin', '*');
     }
   }
 }));
