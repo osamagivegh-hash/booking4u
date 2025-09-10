@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import {
   PlusIcon,
   PencilIcon,
-  TrashIcon,
-  EyeIcon
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
 const ServicesPage = () => {
