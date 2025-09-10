@@ -32,24 +32,18 @@ try {
 
 const app = express();
 
-// CORS Configuration - PRECISE PRODUCTION-READY SETUP
+// CORS Configuration - Production Deployment Setup
 console.log('🌍 Environment:', config.server.nodeEnv);
 console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// Define allowed origins - PRECISE CONFIGURATION
+// Define allowed origins - exact specifications
 const allowedOrigins = [
-  'https://booking4u-1.onrender.com',     // Frontend production URL (Render)
-  'https://booking4u-backend.onrender.com', // Backend URL (for testing)
-  'http://localhost:3000',                // Local development
-  'http://127.0.0.1:3000'                 // Alternative local development
+  'https://booking4u-1.onrender.com',  // Frontend production URL
+  'http://localhost:3000',             // Local development
+  'http://127.0.0.1:3000'              // Alternative local development
 ];
 
-// Add environment-specific origins if provided
-if (config.server.corsOrigin && !allowedOrigins.includes(config.server.corsOrigin)) {
-  allowedOrigins.push(config.server.corsOrigin);
-}
-
-// PRECISE CORS options - EXACTLY as requested
+// CORS options - exact specifications
 const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, Postman, etc.)
@@ -65,10 +59,14 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With'
+  ],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 200  // Return status 200 for OPTIONS requests
 };
 
 // CRITICAL: Apply CORS middleware IMMEDIATELY after express() - BEFORE ALL OTHER MIDDLEWARE
