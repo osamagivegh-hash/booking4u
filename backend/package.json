@@ -2,9 +2,9 @@
   "name": "booking4u-backend",
   "version": "1.0.0",
   "description": "نظام حجز المواعيد - الخادم",
-  "main": "server.js",
+  "main": "server-simple.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server-simple.js",
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
