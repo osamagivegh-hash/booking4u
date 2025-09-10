@@ -46,7 +46,7 @@ const allowedOrigins = [
 
 // NUCLEAR CORS FIX: Allow all origins for testing (REMOVE IN PRODUCTION)
 // Set to true for testing, false for production
-const allowAllOriginsForTesting = true; // TEMPORARILY ENABLED FOR DEEP FIX
+const allowAllOriginsForTesting = false; // DISABLED FOR PRODUCTION
 
 // Enhanced CORS options with more flexibility
 const corsOptions = {
@@ -88,88 +88,11 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// NUCLEAR CORS FIX: Apply multiple CORS layers for maximum compatibility
-app.use(cors({
-  origin: true, // Allow all origins temporarily
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200
-}));
+// Apply CORS with proper configuration
+app.use(cors(corsOptions));
 
-// CRITICAL: Handle preflight requests globally - BEFORE ALL OTHER MIDDLEWARE
-app.options('*', cors({
-  origin: true,
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  optionsSuccessStatus: 200
-}));
-
-// Additional CORS layer for maximum compatibility
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400');
-  
-  if (req.method === 'OPTIONS') {
-    console.log('🚀 NUCLEAR CORS: OPTIONS request handled');
-    return res.status(200).end();
-  }
-  
-  next();
-});
-
-// Enhanced preflight handling for all routes
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400'); // 24 hours
-    console.log('✅ Preflight request handled for origin:', req.headers.origin || 'no-origin');
-    return res.status(200).end();
-  }
-  next();
-});
-
-// Additional manual CORS middleware for comprehensive coverage
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  
-  // Check if origin is in allowed list
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    console.log('✅ Manual CORS: Allowed origin:', origin);
-  }
-  
-  // Set comprehensive CORS headers
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  
-  // Handle OPTIONS requests
-  if (req.method === 'OPTIONS') {
-    console.log('✅ Manual CORS: OPTIONS request handled');
-    return res.status(200).end();
-  }
-  
-  next();
-});
-
-// NUCLEAR CORS FIX: Enhanced logging for debugging
-app.use((req, res, next) => {
-  console.log('🚀 NUCLEAR CORS DEBUG:');
-  console.log('  Origin:', req.headers.origin);
-  console.log('  Method:', req.method);
-  console.log('  Path:', req.path);
-  console.log('  Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('  User-Agent:', req.headers['user-agent']);
-  next();
-});
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // NUCLEAR CORS FIX: Temporarily disable Helmet to avoid CORS conflicts
 // app.use(helmet({

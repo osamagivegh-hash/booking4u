@@ -4,10 +4,10 @@ const API_CONFIG = {
   PRIMARY: 'https://booking4u-backend.onrender.com',
   
   // Alternative backend URL
-  ALTERNATIVE: 'https://booking4u-1.onrender.com',
+  ALTERNATIVE: 'https://booking4u-backend-1.onrender.com',
   
   // GitHub Pages URL
-  GITHUB_PAGES: 'https://booking4u-1.onrender.com',
+  GITHUB_PAGES: 'https://booking4u-backend.onrender.com',
   
   // Development URL
   DEVELOPMENT: 'http://localhost:5001'
