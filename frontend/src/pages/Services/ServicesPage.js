@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../../stores/authStore';
@@ -28,11 +28,7 @@ const ServicesPage = () => {
     setValue
   } = useForm();
 
-  useEffect(() => {
-    fetchBusinessAndServices();
-  }, []);
-
-  const fetchBusinessAndServices = async () => {
+  const fetchBusinessAndServices = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -58,7 +54,11 @@ const ServicesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBusinessAndServices();
+  }, [fetchBusinessAndServices]);
 
   const handleEditService = (service) => {
     setEditingService(service);
