@@ -27,6 +27,7 @@ const queryClient = new QueryClient({
     },
   },
 });
+const API_BASE_URL = 'https://booking4u-backend.onrender.com';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
