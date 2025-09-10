@@ -32,75 +32,57 @@ try {
 
 const app = express();
 
-// CORS Configuration - Enhanced and Flexible Setup
+// CORS Configuration for Production on Render
 console.log('🌍 Environment:', config.server.nodeEnv);
-console.log('🔧 CORS Origin:', config.server.corsOrigin);
 
-// Define allowed origins - comprehensive list
+// Define allowed origins for production
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',  // Frontend production URL
   'https://booking4u.onrender.com',    // Alternative production URL
-  'http://localhost:3000',             // Local development
-  'http://127.0.0.1:3000'              // Alternative local development
+  // يمكن إضافة أي نطاقات أخرى تحتاجها
 ];
 
-// NUCLEAR CORS FIX: Allow all origins for testing (REMOVE IN PRODUCTION)
-// Set to true for testing, false for production
-const allowAllOriginsForTesting = false; // DISABLED FOR PRODUCTION
-
-// Enhanced CORS options with more flexibility
+// CORS configuration for production
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, etc.)
     if (!origin) return callback(null, true);
     
-    // TEMPORARY: Allow all origins for testing
-    if (allowAllOriginsForTesting) {
-      console.log('⚠️  CORS: Allowing all origins (TESTING MODE):', origin);
-      return callback(null, true);
-    }
-    
-    // More flexible origin checking
-    const originIsWhitelisted = allowedOrigins.some(allowedOrigin => 
-      origin === allowedOrigin || 
-      origin.includes(allowedOrigin) ||
-      origin.replace(/\/$/, '') === allowedOrigin // Remove trailing slash
-    );
-    
-    if (originIsWhitelisted) {
-      console.log('✅ CORS: Allowed origin:', origin);
+    // Check if the origin is in the allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       console.log('❌ CORS: Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'), false);
+      callback(new Error('Not allowed by CORS'));
     }
   },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With',
-    'Accept',
-    'Origin'
-  ],
   credentials: true,
-  preflightContinue: false,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 };
 
-// Apply CORS with proper configuration
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
+// Handle preflight requests for all routes
 app.options('*', cors(corsOptions));
 
-// NUCLEAR CORS FIX: Temporarily disable Helmet to avoid CORS conflicts
-// app.use(helmet({
-//   contentSecurityPolicy: false, // Temporarily disabled for CORS testing
-//   crossOriginEmbedderPolicy: false,
-//   crossOriginResourcePolicy: { policy: "cross-origin" },
-//   xssFilter: true // Enable XSS protection
-// }));
+// Configure Helmet for production with security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", ...allowedOrigins]
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Request logging middleware
 app.use(requestLogger);
@@ -113,49 +95,20 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const compression = require('compression');
 app.use(compression());
 
-// Enhanced static file serving with better CORS headers
-app.use('/uploads', (req, res, next) => {
-  // Enhanced CORS headers for static files
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'false');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('✅ Static file preflight handled for:', req.path);
-    res.status(200).end();
-    return;
-  }
-  
-  // Set cache headers for images
-  if (req.path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-    res.header('Cache-Control', 'public, max-age=31536000'); // 1 year
-    res.header('Content-Type', 'image/webp'); // Set proper content type
-  }
-  
-  next();
-}, express.static('uploads', {
-  // Enhanced static file options
-  dotfiles: 'ignore',
-  etag: true,
-  lastModified: true,
+// Static files with proper CORS headers
+app.use('/uploads', express.static('uploads', {
   setHeaders: (res, path) => {
-    // Enhanced headers for all static files
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    
-    // Set additional headers for image files
+    // Set cache headers for images
     if (path.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
-      res.setHeader('Content-Type', 'image/webp');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
     }
   }
 }));
 
 // Data sanitization middleware
-app.use(mongoSanitize()); // Prevent NoSQL injection
-app.use(hpp()); // Prevent HTTP Parameter Pollution
+app.use(mongoSanitize());
+app.use(hpp());
 
 // Rate limiting for API protection
 const rateLimit = require('express-rate-limit');
@@ -252,13 +205,6 @@ app.get('/api/health', async (req, res) => {
       total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
     };
 
-    // CORS status
-    health.checks.cors = {
-      origin: req.headers.origin,
-      allowed: allowedOrigins.includes(req.headers.origin),
-      testingMode: allowAllOriginsForTesting
-    };
-
     res.json(health);
   } catch (error) {
     res.status(500).json({
@@ -269,43 +215,20 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// NUCLEAR CORS FIX: Test endpoint for CORS verification
-app.get('/api/test', (req, res) => {
-  console.log('🚀 NUCLEAR CORS: Test endpoint called');
-  res.json({ 
-    message: 'اختبار الاتصال ناجح / Connection test successful',
-    timestamp: new Date().toISOString(),
-    origin: req.headers.origin,
-    corsStatus: 'Working',
-    nuclearFix: 'Active'
-  });
-});
-
-// Additional simple test endpoint
-app.get('/api/simple', (req, res) => {
-  console.log('🚀 NUCLEAR CORS: Simple endpoint called');
-  res.json({ 
-    status: 'OK',
-    message: 'Simple test successful',
-    cors: 'Working'
-  });
-});
-
 // Error logging middleware
 app.use(errorLogger);
 
 // Enhanced error handling middleware
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err.stack);
+  console.error('❌ Server Error:', err.message);
   
-  // Set CORS headers even for errors
+  // Set proper CORS headers for errors
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  res.header('Access-Control-Allow-Credentials', 'true');
   
-  res.status(500).json({ 
+  res.status(err.status || 500).json({ 
     error: 'حدث خطأ في الخادم / Server error occurred',
     message: err.message,
     timestamp: new Date().toISOString()
@@ -319,7 +242,6 @@ app.use('*', (req, res) => {
   if (allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
-  res.header('Access-Control-Allow-Credentials', 'true');
   
   res.status(404).json({ 
     error: 'الصفحة غير موجودة / Page not found',
@@ -328,17 +250,17 @@ app.use('*', (req, res) => {
   });
 });
 
-const PORT = config.server.port;
+const PORT = config.server.port || 10000;
 
 // Only start server if not in test environment
 if (config.server.nodeEnv !== 'test') {
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 API available at http://localhost:${PORT}/api`);
+    console.log(`📱 API available at http://0.0.0.0:${PORT}/api`);
     console.log(`🌍 Environment: ${config.server.nodeEnv}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+    console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
+    console.log(`🔧 CORS enabled for origins: ${allowedOrigins.join(', ')}`);
   });
-
 
   // Graceful shutdown handling
   process.on('SIGTERM', gracefulShutdown(server));
