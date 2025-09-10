@@ -16,6 +16,9 @@ services:
         value: https://booking4u-backend.onrender.com/api
       - key: REACT_APP_BASE_URL
         value: https://booking4u-backend.onrender.com
+      # Frontend URL (for backend CORS configuration)
+      - key: REACT_APP_FRONTEND_URL
+        value: https://booking4u-1.onrender.com
   - type: web
     name: booking4u-backend
     env: node
