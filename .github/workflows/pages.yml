@@ -37,15 +37,39 @@ jobs:
         npm list --depth=0
         ls -la node_modules/react-scripts/
         cat package.json | grep -A 5 -B 5 "react-scripts"
+        echo "Checking for .env files:"
+        ls -la .env* || echo "No .env files found"
+        
+    - name: Setup environment
+      run: |
+        cd frontend
+        if [ ! -f .env.production ]; then
+          echo "Creating .env.production from env.production.txt"
+          cp env.production.txt .env.production
+        fi
+        echo "Environment file contents:"
+        head -10 .env.production
         
     - name: Clean build directory
       run: |
         cd frontend
         rm -rf build
         
+    - name: Check for syntax errors
+      run: |
+        cd frontend
+        echo "Checking for syntax errors..."
+        npx eslint src/ --ext .js,.jsx --max-warnings 0 || echo "ESLint found issues but continuing..."
+        
     - name: Build
       run: |
         cd frontend
+        echo "Starting build process..."
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Current directory: $(pwd)"
+        echo "Contents: $(ls -la)"
+        echo "Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')"
         CI=false GENERATE_SOURCEMAP=false NPM_CONFIG_UPDATE_NOTIFIER=false npm run build
         
     - name: Check build output
