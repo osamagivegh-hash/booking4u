@@ -39,6 +39,7 @@ console.log('🌍 Environment:', config.server.nodeEnv);
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',
   'https://booking4u.onrender.com',
+  'https://osamagivegh-hash.github.io',
   'http://localhost:3000',
   'http://127.0.0.1:3000'
 ];
