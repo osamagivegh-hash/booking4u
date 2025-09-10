@@ -15,13 +15,13 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
         
-    - name: Update npm
+    - name: Check versions
       run: |
-        npm install -g npm@latest
+        node --version
         npm --version
         
     - name: Install dependencies
