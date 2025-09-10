@@ -44,9 +44,9 @@ const allowedOrigins = [
   'http://127.0.0.1:3000'              // Alternative local development
 ];
 
-// TEMPORARY: Allow all origins for testing (REMOVE IN PRODUCTION)
+// NUCLEAR CORS FIX: Allow all origins for testing (REMOVE IN PRODUCTION)
 // Set to true for testing, false for production
-const allowAllOriginsForTesting = false;
+const allowAllOriginsForTesting = true; // TEMPORARILY ENABLED FOR DEEP FIX
 
 // Enhanced CORS options with more flexibility
 const corsOptions = {
@@ -88,11 +88,39 @@ const corsOptions = {
   optionsSuccessStatus: 200
 };
 
-// CRITICAL: Apply CORS middleware IMMEDIATELY after express() - BEFORE ALL OTHER MIDDLEWARE
-app.use(cors(corsOptions));
+// NUCLEAR CORS FIX: Apply multiple CORS layers for maximum compatibility
+app.use(cors({
+  origin: true, // Allow all origins temporarily
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200
+}));
 
 // CRITICAL: Handle preflight requests globally - BEFORE ALL OTHER MIDDLEWARE
-app.options('*', cors(corsOptions));
+app.options('*', cors({
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  optionsSuccessStatus: 200
+}));
+
+// Additional CORS layer for maximum compatibility
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400');
+  
+  if (req.method === 'OPTIONS') {
+    console.log('🚀 NUCLEAR CORS: OPTIONS request handled');
+    return res.status(200).end();
+  }
+  
+  next();
+});
 
 // Enhanced preflight handling for all routes
 app.use((req, res, next) => {
@@ -132,21 +160,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// Enhanced logging for debugging
+// NUCLEAR CORS FIX: Enhanced logging for debugging
 app.use((req, res, next) => {
-  console.log('🔍 Request Origin:', req.headers.origin);
-  console.log('🔍 Request Method:', req.method);
-  console.log('🔍 Request Path:', req.path);
+  console.log('🚀 NUCLEAR CORS DEBUG:');
+  console.log('  Origin:', req.headers.origin);
+  console.log('  Method:', req.method);
+  console.log('  Path:', req.path);
+  console.log('  Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('  User-Agent:', req.headers['user-agent']);
   next();
 });
 
-// Security middleware - AFTER CORS (More flexible for CORS)
-app.use(helmet({
-  contentSecurityPolicy: false, // Temporarily disabled for CORS testing
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  xssFilter: true // Enable XSS protection
-}));
+// NUCLEAR CORS FIX: Temporarily disable Helmet to avoid CORS conflicts
+// app.use(helmet({
+//   contentSecurityPolicy: false, // Temporarily disabled for CORS testing
+//   crossOriginEmbedderPolicy: false,
+//   crossOriginResourcePolicy: { policy: "cross-origin" },
+//   xssFilter: true // Enable XSS protection
+// }));
 
 // Request logging middleware
 app.use(requestLogger);
@@ -315,13 +346,25 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Test endpoint for CORS verification
+// NUCLEAR CORS FIX: Test endpoint for CORS verification
 app.get('/api/test', (req, res) => {
+  console.log('🚀 NUCLEAR CORS: Test endpoint called');
   res.json({ 
     message: 'اختبار الاتصال ناجح / Connection test successful',
     timestamp: new Date().toISOString(),
     origin: req.headers.origin,
-    corsStatus: 'Working'
+    corsStatus: 'Working',
+    nuclearFix: 'Active'
+  });
+});
+
+// Additional simple test endpoint
+app.get('/api/simple', (req, res) => {
+  console.log('🚀 NUCLEAR CORS: Simple endpoint called');
+  res.json({ 
+    status: 'OK',
+    message: 'Simple test successful',
+    cors: 'Working'
   });
 });
 
