@@ -12,7 +12,6 @@ import {
 } from '@heroicons/react/24/outline';
 
 const ServicesPage = () => {
-  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +53,7 @@ const ServicesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     fetchBusinessAndServices();
