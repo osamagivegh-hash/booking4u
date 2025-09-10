@@ -29,12 +29,19 @@ jobs:
         cd frontend
         rm -rf node_modules package-lock.json
         npm cache clean --force
-        NPM_CONFIG_UPDATE_NOTIFIER=false npm install --legacy-peer-deps --no-audit --no-fund
+        NPM_CONFIG_UPDATE_NOTIFIER=false npm install --legacy-peer-deps --no-audit --no-fund --silent
         
     - name: Verify installation
       run: |
         cd frontend
         npm list --depth=0
+        ls -la node_modules/react-scripts/
+        cat package.json | grep -A 5 -B 5 "react-scripts"
+        
+    - name: Clean build directory
+      run: |
+        cd frontend
+        rm -rf build
         
     - name: Build
       run: |
