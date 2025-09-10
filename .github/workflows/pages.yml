@@ -32,7 +32,12 @@ jobs:
     - name: Build
       run: |
         cd frontend
-        npm run build
+        CI=false GENERATE_SOURCEMAP=false npm run build
+        
+    - name: Check build output
+      run: |
+        cd frontend
+        ls -la build/
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
