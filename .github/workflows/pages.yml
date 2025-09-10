@@ -29,7 +29,7 @@ jobs:
         cd frontend
         rm -rf node_modules package-lock.json
         npm cache clean --force
-        npm install --legacy-peer-deps
+        NPM_CONFIG_UPDATE_NOTIFIER=false npm install --legacy-peer-deps --no-audit --no-fund
         
     - name: Verify installation
       run: |
@@ -39,7 +39,7 @@ jobs:
     - name: Build
       run: |
         cd frontend
-        CI=false GENERATE_SOURCEMAP=false npm run build
+        CI=false GENERATE_SOURCEMAP=false NPM_CONFIG_UPDATE_NOTIFIER=false npm run build
         
     - name: Check build output
       run: |
