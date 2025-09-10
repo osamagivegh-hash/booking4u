@@ -32,7 +32,7 @@
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
-  "homepage": "https://osamagivegh-hash.github.io/booking4u",
+  "homepage": "https://booking4u-1.onrender.com",
   "eslintConfig": {
     "extends": [
       "react-app",

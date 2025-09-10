@@ -36,15 +36,26 @@ jobs:
     - name: Install dependencies
       run: |
         cd frontend
+        echo "Current directory: $(pwd)"
+        echo "Contents: $(ls -la)"
+        echo "Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')"
+        echo "Removing old installations..."
         rm -rf node_modules package-lock.json
+        echo "Cleaning npm cache..."
         npm cache clean --force
-        NPM_CONFIG_UPDATE_NOTIFIER=false npm install --legacy-peer-deps --no-audit --no-fund --silent
+        echo "Installing dependencies with verbose output..."
+        NPM_CONFIG_UPDATE_NOTIFIER=false npm install --legacy-peer-deps --no-audit --no-fund --verbose || {
+          echo "Installation failed, checking npm logs..."
+          cat ~/.npm/_logs/*.log || echo "No npm logs found"
+          exit 1
+        }
         echo "Reinstalling react-scripts specifically..."
-        npm install react-scripts@5.0.1 --save
+        npm install react-scripts@5.0.1 --save --verbose
         
     - name: Verify installation
       run: |
         cd frontend
+        echo "Checking npm installation..."
         npm list --depth=0
         echo "Checking react-scripts installation:"
         ls -la node_modules/react-scripts/
@@ -53,6 +64,8 @@ jobs:
         cat package.json | grep -A 5 -B 5 "react-scripts"
         echo "Checking for .env files:"
         ls -la .env* || echo "No .env files found"
+        echo "Checking npm cache:"
+        npm cache verify
         
     - name: Setup environment
       run: |

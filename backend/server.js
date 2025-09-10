@@ -40,7 +40,6 @@ console.log('🔧 CORS Origin:', config.server.corsOrigin);
 const allowedOrigins = [
   'https://booking4u-1.onrender.com',  // Frontend production URL
   'https://booking4u.onrender.com',    // Alternative production URL
-  'https://osamagivegh-hash.github.io', // GitHub Pages URL
   'http://localhost:3000',             // Local development
   'http://127.0.0.1:3000'              // Alternative local development
 ];
