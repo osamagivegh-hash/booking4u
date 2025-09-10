@@ -103,7 +103,7 @@ export const isValidImageUrl = (url) => {
   }
 };
 
-export default {
+const imageUtils = {
   getImageUrl,
   getServiceImage,
   getServiceImages,
@@ -111,4 +111,6 @@ export default {
   preloadImage,
   isValidImageUrl
 };
+
+export default imageUtils;
 
