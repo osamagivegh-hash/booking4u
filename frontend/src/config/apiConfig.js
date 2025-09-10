@@ -6,6 +6,9 @@ const API_CONFIG = {
   // Alternative backend URL
   ALTERNATIVE: 'https://booking4u-1.onrender.com',
   
+  // GitHub Pages URL
+  GITHUB_PAGES: 'https://booking4u-1.onrender.com',
+  
   // Development URL
   DEVELOPMENT: 'http://localhost:5001'
 };
@@ -20,6 +23,11 @@ export const getApiUrl = () => {
   // In development, use localhost
   if (process.env.NODE_ENV === 'development') {
     return `${API_CONFIG.DEVELOPMENT}/api`;
+  }
+  
+  // Check if we're on GitHub Pages
+  if (window.location.hostname === 'osamagivegh-hash.github.io') {
+    return `${API_CONFIG.GITHUB_PAGES}/api`;
   }
   
   // In production, use primary URL
