@@ -183,7 +183,16 @@ app.use('/api/', limiter);
 console.log('🔄 Attempting to connect to MongoDB Atlas...');
 console.log('📊 MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
 
-mongoose.connect(process.env.MONGODB_URI, {
+// Fallback MongoDB URI if environment variable is not set
+const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
+console.log('🔗 Using MongoDB URI:', mongoUri ? 'Set' : 'Not set');
+console.log('🔍 Environment variables check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
+  PORT: process.env.PORT
+});
+
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   maxPoolSize: 10,
