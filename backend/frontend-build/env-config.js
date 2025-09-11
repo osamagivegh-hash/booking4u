@@ -1,4 +1,4 @@
-// Environment Configuration for Integrated Deployment
+// Environment Configuration for GitHub Pages
 // This file is loaded in public/index.html to set environment variables
 
 (function() {
@@ -26,3 +26,4 @@
     console.log('🔧 Integrated deployment environment detected');
   }
 })();
+
