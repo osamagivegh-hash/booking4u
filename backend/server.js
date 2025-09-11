@@ -179,56 +179,45 @@ const rateLimit = require('express-rate-limit');
 const limiter = rateLimit(config.rateLimit);
 app.use('/api/', limiter);
 
-// Database connection with enhanced error handling and logging
-const connectDatabase = async () => {
-  try {
-    console.log('🔄 Attempting to connect to MongoDB...');
-    console.log('📊 Database URI:', config.database.uri ? 'Set' : 'Not set');
-    console.log('⚙️ Database options:', config.database.options);
-    
-    await mongoose.connect(config.database.uri, config.database.options);
-    
-    console.log('✅ Successfully connected to MongoDB Atlas');
-    console.log('📊 Database name:', mongoose.connection.db.databaseName);
-    console.log('🌐 Database host:', mongoose.connection.host);
-    console.log('🔌 Database port:', mongoose.connection.port);
-    
-    // Set up connection event listeners
-    mongoose.connection.on('connected', () => {
-      console.log('🟢 Mongoose connected to MongoDB');
-    });
-    
-    mongoose.connection.on('error', (err) => {
-      console.error('🔴 Mongoose connection error:', err);
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      console.log('🟡 Mongoose disconnected from MongoDB');
-    });
-    
-    // Graceful shutdown
-    process.on('SIGINT', async () => {
-      await mongoose.connection.close();
-      console.log('🔌 MongoDB connection closed through app termination');
-      process.exit(0);
-    });
-    
-  } catch (error) {
-    console.error('❌ MongoDB connection failed:', error.message);
-    console.error('🔍 Error details:', {
-      name: error.name,
-      code: error.code,
-      message: error.message
-    });
-    
-    // Retry connection after 5 seconds
-    console.log('🔄 Retrying connection in 5 seconds...');
-    setTimeout(connectDatabase, 5000);
-  }
-};
+// Database connection with standard MongoDB Atlas connection
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log("✅ Connected to MongoDB Atlas");
+  console.log('📊 Database name:', mongoose.connection.db.databaseName);
+  console.log('🌐 Database host:', mongoose.connection.host);
+  console.log('🔌 Database port:', mongoose.connection.port);
+})
+.catch(err => {
+  console.error("❌ MongoDB connection error:", err);
+  console.error('🔍 Error details:', {
+    name: err.name,
+    code: err.code,
+    message: err.message
+  });
+});
 
-// Start database connection
-connectDatabase();
+// Set up connection event listeners
+mongoose.connection.on('connected', () => {
+  console.log('🟢 Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('🔴 Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('🟡 Mongoose disconnected from MongoDB');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  await mongoose.connection.close();
+  console.log('🔌 MongoDB connection closed through app termination');
+  process.exit(0);
+});
 
 // Root route handler
 app.get('/', (req, res) => {
@@ -241,6 +230,7 @@ app.get('/', (req, res) => {
       health: '/api/health',
       corsDebug: '/api/debug/cors',
       corsTest: '/api/test-cors',
+      testSave: '/api/test-save',
       auth: '/api/auth',
       bookings: '/api/bookings',
       services: '/api/services',
@@ -252,6 +242,59 @@ app.get('/', (req, res) => {
       notifications: '/api/notifications'
     }
   });
+});
+
+// Test route to verify MongoDB Atlas data insertion
+app.post('/api/test-save', async (req, res) => {
+  try {
+    console.log('🧪 Testing MongoDB Atlas data insertion...');
+    
+    // Create a test document
+    const testData = {
+      message: 'Test data from Booking4U',
+      timestamp: new Date(),
+      environment: process.env.NODE_ENV || 'development',
+      randomId: Math.random().toString(36).substring(7)
+    };
+    
+    // Insert into a test collection
+    const TestModel = mongoose.model('TestData', new mongoose.Schema({
+      message: String,
+      timestamp: Date,
+      environment: String,
+      randomId: String
+    }));
+    
+    const savedData = await TestModel.create(testData);
+    
+    console.log('✅ Test data saved successfully:', savedData);
+    
+    res.json({
+      success: true,
+      message: 'Test data saved to MongoDB Atlas successfully',
+      data: savedData,
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        host: mongoose.connection.host,
+        port: mongoose.connection.port,
+        name: mongoose.connection.db.databaseName
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Test save failed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Test save failed',
+      error: error.message,
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        host: mongoose.connection.host,
+        port: mongoose.connection.port,
+        name: mongoose.connection.db?.databaseName || 'unknown'
+      }
+    });
+  }
 });
 
 // مسارات API
