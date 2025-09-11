@@ -35,7 +35,7 @@
     "deploy": "gh-pages -d build",
     "deploy:github": "npm run build && gh-pages -d build -b gh-pages"
   },
-  "homepage": ".",
+  "homepage": "https://osamagivegh-hash.github.io/booking4u",
   "proxy": "http://localhost:10000",
   "eslintConfig": {
     "extends": [

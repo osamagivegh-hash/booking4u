@@ -13,6 +13,7 @@
     window.REACT_APP_SOCKET_URL = 'http://localhost:10000';
     console.log('🔧 Development environment detected');
   } else if (isGitHubPages) {
+    // GitHub Pages deployment - use Render backend
     window.REACT_APP_API_URL = 'https://booking4u-backend.onrender.com/api';
     window.REACT_APP_BASE_URL = 'https://booking4u-backend.onrender.com';
     window.REACT_APP_SOCKET_URL = 'https://booking4u-backend.onrender.com';

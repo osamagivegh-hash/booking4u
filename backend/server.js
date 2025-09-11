@@ -35,13 +35,18 @@ const app = express();
 // CORS Configuration - Simplified for Integrated Deployment
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// CORS Configuration for Integrated Deployment (same origin)
+// CORS Configuration for GitHub Pages and Integrated Deployment
 const allowedOrigins = [
   // Development origins
   'http://localhost:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
+  
+  // GitHub Pages origins - PRIORITY FOR GITHUB PAGES
+  'https://osamagivegh-hash.github.io',
+  'https://osamagivegh-hash.github.io/booking4u',
+  'https://osamagivegh-hash.github.io/booking4u/',
   
   // Integrated deployment origin (same origin - no CORS needed)
   'https://booking4u-integrated.onrender.com',
