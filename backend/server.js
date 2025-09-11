@@ -32,41 +32,85 @@ try {
 
 const app = express();
 
-// CORS Configuration - الإعدادات المحسنة
+// CORS Configuration - Comprehensive Setup
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// القائمة الكاملة للنطاقات المسموحة
+// Complete list of allowed origins for all environments
 const allowedOrigins = [
+  // Production Render URLs
   'https://booking4u-1.onrender.com',
   'https://booking4u.onrender.com',
+  'https://booking4u-frontend.onrender.com',
+  'https://booking4u-backend.onrender.com',
+  
+  // GitHub Pages
   'https://osamagivegh-hash.github.io',
+  'https://osamagivegh-hash.github.io/booking4u',
+  
+  // Development URLs
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3001',
+  
+  // Alternative development ports
+  'http://localhost:5000',
+  'http://127.0.0.1:5000',
+  'http://localhost:5001',
+  'http://127.0.0.1:5001',
+  
+  // Netlify (if used)
+  'https://booking4u.netlify.app',
+  'https://booking4u-app.netlify.app',
+  
+  // Vercel (if used)
+  'https://booking4u.vercel.app',
+  'https://booking4u-app.vercel.app'
 ];
 
-// إعدادات CORS مبسطة وفعالة
+// Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // السماح للطلبات بدون origin (مثل التطبيقات المحلية)
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) {
+      console.log('🔓 CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
     
-    // التحقق من النطاقات المسموحة
-    const originAllowed = allowedOrigins.some(allowedOrigin => 
-      origin === allowedOrigin || 
-      origin.startsWith(allowedOrigin.replace(/https?:\/\//, ''))
-    );
+    // Check if origin is in allowed list
+    const isAllowed = allowedOrigins.includes(origin);
     
-    if (originAllowed) {
+    if (isAllowed) {
+      console.log('✅ CORS: Allowed origin:', origin);
       callback(null, true);
     } else {
       console.log('❌ CORS: Blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log('📋 Allowed origins:', allowedOrigins);
+      callback(new Error(`Origin ${origin} not allowed by CORS policy`));
     }
   },
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With', 
+    'Accept', 
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers',
+    'Cache-Control',
+    'Pragma'
+  ],
+  exposedHeaders: [
+    'Content-Length',
+    'Content-Type',
+    'Date',
+    'Server',
+    'X-Request-ID'
+  ],
+  maxAge: 86400 // 24 hours
 };
 
 // تطبيق middleware الـ CORS
@@ -75,36 +119,67 @@ app.use(cors(corsOptions));
 // معالجة طلبات preflight بشكل صريح
 app.options('*', cors(corsOptions));
 
-// CORS middleware إضافي كنسخة احتياطية
+// Additional CORS middleware as backup and for specific headers
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  const userAgent = req.headers['user-agent'] || 'Unknown';
   
-  // التحقق من النطاقات المسموحة
-  if (allowedOrigins.includes(origin)) {
+  // Log all requests for debugging
+  console.log(`🌐 Request: ${req.method} ${req.path} from origin: ${origin || 'No origin'} (${userAgent})`);
+  
+  // Set CORS headers for all responses
+  if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
+    console.log('✅ CORS: Set origin header for:', origin);
+  } else if (!origin) {
+    // Allow requests without origin (like server-to-server)
+    res.header('Access-Control-Allow-Origin', '*');
+    console.log('🔓 CORS: Set wildcard origin for no-origin request');
   }
   
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  // Set comprehensive CORS headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Date, Server, X-Request-ID');
   
-  // معالجة طلبات preflight
+  // Handle preflight requests
   if (req.method === 'OPTIONS') {
     console.log('🔄 Handling preflight request for origin:', origin);
+    console.log('📋 Request headers:', req.headers);
     return res.status(200).end();
   }
   
   next();
 });
 
-// تكوين Helmet مع إعدادات آمنة ومتوافقة مع CORS
+// Configure Helmet with CORS-friendly settings
 app.use(helmet({
-  contentSecurityPolicy: false, // تعطيل مؤقت للتجربة
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https:"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https:"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https:", "wss:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginOpenerPolicy: false,
-  hsts: false // تعطيل HSTS مؤقتاً للتجربة
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
 // middleware لتسجيل الطلبات
@@ -146,52 +221,98 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// نقطة نهاية جديدة للتشخيص
+// Enhanced CORS debug endpoint
 app.get('/api/debug/cors', (req, res) => {
   const requestOrigin = req.headers.origin;
   const isAllowed = allowedOrigins.includes(requestOrigin);
+  const userAgent = req.headers['user-agent'];
+  const referer = req.headers.referer;
   
-  res.json({
-    origin: requestOrigin,
-    allowed: isAllowed,
-    allowedOrigins: allowedOrigins,
-    timestamp: new Date().toISOString(),
-    message: isAllowed ? 'Origin allowed' : 'Origin not allowed'
-  });
+  const debugInfo = {
+    request: {
+      origin: requestOrigin,
+      userAgent: userAgent,
+      referer: referer,
+      method: req.method,
+      path: req.path,
+      headers: {
+        'content-type': req.headers['content-type'],
+        'authorization': req.headers.authorization ? 'Present' : 'Not present',
+        'x-requested-with': req.headers['x-requested-with']
+      }
+    },
+    cors: {
+      allowed: isAllowed,
+      allowedOrigins: allowedOrigins,
+      environment: config.server.nodeEnv,
+      corsEnabled: true
+    },
+    server: {
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: require('./package.json').version
+    },
+    message: isAllowed ? '✅ Origin allowed by CORS policy' : '❌ Origin not allowed by CORS policy'
+  };
+  
+  console.log('🔍 CORS Debug Request:', debugInfo);
+  res.json(debugInfo);
 });
 
-// نقطة الصحة
+// Enhanced health check endpoint with CORS info
 app.get('/api/health', async (req, res) => {
   try {
+    const requestOrigin = req.headers.origin;
+    const isAllowed = allowedOrigins.includes(requestOrigin);
+    
     const health = {
       status: 'OK',
-      message: 'الخادم يعمل بشكل صحيح',
+      message: 'Server is running correctly',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: config.server.nodeEnv,
       version: require('./package.json').version,
       cors: {
-        origin: req.headers.origin,
-        allowed: allowedOrigins.includes(req.headers.origin),
-        allowedOrigins: allowedOrigins
+        origin: requestOrigin,
+        allowed: isAllowed,
+        allowedOrigins: allowedOrigins,
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+      },
+      database: {
+        connected: mongoose.connection.readyState === 1,
+        state: mongoose.connection.readyState
       }
     };
+    
+    console.log('🏥 Health check requested from origin:', requestOrigin);
     res.json(health);
   } catch (error) {
+    console.error('❌ Health check error:', error);
     res.status(500).json({
       status: 'ERROR',
       message: 'Health check failed',
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
 
-// نقطة الاختبار
+// Enhanced CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
+  const requestOrigin = req.headers.origin;
+  const isAllowed = allowedOrigins.includes(requestOrigin);
+  
   res.json({ 
-    message: 'اختبار CORS ناجح',
-    origin: req.headers.origin,
-    timestamp: new Date().toISOString()
+    message: 'CORS test successful',
+    origin: requestOrigin,
+    allowed: isAllowed,
+    timestamp: new Date().toISOString(),
+    corsHeaders: {
+      'Access-Control-Allow-Origin': requestOrigin,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD'
+    }
   });
 });
 
@@ -217,18 +338,31 @@ app.use('*', (req, res) => {
 
 const PORT = config.server.port || 10000;
 
-// بدء الخادم
+// Start server with comprehensive logging
 if (config.server.nodeEnv !== 'test') {
   const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 API available at http://0.0.0.0:${PORT}/api`);
+    console.log('='.repeat(80));
+    console.log('🚀 BOOKING4U SERVER STARTED');
+    console.log('='.repeat(80));
+    console.log(`📡 Server running on port ${PORT}`);
+    console.log(`🌐 API available at http://0.0.0.0:${PORT}/api`);
     console.log(`🌍 Environment: ${config.server.nodeEnv}`);
     console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
-    console.log(`🔧 CORS enabled for origins: ${allowedOrigins.join(', ')}`);
+    console.log(`🔧 CORS test: http://0.0.0.0:${PORT}/api/test-cors`);
     console.log(`🐛 Debug endpoint: http://0.0.0.0:${PORT}/api/debug/cors`);
+    console.log('');
+    console.log('🔒 CORS Configuration:');
+    console.log(`   ✅ Credentials: enabled`);
+    console.log(`   ✅ Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD`);
+    console.log(`   ✅ Max Age: 86400 seconds (24 hours)`);
+    console.log(`   📋 Allowed Origins (${allowedOrigins.length}):`);
+    allowedOrigins.forEach((origin, index) => {
+      console.log(`      ${index + 1}. ${origin}`);
+    });
+    console.log('='.repeat(80));
   });
 
-  // إيقاف أنيق
+  // Graceful shutdown
   process.on('SIGTERM', gracefulShutdown(server));
   process.on('SIGINT', gracefulShutdown(server));
 }

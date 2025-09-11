@@ -22,6 +22,11 @@ services:
       # Frontend URL (for backend CORS configuration)
       - key: REACT_APP_FRONTEND_URL
         value: https://booking4u-1.onrender.com
+      # CORS Configuration
+      - key: REACT_APP_CORS_ENABLED
+        value: true
+      - key: REACT_APP_DEBUG_CORS
+        value: true
   - type: web
     name: booking4u-backend
     env: node
@@ -42,5 +47,12 @@ services:
         value: your-super-secret-jwt-key-here
       - key: JWT_EXPIRE
         value: 30d
+      # CORS Configuration - Multiple allowed origins
       - key: CORS_ORIGIN
-        value: https://booking4u-1.onrender.com
+        value: https://booking4u-1.onrender.com,https://booking4u.onrender.com,https://booking4u-frontend.onrender.com,https://osamagivegh-hash.github.io
+      - key: CORS_CREDENTIALS
+        value: true
+      - key: CORS_METHODS
+        value: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
+      - key: CORS_MAX_AGE
+        value: 86400

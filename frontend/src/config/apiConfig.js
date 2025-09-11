@@ -1,36 +1,64 @@
-// API Configuration - Multiple Backend URLs
+// API Configuration - Comprehensive Backend URLs
 const API_CONFIG = {
   // Primary backend URL - Render
   PRIMARY: 'https://booking4u-backend.onrender.com',
   
-  // Alternative backend URL
+  // Alternative backend URLs
   ALTERNATIVE: 'https://booking4u-backend-1.onrender.com',
+  BACKUP: 'https://booking4u-1.onrender.com',
   
   // GitHub Pages URL
   GITHUB_PAGES: 'https://booking4u-backend.onrender.com',
   
-  // Development URL
-  DEVELOPMENT: 'http://localhost:5001'
+  // Development URLs
+  DEVELOPMENT: 'http://localhost:10000',
+  DEVELOPMENT_ALT: 'http://localhost:5001',
+  
+  // Local development with different ports
+  LOCAL_3000: 'http://localhost:3000',
+  LOCAL_5000: 'http://localhost:5000'
 };
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
-  // Use environment variable if available
+  // Use environment variable if available (highest priority)
   if (process.env.REACT_APP_API_URL) {
+    console.log('🔧 Using environment variable API URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
   }
   
-  // In development, use localhost
+  // In development, try multiple localhost ports
   if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Development mode - using localhost API');
     return `${API_CONFIG.DEVELOPMENT}/api`;
   }
   
   // Check if we're on GitHub Pages
   if (window.location.hostname === 'osamagivegh-hash.github.io') {
+    console.log('🔧 GitHub Pages detected - using GitHub Pages API');
     return `${API_CONFIG.GITHUB_PAGES}/api`;
   }
   
-  // In production, use primary URL
+  // Check if we're on Render
+  if (window.location.hostname.includes('render.com')) {
+    console.log('🔧 Render detected - using primary API');
+    return `${API_CONFIG.PRIMARY}/api`;
+  }
+  
+  // Check if we're on Netlify
+  if (window.location.hostname.includes('netlify.app')) {
+    console.log('🔧 Netlify detected - using primary API');
+    return `${API_CONFIG.PRIMARY}/api`;
+  }
+  
+  // Check if we're on Vercel
+  if (window.location.hostname.includes('vercel.app')) {
+    console.log('🔧 Vercel detected - using primary API');
+    return `${API_CONFIG.PRIMARY}/api`;
+  }
+  
+  // Default fallback to primary URL
+  console.log('🔧 Using default primary API URL');
   return `${API_CONFIG.PRIMARY}/api`;
 };
 
@@ -60,31 +88,93 @@ export const getSocketUrl = () => {
   return API_CONFIG.PRIMARY;
 };
 
-// Test API connectivity
+// Test API connectivity with multiple fallbacks
 export const testApiConnectivity = async () => {
   const apiUrl = getApiUrl();
   const baseUrl = getBaseUrl();
   
-  // Try primary URL only
+  // List of URLs to try in order
+  const urlsToTry = [
+    baseUrl,
+    API_CONFIG.PRIMARY,
+    API_CONFIG.ALTERNATIVE,
+    API_CONFIG.BACKUP,
+    API_CONFIG.GITHUB_PAGES
+  ];
+  
+  console.log('🔍 Testing API connectivity...');
+  console.log('📋 URLs to try:', urlsToTry);
+  
+  for (const url of urlsToTry) {
+    try {
+      console.log(`🔄 Trying: ${url}/api/health`);
+      
+      const response = await fetch(`${url}/api/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Origin': window.location.origin
+        },
+        mode: 'cors',
+        credentials: 'include',
+        timeout: 10000 // 10 second timeout
+      });
+      
+      if (response.ok) {
+        const healthData = await response.json();
+        console.log(`✅ API working: ${url}`, healthData);
+        return { 
+          success: true, 
+          url: url,
+          health: healthData,
+          cors: healthData.cors
+        };
+      } else {
+        console.warn(`⚠️ API responded with status ${response.status}: ${url}`);
+      }
+    } catch (error) {
+      console.warn(`❌ API not available: ${url}`, error.message);
+    }
+  }
+  
+  console.error('❌ No backend API available from any URL');
+  return { 
+    success: false, 
+    url: null,
+    error: 'No backend API available',
+    triedUrls: urlsToTry
+  };
+};
+
+// Test CORS specifically
+export const testCorsConnectivity = async () => {
+  const baseUrl = getBaseUrl();
+  
   try {
-    const response = await fetch(`${baseUrl}/api/health`, {
+    console.log('🔍 Testing CORS connectivity...');
+    
+    const response = await fetch(`${baseUrl}/api/debug/cors`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Origin': window.location.origin
       },
       mode: 'cors',
-      credentials: 'include' // Include credentials for CORS
+      credentials: 'include'
     });
+    
     if (response.ok) {
-      console.log(`✅ Primary API working: ${baseUrl}`);
-      return { success: true, url: baseUrl };
+      const corsData = await response.json();
+      console.log('✅ CORS test successful:', corsData);
+      return { success: true, data: corsData };
+    } else {
+      console.warn('⚠️ CORS test failed with status:', response.status);
+      return { success: false, status: response.status };
     }
   } catch (error) {
-    console.warn('Primary API not available:', error.message);
+    console.error('❌ CORS test error:', error.message);
+    return { success: false, error: error.message };
   }
-  
-  console.error('❌ Backend API not available');
-  return { success: false, url: null };
 };
 
 export default API_CONFIG;
