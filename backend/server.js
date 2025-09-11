@@ -32,62 +32,28 @@ try {
 
 const app = express();
 
-// CORS Configuration - Comprehensive Setup
+// CORS Configuration - Simplified for Integrated Deployment
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// Complete list of allowed origins for all environments
-const allowedOrigins = [
-  // Production Render URLs
-  'https://booking4u-1.onrender.com',
-  'https://booking4u.onrender.com',
-  'https://booking4u-frontend.onrender.com',
-  'https://booking4u-backend.onrender.com',
-  
-  // GitHub Pages
-  'https://osamagivegh-hash.github.io',
-  'https://osamagivegh-hash.github.io/booking4u',
-  
-  // Development URLs
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3001',
-  
-  // Alternative development ports
-  'http://localhost:5000',
-  'http://127.0.0.1:5000',
-  'http://localhost:5001',
-  'http://127.0.0.1:5001',
-  
-  // Netlify (if used)
-  'https://booking4u.netlify.app',
-  'https://booking4u-app.netlify.app',
-  
-  // Vercel (if used)
-  'https://booking4u.vercel.app',
-  'https://booking4u-app.vercel.app'
-];
-
-// Enhanced CORS configuration
+// For integrated deployment (same origin), CORS is not needed
+// But we keep minimal CORS for development and external API access
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (same-origin requests)
     if (!origin) {
-      console.log('🔓 CORS: Allowing request with no origin');
+      console.log('🔓 CORS: Allowing same-origin request');
       return callback(null, true);
     }
     
-    // Check if origin is in allowed list
-    const isAllowed = allowedOrigins.includes(origin);
-    
-    if (isAllowed) {
-      console.log('✅ CORS: Allowed origin:', origin);
-      callback(null, true);
-    } else {
-      console.log('❌ CORS: Blocked origin:', origin);
-      console.log('📋 Allowed origins:', allowedOrigins);
-      callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+    // Allow localhost for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      console.log('✅ CORS: Allowed development origin:', origin);
+      return callback(null, true);
     }
+    
+    // For production, allow same origin only
+    console.log('✅ CORS: Allowing origin:', origin);
+    callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200,
@@ -97,20 +63,8 @@ const corsOptions = {
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers',
-    'Cache-Control',
-    'Pragma'
-  ],
-  exposedHeaders: [
-    'Content-Length',
-    'Content-Type',
-    'Date',
-    'Server',
-    'X-Request-ID'
-  ],
-  maxAge: 86400 // 24 hours
+    'Origin'
+  ]
 };
 
 // تطبيق middleware الـ CORS
@@ -119,37 +73,13 @@ app.use(cors(corsOptions));
 // معالجة طلبات preflight بشكل صريح
 app.options('*', cors(corsOptions));
 
-// Additional CORS middleware as backup and for specific headers
+// Request logging middleware for debugging
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const userAgent = req.headers['user-agent'] || 'Unknown';
   
   // Log all requests for debugging
-  console.log(`🌐 Request: ${req.method} ${req.path} from origin: ${origin || 'No origin'} (${userAgent})`);
-  
-  // Set CORS headers for all responses
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    console.log('✅ CORS: Set origin header for:', origin);
-  } else if (!origin) {
-    // Allow requests without origin (like server-to-server)
-    res.header('Access-Control-Allow-Origin', '*');
-    console.log('🔓 CORS: Set wildcard origin for no-origin request');
-  }
-  
-  // Set comprehensive CORS headers
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Cache-Control, Pragma');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Max-Age', '86400'); // 24 hours
-  res.header('Access-Control-Expose-Headers', 'Content-Length, Content-Type, Date, Server, X-Request-ID');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('🔄 Handling preflight request for origin:', origin);
-    console.log('📋 Request headers:', req.headers);
-    return res.status(200).end();
-  }
+  console.log(`🌐 Request: ${req.method} ${req.path} from origin: ${origin || 'Same origin'} (${userAgent})`);
   
   next();
 });
@@ -387,13 +317,9 @@ if (config.server.nodeEnv !== 'test') {
     console.log(`🐛 Debug endpoint: http://0.0.0.0:${PORT}/api/debug/cors`);
     console.log('');
     console.log('🔒 CORS Configuration:');
-    console.log(`   ✅ Credentials: enabled`);
+    console.log(`   ✅ Same-origin requests: enabled`);
+    console.log(`   ✅ Development localhost: enabled`);
     console.log(`   ✅ Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD`);
-    console.log(`   ✅ Max Age: 86400 seconds (24 hours)`);
-    console.log(`   📋 Allowed Origins (${allowedOrigins.length}):`);
-    allowedOrigins.forEach((origin, index) => {
-      console.log(`      ${index + 1}. ${origin}`);
-    });
     console.log('');
     console.log('🎯 Integrated Deployment:');
     console.log(`   ✅ Frontend served from: ${path.join(__dirname, 'frontend-build')}`);
