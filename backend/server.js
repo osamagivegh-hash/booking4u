@@ -196,6 +196,10 @@ app.use(compression());
 // الملفات الثابتة
 app.use('/uploads', express.static('uploads'));
 
+// Serve React frontend static files
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'frontend-build')));
+
 // middleware لتطهير البيانات
 app.use(mongoSanitize());
 app.use(hpp());
@@ -351,13 +355,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-// معالج 404
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    error: 'الصفحة غير موجودة',
-    path: req.originalUrl,
-    timestamp: new Date().toISOString()
-  });
+// Catch-all handler for React Router (must be after all API routes)
+app.get('*', (req, res) => {
+  // Only serve index.html for non-API routes
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
+  } else {
+    // API routes that don't exist should return 404
+    res.status(404).json({ 
+      error: 'API endpoint not found',
+      path: req.originalUrl,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 const PORT = config.server.port || 10000;
@@ -366,10 +376,11 @@ const PORT = config.server.port || 10000;
 if (config.server.nodeEnv !== 'test') {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(80));
-    console.log('🚀 BOOKING4U SERVER STARTED');
+    console.log('🚀 BOOKING4U INTEGRATED SERVER STARTED');
     console.log('='.repeat(80));
     console.log(`📡 Server running on port ${PORT}`);
-    console.log(`🌐 API available at http://0.0.0.0:${PORT}/api`);
+    console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
+    console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
     console.log(`🌍 Environment: ${config.server.nodeEnv}`);
     console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
     console.log(`🔧 CORS test: http://0.0.0.0:${PORT}/api/test-cors`);
@@ -383,6 +394,11 @@ if (config.server.nodeEnv !== 'test') {
     allowedOrigins.forEach((origin, index) => {
       console.log(`      ${index + 1}. ${origin}`);
     });
+    console.log('');
+    console.log('🎯 Integrated Deployment:');
+    console.log(`   ✅ Frontend served from: ${path.join(__dirname, 'frontend-build')}`);
+    console.log(`   ✅ React Router catch-all enabled`);
+    console.log(`   ✅ No CORS issues (same origin)`);
     console.log('='.repeat(80));
   });
 

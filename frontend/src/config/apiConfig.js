@@ -33,28 +33,13 @@ export const getApiUrl = () => {
     return `${API_CONFIG.DEVELOPMENT}/api`;
   }
   
-  // Check if we're on GitHub Pages
-  if (window.location.hostname === 'osamagivegh-hash.github.io') {
-    console.log('🔧 GitHub Pages detected - using GitHub Pages API');
-    return `${API_CONFIG.GITHUB_PAGES}/api`;
-  }
-  
-  // Check if we're on Render
-  if (window.location.hostname.includes('render.com')) {
-    console.log('🔧 Render detected - using primary API');
-    return `${API_CONFIG.PRIMARY}/api`;
-  }
-  
-  // Check if we're on Netlify
-  if (window.location.hostname.includes('netlify.app')) {
-    console.log('🔧 Netlify detected - using primary API');
-    return `${API_CONFIG.PRIMARY}/api`;
-  }
-  
-  // Check if we're on Vercel
-  if (window.location.hostname.includes('vercel.app')) {
-    console.log('🔧 Vercel detected - using primary API');
-    return `${API_CONFIG.PRIMARY}/api`;
+  // For integrated deployment (same origin), use relative URL
+  if (window.location.hostname.includes('render.com') || 
+      window.location.hostname.includes('netlify.app') || 
+      window.location.hostname.includes('vercel.app') ||
+      window.location.hostname.includes('github.io')) {
+    console.log('🔧 Integrated deployment detected - using relative API URL');
+    return '/api';
   }
   
   // Default fallback to primary URL

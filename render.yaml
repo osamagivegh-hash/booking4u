@@ -1,36 +1,12 @@
 services:
   - type: web
-    name: booking4u-frontend
-    env: static
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    publishDir: build
-    plan: free
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: REACT_APP_API_URL
-        value: https://booking4u-backend.onrender.com/api
-      - key: REACT_APP_BASE_URL
-        value: https://booking4u-backend.onrender.com
-      - key: REACT_APP_SOCKET_URL
-        value: https://booking4u-backend.onrender.com
-      # Frontend URL (for backend CORS configuration)
-      - key: REACT_APP_FRONTEND_URL
-        value: https://booking4u-1.onrender.com
-      # CORS Configuration
-      - key: REACT_APP_CORS_ENABLED
-        value: true
-      - key: REACT_APP_DEBUG_CORS
-        value: true
-  - type: web
-    name: booking4u-backend
+    name: booking4u-integrated
     env: node
-    buildCommand: cd backend && npm install
+    buildCommand: |
+      cd backend && npm install && 
+      cd ../frontend && npm install && npm run build && 
+      cd ../backend && mkdir -p frontend-build && 
+      cp -r ../frontend/build/* frontend-build/
     startCommand: cd backend && npm start
     rootDir: .
     plan: free
@@ -47,9 +23,16 @@ services:
         value: your-super-secret-jwt-key-here
       - key: JWT_EXPIRE
         value: 30d
-      # CORS Configuration - Multiple allowed origins
+      # Frontend environment variables
+      - key: REACT_APP_API_URL
+        value: /api
+      - key: REACT_APP_BASE_URL
+        value: /
+      - key: REACT_APP_SOCKET_URL
+        value: /
+      # CORS Configuration - Simplified for same origin
       - key: CORS_ORIGIN
-        value: https://booking4u-1.onrender.com,https://booking4u.onrender.com,https://booking4u-frontend.onrender.com,https://osamagivegh-hash.github.io
+        value: *
       - key: CORS_CREDENTIALS
         value: true
       - key: CORS_METHODS
