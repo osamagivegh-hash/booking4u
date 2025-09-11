@@ -35,11 +35,17 @@
     "deploy": "gh-pages -d build"
   },
   "homepage": ".",
+  "proxy": "http://localhost:10000",
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "rules": {
+      "no-unused-vars": "warn",
+      "no-dupe-keys": "error",
+      "react-hooks/exhaustive-deps": "warn"
+    }
   },
   "browserslist": {
     "production": [

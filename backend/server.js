@@ -32,28 +32,55 @@ try {
 
 const app = express();
 
-// CORS Configuration - Simplified for Integrated Deployment
+// CORS Configuration - Enhanced for GitHub Pages and Multiple Origins
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// For integrated deployment (same origin), CORS is not needed
-// But we keep minimal CORS for development and external API access
+// Define allowed origins for different environments
+const allowedOrigins = [
+  // Development origins
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  
+  // GitHub Pages origins
+  'https://osamagivegh-hash.github.io',
+  'https://osamagivegh-hash.github.io/booking4u',
+  
+  // Render origins (if frontend is deployed there)
+  'https://booking4u-frontend.onrender.com',
+  'https://booking4u.onrender.com',
+  
+  // Netlify origins (if used)
+  'https://booking4u.netlify.app',
+  
+  // Vercel origins (if used)
+  'https://booking4u.vercel.app'
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (same-origin requests)
+    // Allow requests with no origin (same-origin requests, mobile apps, etc.)
     if (!origin) {
       console.log('🔓 CORS: Allowing same-origin request');
       return callback(null, true);
     }
     
-    // Allow localhost for development
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Allowed origin:', origin);
+      return callback(null, true);
+    }
+    
+    // Allow localhost for development (dynamic ports)
     if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
       console.log('✅ CORS: Allowed development origin:', origin);
       return callback(null, true);
     }
     
-    // For production, allow same origin only
-    console.log('✅ CORS: Allowing origin:', origin);
-    callback(null, true);
+    // Log blocked origin for debugging
+    console.log('❌ CORS: Blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   optionsSuccessStatus: 200,
@@ -63,7 +90,13 @@ const corsOptions = {
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin'
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
+  exposedHeaders: [
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Credentials'
   ]
 };
 
@@ -72,6 +105,30 @@ app.use(cors(corsOptions));
 
 // معالجة طلبات preflight بشكل صريح
 app.options('*', cors(corsOptions));
+
+// Add explicit CORS headers for health check endpoint
+app.get('/api/health', (req, res) => {
+  const origin = req.headers.origin;
+  
+  // Set CORS headers explicitly
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: config.server.nodeEnv,
+    cors: {
+      origin: origin,
+      allowed: allowedOrigins.includes(origin),
+      allowedOrigins: allowedOrigins
+    }
+  });
+});
 
 // Request logging middleware for debugging
 app.use((req, res, next) => {

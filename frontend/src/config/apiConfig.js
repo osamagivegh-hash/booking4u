@@ -21,9 +21,15 @@ const API_CONFIG = {
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
-  // Use environment variable if available (highest priority)
+  // Use window environment variable if available (for GitHub Pages)
+  if (window.REACT_APP_API_URL) {
+    console.log('🔧 Using window environment variable API URL:', window.REACT_APP_API_URL);
+    return window.REACT_APP_API_URL;
+  }
+  
+  // Use process environment variable if available
   if (process.env.REACT_APP_API_URL) {
-    console.log('🔧 Using environment variable API URL:', process.env.REACT_APP_API_URL);
+    console.log('🔧 Using process environment variable API URL:', process.env.REACT_APP_API_URL);
     return process.env.REACT_APP_API_URL;
   }
   
@@ -33,11 +39,16 @@ export const getApiUrl = () => {
     return `${API_CONFIG.DEVELOPMENT}/api`;
   }
   
+  // For GitHub Pages deployment, use absolute URL to backend
+  if (window.location.hostname.includes('github.io')) {
+    console.log('🔧 GitHub Pages deployment detected - using absolute API URL');
+    return `${API_CONFIG.PRIMARY}/api`;
+  }
+  
   // For integrated deployment (same origin), use relative URL
   if (window.location.hostname.includes('render.com') || 
       window.location.hostname.includes('netlify.app') || 
-      window.location.hostname.includes('vercel.app') ||
-      window.location.hostname.includes('github.io')) {
+      window.location.hostname.includes('vercel.app')) {
     console.log('🔧 Integrated deployment detected - using relative API URL');
     return '/api';
   }
@@ -49,6 +60,10 @@ export const getApiUrl = () => {
 
 // Get the base URL for images and static files
 export const getBaseUrl = () => {
+  if (window.REACT_APP_BASE_URL) {
+    return window.REACT_APP_BASE_URL;
+  }
+  
   if (process.env.REACT_APP_BASE_URL) {
     return process.env.REACT_APP_BASE_URL;
   }
@@ -62,6 +77,10 @@ export const getBaseUrl = () => {
 
 // Get socket URL
 export const getSocketUrl = () => {
+  if (window.REACT_APP_SOCKET_URL) {
+    return window.REACT_APP_SOCKET_URL;
+  }
+  
   if (process.env.REACT_APP_SOCKET_URL) {
     return process.env.REACT_APP_SOCKET_URL;
   }

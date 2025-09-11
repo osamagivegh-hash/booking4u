@@ -38,7 +38,6 @@ const translations = {
     
     // Services
     service: 'خدمة',
-    services: 'خدمات',
     serviceDetails: 'تفاصيل الخدمة',
     bookService: 'احجز الخدمة',
     serviceProvider: 'مقدم الخدمة',
@@ -56,7 +55,6 @@ const translations = {
     // Bookings
     booking: 'حجز',
     bookings: 'حجوزات',
-    myBookings: 'حجوزاتي',
     bookingDate: 'تاريخ الحجز',
     bookingTime: 'وقت الحجز',
     bookingStatus: 'حالة الحجز',
@@ -66,7 +64,6 @@ const translations = {
     cancelled: 'ملغاة',
     
     // News
-    news: 'الأخبار',
     latestNews: 'آخر الأخبار',
     breakingNews: 'أخبار عاجلة',
     featuredNews: 'أخبار مميزة',
@@ -84,7 +81,6 @@ const translations = {
     todayBookings: 'حجوزات اليوم',
     monthlyRevenue: 'الإيرادات الشهرية',
     totalRevenue: 'إجمالي الإيرادات',
-    activeServices: 'الخدمات النشطة',
     conversionRate: 'معدل التحويل',
     averageRating: 'متوسط التقييم',
     totalReviews: 'إجمالي التقييمات',
@@ -106,7 +102,6 @@ const translations = {
     
     // Forms
     name: 'الاسم',
-    email: 'البريد الإلكتروني',
     phone: 'رقم الهاتف',
     password: 'كلمة المرور',
     confirmPassword: 'تأكيد كلمة المرور',
@@ -121,7 +116,6 @@ const translations = {
     minutesAgo: 'منذ {count} دقيقة',
     hoursAgo: 'منذ {count} ساعة',
     daysAgo: 'منذ {count} يوم',
-    today: 'اليوم',
     yesterday: 'أمس',
     tomorrow: 'غداً',
     
@@ -135,7 +129,6 @@ const translations = {
     
     // Actions
     like: 'إعجاب',
-    share: 'مشاركة',
     comment: 'تعليق',
     follow: 'متابعة',
     unfollow: 'إلغاء المتابعة',
@@ -188,14 +181,12 @@ const translations = {
     tryDifferentKeywords: 'جرب كلمات مختلفة',
     
     // Social Sharing
-    share: 'مشاركة',
     shareVia: 'مشاركة عبر',
     linkCopied: 'تم نسخ الرابط',
     contentCopied: 'تم نسخ المحتوى',
     copyFailed: 'فشل في النسخ',
     shareFailed: 'فشل في المشاركة',
     copied: 'تم النسخ',
-    email: 'البريد الإلكتروني',
     sms: 'الرسائل النصية',
     
     // Time Ranges
@@ -207,15 +198,11 @@ const translations = {
     // Additional terms
     total: 'إجمالي',
     customer: 'عميل',
-    activeServices: 'الخدمات النشطة',
     amountPaid: 'المبلغ المدفوع',
     thisMonth: 'هذا الشهر',
     performance: 'الأداء',
     bookingGrowth: 'نمو الحجوزات',
-    averageBooking: 'متوسط الحجز',
-    today: 'اليوم',
-    myBookings: 'حجوزاتي',
-    bookingStatus: 'حالة الحجوزات'
+    averageBooking: 'متوسط الحجز'
   },
   en: {
     // Navigation
@@ -252,7 +239,6 @@ const translations = {
     
     // Services
     service: 'Service',
-    services: 'Services',
     serviceDetails: 'Service Details',
     bookService: 'Book Service',
     serviceProvider: 'Service Provider',
@@ -270,17 +256,14 @@ const translations = {
     // Bookings
     booking: 'Booking',
     bookings: 'Bookings',
-    myBookings: 'My Bookings',
     bookingDate: 'Booking Date',
     bookingTime: 'Booking Time',
-    bookingStatus: 'Booking Status',
     pending: 'Pending',
     confirmed: 'Confirmed',
     completed: 'Completed',
     cancelled: 'Cancelled',
     
     // News
-    news: 'News',
     latestNews: 'Latest News',
     breakingNews: 'Breaking News',
     featuredNews: 'Featured News',
@@ -298,7 +281,6 @@ const translations = {
     todayBookings: 'Today\'s Bookings',
     monthlyRevenue: 'Monthly Revenue',
     totalRevenue: 'Total Revenue',
-    activeServices: 'Active Services',
     conversionRate: 'Conversion Rate',
     averageRating: 'Average Rating',
     totalReviews: 'Total Reviews',
@@ -320,7 +302,6 @@ const translations = {
     
     // Forms
     name: 'Name',
-    email: 'Email',
     phone: 'Phone',
     password: 'Password',
     confirmPassword: 'Confirm Password',
@@ -335,7 +316,6 @@ const translations = {
     minutesAgo: '{count} minutes ago',
     hoursAgo: '{count} hours ago',
     daysAgo: '{count} days ago',
-    today: 'Today',
     yesterday: 'Yesterday',
     tomorrow: 'Tomorrow',
     
@@ -349,7 +329,6 @@ const translations = {
     
     // Actions
     like: 'Like',
-    share: 'Share',
     comment: 'Comment',
     follow: 'Follow',
     unfollow: 'Unfollow',
@@ -402,14 +381,12 @@ const translations = {
     tryDifferentKeywords: 'Try different keywords',
     
     // Social Sharing
-    share: 'Share',
     shareVia: 'Share via',
     linkCopied: 'Link copied',
     contentCopied: 'Content copied',
     copyFailed: 'Failed to copy',
     shareFailed: 'Failed to share',
     copied: 'Copied',
-    email: 'Email',
     sms: 'SMS',
     
     // Time Ranges
@@ -421,15 +398,11 @@ const translations = {
     // Additional terms
     total: 'Total',
     customer: 'Customer',
-    activeServices: 'Active Services',
     amountPaid: 'Amount Paid',
     thisMonth: 'This Month',
     performance: 'Performance',
     bookingGrowth: 'Booking Growth',
-    averageBooking: 'Average Booking',
-    today: 'Today',
-    myBookings: 'My Bookings',
-    bookingStatus: 'Booking Status'
+    averageBooking: 'Average Booking'
   }
 };
 

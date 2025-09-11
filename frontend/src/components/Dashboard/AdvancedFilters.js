@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { 
-  FunnelIcon, 
   CalendarIcon, 
   CurrencyDollarIcon, 
   MapPinIcon,
