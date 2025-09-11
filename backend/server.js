@@ -51,11 +51,21 @@ const allowedOrigins = [
   'http://127.0.0.1:10000'
 ];
 
+// Allow all origins in production for Render deployment
+const isProduction = config.server.nodeEnv === 'production';
+const isRenderDeployment = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
+
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (same-origin requests, mobile apps, etc.)
     if (!origin) {
       console.log('🔓 CORS: Allowing same-origin request');
+      return callback(null, true);
+    }
+    
+    // In production/Render deployment, allow all origins for integrated deployment
+    if (isRenderDeployment) {
+      console.log('✅ CORS: Allowing all origins in production/Render deployment:', origin);
       return callback(null, true);
     }
     
@@ -83,7 +93,9 @@ const corsOptions = {
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin'
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
   ]
 };
 
@@ -159,10 +171,56 @@ const rateLimit = require('express-rate-limit');
 const limiter = rateLimit(config.rateLimit);
 app.use('/api/', limiter);
 
-// الاتصال بقاعدة البيانات
-mongoose.connect(config.database.uri, config.database.options)
-.then(() => console.log('✅ Connected to MongoDB'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+// Database connection with enhanced error handling and logging
+const connectDatabase = async () => {
+  try {
+    console.log('🔄 Attempting to connect to MongoDB...');
+    console.log('📊 Database URI:', config.database.uri ? 'Set' : 'Not set');
+    console.log('⚙️ Database options:', config.database.options);
+    
+    await mongoose.connect(config.database.uri, config.database.options);
+    
+    console.log('✅ Successfully connected to MongoDB Atlas');
+    console.log('📊 Database name:', mongoose.connection.db.databaseName);
+    console.log('🌐 Database host:', mongoose.connection.host);
+    console.log('🔌 Database port:', mongoose.connection.port);
+    
+    // Set up connection event listeners
+    mongoose.connection.on('connected', () => {
+      console.log('🟢 Mongoose connected to MongoDB');
+    });
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('🔴 Mongoose connection error:', err);
+    });
+    
+    mongoose.connection.on('disconnected', () => {
+      console.log('🟡 Mongoose disconnected from MongoDB');
+    });
+    
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      await mongoose.connection.close();
+      console.log('🔌 MongoDB connection closed through app termination');
+      process.exit(0);
+    });
+    
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error.message);
+    console.error('🔍 Error details:', {
+      name: error.name,
+      code: error.code,
+      message: error.message
+    });
+    
+    // Retry connection after 5 seconds
+    console.log('🔄 Retrying connection in 5 seconds...');
+    setTimeout(connectDatabase, 5000);
+  }
+};
+
+// Start database connection
+connectDatabase();
 
 // Root route handler
 app.get('/', (req, res) => {
@@ -202,7 +260,7 @@ app.use('/api/notifications', notificationRoutes);
 // Enhanced CORS debug endpoint
 app.get('/api/debug/cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = allowedOrigins.includes(requestOrigin);
+  const isAllowed = isRenderDeployment || allowedOrigins.includes(requestOrigin);
   const userAgent = req.headers['user-agent'];
   const referer = req.headers.referer;
   
@@ -223,7 +281,9 @@ app.get('/api/debug/cors', (req, res) => {
       allowed: isAllowed,
       allowedOrigins: allowedOrigins,
       environment: config.server.nodeEnv,
-      corsEnabled: true
+      corsEnabled: true,
+      renderDeployment: isRenderDeployment,
+      productionMode: isProduction
     },
     server: {
       timestamp: new Date().toISOString(),
@@ -241,11 +301,31 @@ app.get('/api/debug/cors', (req, res) => {
 app.get('/api/health', async (req, res) => {
   try {
     const requestOrigin = req.headers.origin;
-    const isAllowed = allowedOrigins.includes(requestOrigin);
+    const isAllowed = isRenderDeployment || allowedOrigins.includes(requestOrigin);
+    
+    // Test database connection
+    let dbStatus = 'disconnected';
+    let dbConnected = false;
+    
+    try {
+      if (mongoose.connection.readyState === 1) {
+        // Test with a simple ping
+        await mongoose.connection.db.admin().ping();
+        dbStatus = 'connected';
+        dbConnected = true;
+      } else {
+        dbStatus = 'disconnected';
+        dbConnected = false;
+      }
+    } catch (dbError) {
+      console.error('❌ Database ping failed:', dbError.message);
+      dbStatus = 'error';
+      dbConnected = false;
+    }
     
     const health = {
-      status: 'OK',
-      message: 'Server is running correctly',
+      status: dbConnected ? 'OK' : 'WARNING',
+      message: dbConnected ? 'Server is running correctly' : 'Server running but database disconnected',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: config.server.nodeEnv,
@@ -255,15 +335,22 @@ app.get('/api/health', async (req, res) => {
         allowed: isAllowed,
         allowedOrigins: allowedOrigins,
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        renderDeployment: isRenderDeployment
       },
       database: {
-        connected: mongoose.connection.readyState === 1,
-        state: mongoose.connection.readyState
+        connected: dbConnected,
+        state: mongoose.connection.readyState,
+        status: dbStatus,
+        host: mongoose.connection.host || 'unknown',
+        port: mongoose.connection.port || 'unknown',
+        name: mongoose.connection.name || 'unknown'
       }
     };
     
     console.log('🏥 Health check requested from origin:', requestOrigin);
+    console.log('📊 Database status:', dbStatus, 'Connected:', dbConnected);
+    
     res.json(health);
   } catch (error) {
     console.error('❌ Health check error:', error);
