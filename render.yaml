@@ -26,9 +26,9 @@ services:
         value: /
       - key: REACT_APP_SOCKET_URL
         value: /
-      # CORS Configuration - Simplified for same origin
+      # CORS Configuration - Enhanced for GitHub Pages
       - key: CORS_ORIGIN
-        value: *
+        value: https://osamagivegh-hash.github.io,https://osamagivegh-hash.github.io/booking4u,https://booking4u-integrated.onrender.com
       - key: CORS_CREDENTIALS
         value: true
       - key: CORS_METHODS

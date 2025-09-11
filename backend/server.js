@@ -32,10 +32,10 @@ try {
 
 const app = express();
 
-// CORS Configuration - Enhanced for GitHub Pages and Multiple Origins
+// CORS Configuration - Simplified for Integrated Deployment
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// Define allowed origins for different environments
+// CORS Configuration for GitHub Pages and multiple deployment environments
 const allowedOrigins = [
   // Development origins
   'http://localhost:3000',
@@ -43,18 +43,18 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
   
-  // GitHub Pages origins
+  // GitHub Pages origins - CRITICAL FOR GITHUB PAGES DEPLOYMENT
   'https://osamagivegh-hash.github.io',
   'https://osamagivegh-hash.github.io/booking4u',
+  'https://osamagivegh-hash.github.io/booking4u/',
   
-  // Render origins (if frontend is deployed there)
+  // Render origins
   'https://booking4u-frontend.onrender.com',
   'https://booking4u.onrender.com',
+  'https://booking4u-integrated.onrender.com',
   
-  // Netlify origins (if used)
+  // Other deployment platforms
   'https://booking4u.netlify.app',
-  
-  // Vercel origins (if used)
   'https://booking4u.vercel.app'
 ];
 
@@ -90,13 +90,7 @@ const corsOptions = {
     'Authorization', 
     'X-Requested-With', 
     'Accept', 
-    'Origin',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-  ],
-  exposedHeaders: [
-    'Access-Control-Allow-Origin',
-    'Access-Control-Allow-Credentials'
+    'Origin'
   ]
 };
 
@@ -105,30 +99,6 @@ app.use(cors(corsOptions));
 
 // معالجة طلبات preflight بشكل صريح
 app.options('*', cors(corsOptions));
-
-// Add explicit CORS headers for health check endpoint
-app.get('/api/health', (req, res) => {
-  const origin = req.headers.origin;
-  
-  // Set CORS headers explicitly
-  if (allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
-  
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: config.server.nodeEnv,
-    cors: {
-      origin: origin,
-      allowed: allowedOrigins.includes(origin),
-      allowedOrigins: allowedOrigins
-    }
-  });
-});
 
 // Request logging middleware for debugging
 app.use((req, res, next) => {
