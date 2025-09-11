@@ -21,6 +21,14 @@ const API_CONFIG = {
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
+  console.log('🔍 getApiUrl called - Debug info:', {
+    'window.REACT_APP_API_URL': window.REACT_APP_API_URL,
+    'process.env.REACT_APP_API_URL': process.env.REACT_APP_API_URL,
+    'process.env.NODE_ENV': process.env.NODE_ENV,
+    'window.location.hostname': window.location.hostname,
+    'window.location.origin': window.location.origin
+  });
+  
   // Use window environment variable if available (PRIORITY)
   if (window.REACT_APP_API_URL) {
     console.log('🔧 Using window environment variable API URL:', window.REACT_APP_API_URL);
@@ -33,12 +41,6 @@ export const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // In development, try multiple localhost ports
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 Development mode - using localhost API');
-    return `${API_CONFIG.DEVELOPMENT}/api`;
-  }
-  
   // For integrated deployment (same origin), use relative URL - PRIORITY
   if (window.location.hostname.includes('render.com') || 
       window.location.hostname.includes('netlify.app') || 
@@ -47,15 +49,21 @@ export const getApiUrl = () => {
     return '/api';
   }
   
+  // In development, try multiple localhost ports
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Development mode - using localhost API');
+    return `${API_CONFIG.DEVELOPMENT}/api`;
+  }
+  
   // For GitHub Pages deployment, use absolute URL to backend
   if (window.location.hostname.includes('github.io')) {
     console.log('🔧 GitHub Pages deployment detected - using absolute API URL');
     return `${API_CONFIG.PRIMARY}/api`;
   }
   
-  // Default fallback to primary URL
-  console.log('🔧 Using default primary API URL');
-  return `${API_CONFIG.PRIMARY}/api`;
+  // Default fallback to relative URL for integrated deployment
+  console.log('🔧 Using default relative API URL for integrated deployment');
+  return '/api';
 };
 
 // Get the base URL for images and static files
@@ -70,6 +78,13 @@ export const getBaseUrl = () => {
   
   if (process.env.NODE_ENV === 'development') {
     return API_CONFIG.DEVELOPMENT;
+  }
+  
+  // For integrated deployment, use relative URL
+  if (window.location.hostname.includes('render.com') || 
+      window.location.hostname.includes('netlify.app') || 
+      window.location.hostname.includes('vercel.app')) {
+    return '/';
   }
   
   return API_CONFIG.PRIMARY;
@@ -89,6 +104,13 @@ export const getSocketUrl = () => {
     return API_CONFIG.DEVELOPMENT;
   }
   
+  // For integrated deployment, use relative URL
+  if (window.location.hostname.includes('render.com') || 
+      window.location.hostname.includes('netlify.app') || 
+      window.location.hostname.includes('vercel.app')) {
+    return '/';
+  }
+  
   return API_CONFIG.PRIMARY;
 };
 
@@ -97,13 +119,17 @@ export const testApiConnectivity = async () => {
   const apiUrl = getApiUrl();
   const baseUrl = getBaseUrl();
   
-  // List of URLs to try in order
+  // List of URLs to try in order - prioritize current environment
   const urlsToTry = [
+    apiUrl.replace('/api', ''), // Remove /api suffix to get base URL
     baseUrl,
-    API_CONFIG.PRIMARY,
-    API_CONFIG.ALTERNATIVE,
-    API_CONFIG.BACKUP,
-    API_CONFIG.GITHUB_PAGES
+    // Only try external URLs if not in integrated deployment
+    ...(window.location.hostname.includes('render.com') ? [] : [
+      API_CONFIG.PRIMARY,
+      API_CONFIG.ALTERNATIVE,
+      API_CONFIG.BACKUP,
+      API_CONFIG.GITHUB_PAGES
+    ])
   ];
   
   console.log('🔍 Testing API connectivity...');
