@@ -8,9 +8,9 @@
   
   // Set environment variables based on deployment
   if (isDevelopment) {
-    window.REACT_APP_API_URL = 'http://localhost:10000/api';
-    window.REACT_APP_BASE_URL = 'http://localhost:10000';
-    window.REACT_APP_SOCKET_URL = 'http://localhost:10000';
+    window.REACT_APP_API_URL = 'http://localhost:5001/api';
+    window.REACT_APP_BASE_URL = 'http://localhost:5001';
+    window.REACT_APP_SOCKET_URL = 'http://localhost:5001';
     console.log('🔧 Development environment detected');
   } else if (isGitHubPages) {
     // GitHub Pages deployment - use Render backend
