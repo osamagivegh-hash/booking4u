@@ -210,6 +210,30 @@ mongoose.connect(config.database.uri, config.database.options)
 .then(() => console.log('✅ Connected to MongoDB'))
 .catch(err => console.error('❌ MongoDB connection error:', err));
 
+// Root route handler
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Booking4U API Server',
+    version: require('./package.json').version,
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      corsDebug: '/api/debug/cors',
+      corsTest: '/api/test-cors',
+      auth: '/api/auth',
+      bookings: '/api/bookings',
+      services: '/api/services',
+      businesses: '/api/businesses',
+      users: '/api/users',
+      messages: '/api/messages',
+      reviews: '/api/reviews',
+      news: '/api/news',
+      notifications: '/api/notifications'
+    }
+  });
+});
+
 // مسارات API
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
