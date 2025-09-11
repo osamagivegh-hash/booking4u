@@ -180,15 +180,24 @@ const limiter = rateLimit(config.rateLimit);
 app.use('/api/', limiter);
 
 // Database connection with standard MongoDB Atlas connection
+console.log('🔄 Attempting to connect to MongoDB Atlas...');
+console.log('📊 MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferCommands: false,
+  bufferMaxEntries: 0
 })
 .then(() => {
   console.log("✅ Connected to MongoDB Atlas");
   console.log('📊 Database name:', mongoose.connection.db.databaseName);
   console.log('🌐 Database host:', mongoose.connection.host);
   console.log('🔌 Database port:', mongoose.connection.port);
+  console.log('🔗 Connection state:', mongoose.connection.readyState);
 })
 .catch(err => {
   console.error("❌ MongoDB connection error:", err);
@@ -197,6 +206,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     code: err.code,
     message: err.message
   });
+  console.error('🔍 Full error:', err);
 });
 
 // Set up connection event listeners
