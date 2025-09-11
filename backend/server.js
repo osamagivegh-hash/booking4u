@@ -189,7 +189,7 @@ mongoose.connect(process.env.MONGODB_URI, {
   maxPoolSize: 10,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
-  bufferCommands: false,
+  bufferCommands: true,
   bufferMaxEntries: 0
 })
 .then(() => {
@@ -220,6 +220,20 @@ mongoose.connection.on('error', (err) => {
 
 mongoose.connection.on('disconnected', () => {
   console.log('🟡 Mongoose disconnected from MongoDB');
+});
+
+// Middleware to check database connection before processing requests
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log('⚠️ Database not connected, readyState:', mongoose.connection.readyState);
+    return res.status(503).json({
+      success: false,
+      message: 'Database connection not ready',
+      error: 'Service temporarily unavailable',
+      readyState: mongoose.connection.readyState
+    });
+  }
+  next();
 });
 
 // Graceful shutdown
