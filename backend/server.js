@@ -51,9 +51,10 @@ const allowedOrigins = [
   'http://127.0.0.1:10000'
 ];
 
-// Allow all origins in production for Render deployment
+// Environment detection
 const isProduction = config.server.nodeEnv === 'production';
 const isRenderDeployment = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
+const isLocalDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -63,9 +64,9 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // In production/Render deployment, allow all origins for integrated deployment
-    if (isRenderDeployment) {
-      console.log('✅ CORS: Allowing all origins in production/Render deployment:', origin);
+    // In production/Render deployment, allow specific Render domain
+    if (isRenderDeployment && origin === 'https://booking4u-integrated.onrender.com') {
+      console.log('✅ CORS: Allowing Render frontend domain:', origin);
       return callback(null, true);
     }
     
@@ -76,13 +77,20 @@ const corsOptions = {
     }
     
     // Allow localhost for development (dynamic ports)
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+    if (isLocalDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
       console.log('✅ CORS: Allowed development origin:', origin);
       return callback(null, true);
     }
     
     // Log blocked origin for debugging
     console.log('❌ CORS: Blocked origin:', origin);
+    console.log('🔍 CORS Debug Info:', {
+      origin,
+      isProduction,
+      isRenderDeployment,
+      isLocalDevelopment,
+      allowedOrigins
+    });
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -366,13 +374,20 @@ app.get('/api/health', async (req, res) => {
 // Enhanced CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = allowedOrigins.includes(requestOrigin);
+  const isAllowed = isRenderDeployment && requestOrigin === 'https://booking4u-integrated.onrender.com' || 
+                   allowedOrigins.includes(requestOrigin) ||
+                   (isLocalDevelopment && requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1')));
   
   res.json({ 
     message: 'CORS test successful',
     origin: requestOrigin,
     allowed: isAllowed,
     timestamp: new Date().toISOString(),
+    environment: {
+      isProduction,
+      isRenderDeployment,
+      isLocalDevelopment
+    },
     corsHeaders: {
       'Access-Control-Allow-Origin': requestOrigin,
       'Access-Control-Allow-Credentials': 'true',
