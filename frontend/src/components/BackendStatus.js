@@ -15,6 +15,9 @@ const BackendStatus = () => {
       setStatus('checking');
       setMessage('Checking backend connection...');
       
+      // Wait a bit for env-config.js to load
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const apiUrl = getApiUrl();
       console.log('🔍 Checking backend health at:', apiUrl);
       

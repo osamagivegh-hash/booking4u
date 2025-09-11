@@ -3,7 +3,7 @@ import { getApiUrl, testApiConnectivity } from '../config/apiConfig';
 
 // Create axios instance with comprehensive CORS configuration
 const api = axios.create({
-  baseURL: getApiUrl(),
+  baseURL: '', // Will be set dynamically
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -19,9 +19,19 @@ const api = axios.create({
   }
 });
 
+// Set the base URL dynamically - this will be called when requests are made
+const getDynamicApiUrl = () => {
+  const url = getApiUrl();
+  console.log('🔧 Dynamic API URL resolved:', url);
+  return url;
+};
+
 // Request interceptor with enhanced CORS handling
 api.interceptors.request.use(
   (config) => {
+    // Set the base URL dynamically for each request
+    config.baseURL = getDynamicApiUrl();
+    
     console.log('🔍 API Request:', config.method?.toUpperCase(), config.url);
     console.log('🌐 Origin:', window.location.origin);
     console.log('🔗 Base URL:', config.baseURL);
