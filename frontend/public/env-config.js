@@ -24,6 +24,23 @@
     window.REACT_APP_BASE_URL = '/';
     window.REACT_APP_SOCKET_URL = '/';
     console.log('🔧 Integrated deployment environment detected');
+    
+    // Force override any existing API configuration
+    window.API_CONFIG = {
+      PRIMARY: '/',
+      DEVELOPMENT: '/',
+      ALTERNATIVE: '/',
+      BACKUP: '/',
+      GITHUB_PAGES: '/'
+    };
+    
+    // Override any existing getApiUrl function
+    window.getApiUrl = function() {
+      console.log('🔧 Override getApiUrl called - returning /api');
+      return '/api';
+    };
+    
+    console.log('🔧 API configuration overridden for integrated deployment');
   }
 })();
 
