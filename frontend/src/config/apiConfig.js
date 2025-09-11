@@ -21,7 +21,7 @@ const API_CONFIG = {
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
-  // Use window environment variable if available (for GitHub Pages)
+  // Use window environment variable if available (PRIORITY)
   if (window.REACT_APP_API_URL) {
     console.log('🔧 Using window environment variable API URL:', window.REACT_APP_API_URL);
     return window.REACT_APP_API_URL;
@@ -39,18 +39,18 @@ export const getApiUrl = () => {
     return `${API_CONFIG.DEVELOPMENT}/api`;
   }
   
-  // For GitHub Pages deployment, use absolute URL to backend
-  if (window.location.hostname.includes('github.io')) {
-    console.log('🔧 GitHub Pages deployment detected - using absolute API URL');
-    return `${API_CONFIG.PRIMARY}/api`;
-  }
-  
-  // For integrated deployment (same origin), use relative URL
+  // For integrated deployment (same origin), use relative URL - PRIORITY
   if (window.location.hostname.includes('render.com') || 
       window.location.hostname.includes('netlify.app') || 
       window.location.hostname.includes('vercel.app')) {
     console.log('🔧 Integrated deployment detected - using relative API URL');
     return '/api';
+  }
+  
+  // For GitHub Pages deployment, use absolute URL to backend
+  if (window.location.hostname.includes('github.io')) {
+    console.log('🔧 GitHub Pages deployment detected - using absolute API URL');
+    return `${API_CONFIG.PRIMARY}/api`;
   }
   
   // Default fallback to primary URL
