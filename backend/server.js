@@ -35,7 +35,7 @@ const app = express();
 // CORS Configuration - Simplified for Integrated Deployment
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// CORS Configuration for GitHub Pages and multiple deployment environments
+// CORS Configuration for Integrated Deployment (same origin)
 const allowedOrigins = [
   // Development origins
   'http://localhost:3000',
@@ -43,19 +43,12 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
   
-  // GitHub Pages origins - CRITICAL FOR GITHUB PAGES DEPLOYMENT
-  'https://osamagivegh-hash.github.io',
-  'https://osamagivegh-hash.github.io/booking4u',
-  'https://osamagivegh-hash.github.io/booking4u/',
-  
-  // Render origins
-  'https://booking4u-frontend.onrender.com',
-  'https://booking4u.onrender.com',
+  // Integrated deployment origin (same origin - no CORS needed)
   'https://booking4u-integrated.onrender.com',
   
-  // Other deployment platforms
-  'https://booking4u.netlify.app',
-  'https://booking4u.vercel.app'
+  // Development with different ports
+  'http://localhost:10000',
+  'http://127.0.0.1:10000'
 ];
 
 const corsOptions = {
