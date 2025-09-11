@@ -20,12 +20,27 @@ const RegisterPage = () => {
 
   const password = watch('password');
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, event) => {
+    // Explicitly prevent default form submission
+    if (event) {
+      event.preventDefault();
+    }
+    
     try {
+      console.log('🔍 Attempting registration with:', { ...data, password: '[HIDDEN]' });
+      console.log('🌐 Current API URL:', window.getApiUrl ? window.getApiUrl() : 'Not available');
+      
       await registerUser(data);
       toast.success('تم إنشاء الحساب بنجاح');
       navigate('/dashboard');
     } catch (error) {
+      console.error('❌ Registration error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
       // Handle different types of errors
       if (error.response?.status === 422) {
         // Validation errors from backend
@@ -40,6 +55,10 @@ const RegisterPage = () => {
       } else if (error.response?.status === 409) {
         // Conflict error (email already exists)
         toast.error('البريد الإلكتروني مسجل مسبقاً');
+      } else if (error.response?.status === 500) {
+        toast.error('خطأ في الخادم، يرجى المحاولة لاحقاً');
+      } else if (error.message.includes('Network Error')) {
+        toast.error('خطأ في الاتصال، تأكد من اتصالك بالإنترنت');
       } else {
         // Generic error
         toast.error(error.message || 'حدث خطأ في إنشاء الحساب');

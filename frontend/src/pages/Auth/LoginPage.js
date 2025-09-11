@@ -19,16 +19,39 @@ const LoginPage = () => {
 
   const from = location.state?.from?.pathname || '/dashboard';
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, event) => {
+    // Explicitly prevent default form submission
+    if (event) {
+      event.preventDefault();
+    }
+    
     try {
       console.log('🔍 Attempting login with:', data);
+      console.log('🌐 Current API URL:', window.getApiUrl ? window.getApiUrl() : 'Not available');
+      
       const result = await login(data);
       console.log('✅ Login result:', result);
+      
       toast.success('تم تسجيل الدخول بنجاح');
       navigate(from, { replace: true });
     } catch (error) {
       console.error('❌ Login error:', error);
-      toast.error(error.message);
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      
+      // More specific error messages
+      if (error.response?.status === 401) {
+        toast.error('بيانات الدخول غير صحيحة');
+      } else if (error.response?.status === 500) {
+        toast.error('خطأ في الخادم، يرجى المحاولة لاحقاً');
+      } else if (error.message.includes('Network Error')) {
+        toast.error('خطأ في الاتصال، تأكد من اتصالك بالإنترنت');
+      } else {
+        toast.error(error.message || 'حدث خطأ في تسجيل الدخول');
+      }
     }
   };
 
