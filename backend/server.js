@@ -35,18 +35,13 @@ const app = express();
 // CORS Configuration - Simplified for Integrated Deployment
 console.log('🌍 Environment:', config.server.nodeEnv);
 
-// CORS Configuration for GitHub Pages and Integrated Deployment
+// CORS Configuration for Integrated Deployment
 const allowedOrigins = [
   // Development origins
   'http://localhost:3000',
   'http://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
-  
-  // GitHub Pages origins - PRIORITY FOR GITHUB PAGES
-  'https://osamagivegh-hash.github.io',
-  'https://osamagivegh-hash.github.io/booking4u',
-  'https://osamagivegh-hash.github.io/booking4u/',
   
   // Integrated deployment origin (same origin - no CORS needed)
   'https://booking4u-integrated.onrender.com',
@@ -310,11 +305,25 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Serve static files from React build (Integrated Deployment)
+if (config.server.nodeEnv === 'production') {
+  console.log('📁 Serving static files from:', path.join(__dirname, 'frontend-build'));
+  app.use(express.static(path.join(__dirname, 'frontend-build')));
+}
+
 // Catch-all handler for React Router (must be after all API routes)
 app.get('*', (req, res) => {
   // Only serve index.html for non-API routes
   if (!req.path.startsWith('/api/')) {
-    res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
+    if (config.server.nodeEnv === 'production') {
+      res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
+    } else {
+      res.status(404).json({ 
+        error: 'Frontend not available in development mode',
+        message: 'Please run frontend separately with npm run dev:frontend',
+        timestamp: new Date().toISOString()
+      });
+    }
   } else {
     // API routes that don't exist should return 404
     res.status(404).json({ 

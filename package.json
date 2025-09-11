@@ -9,9 +9,11 @@
     "dev:frontend": "cd frontend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm run build && cd ../backend && mkdir -p frontend-build && cp -r ../frontend/build/* frontend-build/",
+    "build:render": "npm run install:all && npm run build",
     "start": "cd backend && npm start",
     "postinstall": "cd backend && npm install",
     "heroku-postbuild": "npm run build",
+    "render-postbuild": "npm run build:render",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

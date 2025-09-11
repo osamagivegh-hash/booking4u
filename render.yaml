@@ -2,36 +2,67 @@ services:
   - type: web
     name: booking4u-integrated
     env: node
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    rootDir: .
     plan: free
+    region: oregon
+    branch: main
+    buildCommand: |
+      echo "🔧 Installing root dependencies..."
+      npm install
+      echo "🔧 Installing backend dependencies..."
+      cd backend && npm install
+      echo "🔧 Installing frontend dependencies..."
+      cd ../frontend && npm install
+      echo "🔧 Building frontend..."
+      npm run build
+      echo "🔧 Copying frontend build to backend..."
+      cp -r build ../backend/frontend-build
+      echo "✅ Build completed successfully!"
+    startCommand: cd backend && npm start
     healthCheckPath: /api/health
-    autoDeploy: true
     envVars:
+      # Environment
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+      
+      # Database
       - key: MONGODB_URI
-        value: mongodb+srv://osamagivegh:osamagivegh@cluster0.8qjqj.mongodb.net/booking4u?retryWrites=true&w=majority
+        fromDatabase:
+          name: booking4u-db
+          property: connectionString
+      
+      # Security
       - key: JWT_SECRET
-        value: your-super-secret-jwt-key-here
-      - key: JWT_EXPIRE
-        value: 30d
-      # Frontend environment variables
-      - key: REACT_APP_API_URL
-        value: /api
-      - key: REACT_APP_BASE_URL
-        value: /
-      - key: REACT_APP_SOCKET_URL
-        value: /
-      # CORS Configuration - Enhanced for GitHub Pages
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      
+      # CORS Configuration
       - key: CORS_ORIGIN
-        value: https://osamagivegh-hash.github.io,https://osamagivegh-hash.github.io/booking4u,https://booking4u-integrated.onrender.com
+        value: https://booking4u-integrated.onrender.com
       - key: CORS_CREDENTIALS
         value: true
       - key: CORS_METHODS
         value: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
       - key: CORS_MAX_AGE
         value: 86400
+      
+      # Frontend Environment Variables
+      - key: REACT_APP_API_URL
+        value: /api
+      - key: REACT_APP_BASE_URL
+        value: /
+      - key: REACT_APP_SOCKET_URL
+        value: /
+      
+      # Logging
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_FILE
+        value: logs/app.log
+
+databases:
+  - name: booking4u-db
+    plan: free
+    region: oregon
