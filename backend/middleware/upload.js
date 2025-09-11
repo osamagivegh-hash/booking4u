@@ -127,7 +127,15 @@ const deleteFile = (filePath) => {
 
 // Utility function to get file URL
 const getFileUrl = (req, filename) => {
-  // Ensure we have a proper base URL
+  // In production, use relative URLs to avoid localhost issues
+  if (process.env.NODE_ENV === 'production') {
+    const cleanFilename = filename.replace(/\\/g, '/');
+    const relativeUrl = `/uploads/${cleanFilename}`;
+    console.log('Generated relative image URL:', relativeUrl);
+    return relativeUrl;
+  }
+  
+  // In development, use full URL
   const protocol = req.protocol || 'http';
   const host = req.get('host') || 'localhost:5001';
   const baseUrl = `${protocol}://${host}`;
