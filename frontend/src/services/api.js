@@ -32,9 +32,14 @@ api.interceptors.request.use(
     // Set the base URL dynamically for each request
     config.baseURL = getDynamicApiUrl();
     
-    console.log('🔍 API Request:', config.method?.toUpperCase(), config.url);
-    console.log('🌐 Origin:', window.location.origin);
-    console.log('🔗 Base URL:', config.baseURL);
+    console.log('🔍 API REQUEST INTERCEPTOR:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      fullUrl: `${config.baseURL}${config.url}`,
+      origin: window.location.origin,
+      baseURL: config.baseURL,
+      timestamp: new Date().toISOString()
+    });
     
     // Add CORS headers
     config.headers['Origin'] = window.location.origin;
@@ -72,11 +77,31 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor with enhanced CORS error handling
+// Refresh token flow variables
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
+// Response interceptor with refresh token flow
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', response.status, response.config.url);
-    console.log('📋 Response headers:', response.headers);
+    console.log('✅ API RESPONSE INTERCEPTOR:', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method,
+      timestamp: new Date().toISOString()
+    });
     
     // Log CORS headers if present
     const corsHeaders = {
@@ -91,14 +116,83 @@ api.interceptors.response.use(
     
     return response;
   },
-  (error) => {
-    console.error('❌ API Error:', error.response?.status, error.response?.data);
-    console.error('❌ Error details:', {
+  async (error) => {
+    console.error('❌ API RESPONSE INTERCEPTOR ERROR:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      method: error.config?.method,
       message: error.message,
-      code: error.code,
-      config: error.config,
-      request: error.request
+      timestamp: new Date().toISOString()
     });
+    
+    const originalRequest = error.config;
+    
+    // Handle 401 errors with refresh token flow
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔒 401 Unauthorized - Attempting refresh token flow');
+      
+      if (isRefreshing) {
+        console.log('🔒 Already refreshing, queuing request');
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        console.log('🔒 Attempting to refresh token...');
+        const refreshResponse = await api.post('/auth/refresh');
+        const { token } = refreshResponse.data.data;
+        
+        console.log('🔒 Token refreshed successfully');
+        
+        // Update the token in localStorage
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          const parsed = JSON.parse(authStorage);
+          parsed.state.token = token;
+          localStorage.setItem('auth-storage', JSON.stringify(parsed));
+        }
+        
+        // Update the default authorization header
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        processQueue(null, token);
+        
+        // Retry the original request
+        originalRequest.headers['Authorization'] = 'Bearer ' + token;
+        return api(originalRequest);
+        
+      } catch (refreshError) {
+        console.error('🔒 Token refresh failed:', refreshError);
+        processQueue(refreshError, null);
+        
+        // Clear auth data and navigate to login (NO PAGE RELOAD)
+        try {
+          localStorage.removeItem('auth-storage');
+          delete api.defaults.headers.common['Authorization'];
+          
+          // Use React Router navigation instead of window.location
+          console.log('🔒 Redirecting to login via React Router');
+          // This will be handled by the auth store or App component
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+          
+        } catch (e) {
+          console.error('❌ Error clearing auth storage:', e.message);
+        }
+        
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
     
     // Handle CORS errors specifically
     if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
@@ -118,18 +212,6 @@ api.interceptors.response.use(
     // Handle network errors
     if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
       console.error('🌐 Network Error - checking connectivity...');
-    }
-    
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      console.log('🔒 Unauthorized, clearing auth data');
-      // Clear auth data and redirect to login
-      try {
-        localStorage.removeItem('auth-storage');
-        window.location.href = '/login';
-      } catch (e) {
-        console.log('❌ Error clearing auth storage:', e.message);
-      }
     }
     
     return Promise.reject(error);

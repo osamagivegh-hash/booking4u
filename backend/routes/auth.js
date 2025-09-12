@@ -13,6 +13,11 @@ const router = express.Router();
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', validateUser, asyncHandler(async (req, res) => {
+    console.log('🔍 AUTH REGISTER: Request received', {
+      body: { ...req.body, password: '[HIDDEN]' },
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
 
     const { name, email, password, phone, role } = req.body;
 
@@ -32,6 +37,7 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
     }
 
     // Create user
+    console.log('🔍 AUTH REGISTER: Creating user in database');
     const user = await User.create({
       name,
       email,
@@ -39,9 +45,19 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
       phone,
       role
     });
+    console.log('🔍 AUTH REGISTER: User created successfully', {
+      userId: user._id,
+      email: user.email,
+      role: user.role
+    });
 
     // Create token
+    console.log('🔍 AUTH REGISTER: Generating JWT token');
     const token = user.getSignedJwtToken();
+    console.log('🔍 AUTH REGISTER: Token generated', {
+      tokenLength: token.length,
+      tokenPreview: token.substring(0, 20) + '...'
+    });
 
     // Log successful registration
     logInfo('User registered successfully', {
@@ -50,7 +66,7 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
       role: user.role
     });
 
-    return ApiResponse.created(res, {
+    const responseData = {
       user: {
         id: user._id,
         name: user.name,
@@ -60,7 +76,15 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
         avatar: user.avatar
       },
       token
-    }, 'تم التسجيل بنجاح');
+    };
+
+    console.log('🔍 AUTH REGISTER: Sending response', {
+      userId: responseData.user.id,
+      userEmail: responseData.user.email,
+      tokenLength: responseData.token.length
+    });
+
+    return ApiResponse.created(res, responseData, 'تم التسجيل بنجاح');
 }));
 
 // @desc    Login user
@@ -75,34 +99,56 @@ router.post('/login', [
     .notEmpty()
     .withMessage('كلمة المرور مطلوبة')
 ], asyncHandler(async (req, res) => {
+    console.log('🔍 AUTH LOGIN: Request received', {
+      body: { ...req.body, password: '[HIDDEN]' },
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
 
     const { email, password } = req.body;
 
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('🔍 AUTH LOGIN: Validation errors', errors.array());
       return ApiResponse.validationError(res, errors.array(), 'بيانات غير صحيحة');
     }
 
     // Check if user exists
+    console.log('🔍 AUTH LOGIN: Looking up user in database');
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
+      console.log('🔍 AUTH LOGIN: User not found');
       return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
     }
+    console.log('🔍 AUTH LOGIN: User found', {
+      userId: user._id,
+      email: user.email,
+      isActive: user.isActive
+    });
 
     // Check if password matches
+    console.log('🔍 AUTH LOGIN: Checking password');
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
+      console.log('🔍 AUTH LOGIN: Password mismatch');
       return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
     }
+    console.log('🔍 AUTH LOGIN: Password verified');
 
     // Check if user is active
     if (!user.isActive) {
+      console.log('🔍 AUTH LOGIN: User account is inactive');
       return ApiResponse.unauthorized(res, 'الحساب معطل');
     }
 
     // Create token
+    console.log('🔍 AUTH LOGIN: Generating JWT token');
     const token = user.getSignedJwtToken();
+    console.log('🔍 AUTH LOGIN: Token generated', {
+      tokenLength: token.length,
+      tokenPreview: token.substring(0, 20) + '...'
+    });
 
     // Log successful login
     logInfo('User logged in successfully', {
@@ -111,7 +157,7 @@ router.post('/login', [
       role: user.role
     });
 
-    return ApiResponse.success(res, {
+    const responseData = {
       user: {
         id: user._id,
         name: user.name,
@@ -121,16 +167,34 @@ router.post('/login', [
         avatar: user.avatar
       },
       token
-    }, 'تم تسجيل الدخول بنجاح');
+    };
+
+    console.log('🔍 AUTH LOGIN: Sending response', {
+      userId: responseData.user.id,
+      userEmail: responseData.user.email,
+      tokenLength: responseData.token.length
+    });
+
+    return ApiResponse.success(res, responseData, 'تم تسجيل الدخول بنجاح');
 }));
 
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
 router.get('/me', protect, asyncHandler(async (req, res) => {
-      const user = await User.findById(req.user._id);
-  
-  return ApiResponse.success(res, {
+  console.log('🔍 AUTH ME: Request received', {
+    userId: req.user._id,
+    timestamp: new Date().toISOString()
+  });
+
+  const user = await User.findById(req.user._id);
+  console.log('🔍 AUTH ME: User found', {
+    userId: user._id,
+    email: user.email,
+    isActive: user.isActive
+  });
+
+  const responseData = {
     user: {
       id: user._id,
       name: user.name,
@@ -142,7 +206,54 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
       phoneVerified: user.phoneVerified,
       createdAt: user.createdAt
     }
-  }, 'تم جلب بيانات المستخدم بنجاح');
+  };
+
+  console.log('🔍 AUTH ME: Sending response', {
+    userId: responseData.user.id,
+    userEmail: responseData.user.email
+  });
+
+  return ApiResponse.success(res, responseData, 'تم جلب بيانات المستخدم بنجاح');
+}));
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Private
+router.post('/refresh', protect, asyncHandler(async (req, res) => {
+  console.log('🔍 AUTH REFRESH: Request received', {
+    userId: req.user._id,
+    timestamp: new Date().toISOString()
+  });
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    console.log('🔍 AUTH REFRESH: User not found');
+    return ApiResponse.unauthorized(res, 'المستخدم غير موجود');
+  }
+
+  if (!user.isActive) {
+    console.log('🔍 AUTH REFRESH: User account is inactive');
+    return ApiResponse.unauthorized(res, 'الحساب معطل');
+  }
+
+  // Generate new token
+  console.log('🔍 AUTH REFRESH: Generating new JWT token');
+  const token = user.getSignedJwtToken();
+  console.log('🔍 AUTH REFRESH: New token generated', {
+    tokenLength: token.length,
+    tokenPreview: token.substring(0, 20) + '...'
+  });
+
+  const responseData = {
+    token
+  };
+
+  console.log('🔍 AUTH REFRESH: Sending response', {
+    userId: user._id,
+    tokenLength: responseData.token.length
+  });
+
+  return ApiResponse.success(res, responseData, 'تم تحديث الرمز المميز بنجاح');
 }));
 
 // @desc    Update user profile

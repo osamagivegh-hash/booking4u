@@ -32,21 +32,41 @@ import NotFoundPage from './pages/NotFoundPage';
 import ApiDebugger from './components/ApiDebugger';
 
 function App() {
-  const { isAuthenticated, initializeAuth } = useAuthStore();
+  const { isAuthenticated, initializeAuth, logout } = useAuthStore();
 
   // Initialize authentication on app load
   useEffect(() => {
+    console.log('🔍 App: Component mounted, initializing auth');
+    
     // Only initialize once on mount
     const initializeOnce = async () => {
       try {
         await initializeAuth();
+        console.log('🔍 App: Auth initialization completed');
       } catch (error) {
-        console.log('Auth initialization error:', error.message);
+        console.log('🔍 App: Auth initialization error:', error.message);
       }
     };
     
     initializeOnce();
-  }, [initializeAuth]); // Add initializeAuth back to dependencies
+  }, [initializeAuth]);
+
+  // Listen for auth:logout events from API interceptor
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      console.log('🔍 App: Received auth:logout event, logging out user');
+      logout();
+      // Navigate to login page using React Router (no page reload)
+      window.history.pushState(null, '', '/login');
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    };
+
+    window.addEventListener('auth:logout', handleAuthLogout);
+    
+    return () => {
+      window.removeEventListener('auth:logout', handleAuthLogout);
+    };
+  }, [logout]);
 
   return (
     <LanguageProvider>

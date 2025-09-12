@@ -33,7 +33,7 @@ services:
       # Security
       - key: JWT_SECRET
         generateValue: true
-      - key: JWT_EXPIRES_IN
+      - key: JWT_EXPIRE
         value: 7d
       
       # CORS Configuration

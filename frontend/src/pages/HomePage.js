@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   CalendarIcon, 
   ClockIcon, 
@@ -17,6 +17,7 @@ import BackendStatus from '../components/BackendStatus';
 import api from '../services/api';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const [latestServices, setLatestServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,7 +52,7 @@ const HomePage = () => {
         ...(selectedCategory && { category: selectedCategory }),
         ...(selectedLocation && { location: selectedLocation })
       });
-      window.location.href = `/services?${params}`;
+      navigate(`/services?${params}`);
     }
   };
 

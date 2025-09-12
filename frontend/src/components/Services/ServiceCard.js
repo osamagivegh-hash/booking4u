@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   StarIcon, 
   ClockIcon, 
@@ -21,6 +21,7 @@ import toast from 'react-hot-toast';
 import { getServiceImages, handleImageError } from '../../utils/imageUtils';
 
 const ServiceCard = ({ service, showProvider = true, compact = false, showActions = false, onBook, onInquire }) => {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const [isLiked, setIsLiked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +86,7 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
     }
     
     // Navigate to messages or open message modal
-    window.location.href = `/dashboard/messages?contact=${service.businessId?.ownerId}`;
+    navigate(`/dashboard/messages?contact=${service.businessId?.ownerId}`);
   };
 
   const getCategoryLabel = (category) => {

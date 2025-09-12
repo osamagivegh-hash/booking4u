@@ -15,14 +15,27 @@ const useAuthStore = create(
 
       // Actions
       login: async (credentials) => {
+        console.log('🔍 Auth Store: LOGIN START - Setting loading state');
         set({ isLoading: true, error: null });
         try {
           console.log('🔍 Auth Store: Attempting login with credentials:', credentials);
+          console.log('🔍 Auth Store: Current API base URL:', api.defaults.baseURL);
+          console.log('🔍 Auth Store: Current headers:', api.defaults.headers);
+          
           const response = await api.post('/auth/login', credentials);
-          console.log('🔍 Auth Store: Login response:', response.data);
+          console.log('🔍 Auth Store: Login response received:', response.data);
+          console.log('🔍 Auth Store: Response headers:', response.headers);
+          
           const { user, token } = response.data.data;
           
-          console.log('🔍 Auth Store: Setting user data:', { user, token });
+          console.log('🔍 Auth Store: Extracted user and token:', { 
+            userId: user?.id, 
+            userEmail: user?.email, 
+            tokenLength: token?.length,
+            tokenPreview: token?.substring(0, 20) + '...'
+          });
+          
+          console.log('🔍 Auth Store: Setting user data in store');
           set({
             user,
             token,
@@ -33,10 +46,16 @@ const useAuthStore = create(
 
           // Set token in API headers
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          console.log('🔍 Auth Store: Login successful, returning result');
+          console.log('🔍 Auth Store: Token set in API headers');
+          console.log('🔍 Auth Store: Updated API headers:', api.defaults.headers);
+          console.log('🔍 Auth Store: LOGIN SUCCESS - Returning result');
           
           return { success: true, user };
         } catch (error) {
+          console.error('🔍 Auth Store: LOGIN ERROR:', error);
+          console.error('🔍 Auth Store: Error response:', error.response?.data);
+          console.error('🔍 Auth Store: Error status:', error.response?.status);
+          
           const errorMessage = error.response?.data?.message || 'حدث خطأ في تسجيل الدخول';
           set({
             isLoading: false,
@@ -47,10 +66,23 @@ const useAuthStore = create(
       },
 
       register: async (userData) => {
+        console.log('🔍 Auth Store: REGISTER START - Setting loading state');
         set({ isLoading: true, error: null });
         try {
+          console.log('🔍 Auth Store: Attempting registration with userData:', { ...userData, password: '[HIDDEN]' });
+          console.log('🔍 Auth Store: Current API base URL:', api.defaults.baseURL);
+          
           const response = await api.post('/auth/register', userData);
+          console.log('🔍 Auth Store: Registration response received:', response.data);
+          
           const { user, token } = response.data.data;
+          
+          console.log('🔍 Auth Store: Extracted user and token from registration:', { 
+            userId: user?.id, 
+            userEmail: user?.email, 
+            tokenLength: token?.length,
+            tokenPreview: token?.substring(0, 20) + '...'
+          });
           
           set({
             user,
@@ -62,9 +94,14 @@ const useAuthStore = create(
 
           // Set token in API headers
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          console.log('🔍 Auth Store: REGISTER SUCCESS - Token set in headers');
           
           return { success: true, user };
         } catch (error) {
+          console.error('🔍 Auth Store: REGISTER ERROR:', error);
+          console.error('🔍 Auth Store: Error response:', error.response?.data);
+          console.error('🔍 Auth Store: Error status:', error.response?.status);
+          
           const errorMessage = error.response?.data?.message || 'حدث خطأ في التسجيل';
           set({
             isLoading: false,
@@ -75,6 +112,7 @@ const useAuthStore = create(
       },
 
       logout: () => {
+        console.log('🔍 Auth Store: LOGOUT - Clearing auth state');
         set({
           user: null,
           token: null,
@@ -85,6 +123,72 @@ const useAuthStore = create(
 
         // Remove token from API headers
         delete api.defaults.headers.common['Authorization'];
+        console.log('🔍 Auth Store: LOGOUT - Token removed from headers');
+      },
+
+      // Initialize auth state from localStorage
+      initializeAuth: async () => {
+        console.log('🔍 Auth Store: INITIALIZE AUTH START');
+        set({ isInitializing: true });
+        
+        try {
+          // Check if we have a stored token
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage);
+            const token = parsed?.state?.token;
+            const user = parsed?.state?.user;
+            
+            if (token && user) {
+              console.log('🔍 Auth Store: Found stored token and user, validating...');
+              console.log('🔍 Auth Store: Stored user:', { id: user.id, email: user.email });
+              console.log('🔍 Auth Store: Stored token length:', token.length);
+              
+              // Set token in API headers
+              api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+              
+              // Validate token by calling /api/auth/me
+              try {
+                const response = await api.get('/auth/me');
+                console.log('🔍 Auth Store: Token validation successful:', response.data);
+                
+                set({
+                  user: response.data.data.user,
+                  token,
+                  isAuthenticated: true,
+                  isInitializing: false,
+                  error: null,
+                });
+                
+                console.log('🔍 Auth Store: INITIALIZE AUTH SUCCESS - User authenticated');
+                return;
+              } catch (error) {
+                console.log('🔍 Auth Store: Token validation failed, clearing stored auth:', error.response?.status);
+                // Token is invalid, clear it
+                localStorage.removeItem('auth-storage');
+                delete api.defaults.headers.common['Authorization'];
+              }
+            }
+          }
+          
+          console.log('🔍 Auth Store: No valid stored auth found, setting unauthenticated');
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isInitializing: false,
+            error: null,
+          });
+        } catch (error) {
+          console.error('🔍 Auth Store: INITIALIZE AUTH ERROR:', error);
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isInitializing: false,
+            error: 'Failed to initialize authentication',
+          });
+        }
       },
 
       updateProfile: async (profileData) => {

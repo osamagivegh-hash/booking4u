@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   BellIcon, 
   XMarkIcon, 
@@ -14,6 +15,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 
 const NotificationCenter = () => {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -261,7 +263,7 @@ const NotificationCenter = () => {
                 onClick={() => {
                   setIsOpen(false);
                   // Navigate to all notifications page
-                  window.location.href = '/dashboard/notifications';
+                  navigate('/dashboard/notifications');
                 }}
                 className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
               >
