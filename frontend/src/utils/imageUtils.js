@@ -61,7 +61,8 @@ export const getImageUrl = (imagePath) => {
   const isIntegratedDeployment = window.location.hostname.includes('render.com') || 
                                  window.location.hostname.includes('netlify.app') || 
                                  window.location.hostname.includes('vercel.app') ||
-                                 window.location.hostname.includes('github.io');
+                                 window.location.hostname.includes('github.io') ||
+                                 window.REACT_APP_API_URL === '/api';
   
   if (isIntegratedDeployment) {
     // In integrated deployment, use relative URLs
