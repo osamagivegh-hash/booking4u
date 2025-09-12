@@ -37,6 +37,9 @@ class StatePreservation {
     
     // Auto-save scroll position periodically
     this.setupScrollAutoSave();
+    
+    // Enhanced error handling to prevent data loss
+    this.setupErrorHandling();
   }
 
   setupFormPreservation() {
@@ -63,6 +66,32 @@ class StatePreservation {
       scrollTimeout = setTimeout(() => {
         this.saveScrollPosition();
       }, 1000); // Save after 1 second of no scrolling
+    });
+  }
+
+  setupErrorHandling() {
+    // Handle uncaught errors to preserve state
+    window.addEventListener('error', (event) => {
+      console.warn('🔧 Uncaught error detected, preserving state:', event.error);
+      
+      // Save current state before any potential reload
+      this.saveScrollPosition();
+      this.saveAllFormStates();
+      
+      // Prevent the error from causing a page reload
+      event.preventDefault();
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      console.warn('🔧 Unhandled promise rejection detected, preserving state:', event.reason);
+      
+      // Save current state before any potential reload
+      this.saveScrollPosition();
+      this.saveAllFormStates();
+      
+      // Prevent the rejection from causing issues
+      event.preventDefault();
     });
   }
 

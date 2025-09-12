@@ -28,6 +28,10 @@ const SafeImage = ({
     setIsLoading(false);
     setHasError(true);
     
+    // Prevent the error from bubbling up and causing page issues
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Try fallback image
     if (e.target.src !== fallbackSrc) {
       setImageSrc(fallbackSrc);
@@ -35,6 +39,16 @@ const SafeImage = ({
     } else {
       // If fallback also fails, show placeholder
       setHasError(true);
+    }
+    
+    // Log to auto-refresh prevention system
+    if (window.autoRefreshPrevention) {
+      window.autoRefreshPrevention.imageErrors.push({
+        timestamp: new Date().toISOString(),
+        src: e.target.src,
+        error: 'Image load failed in SafeImage component',
+        component: 'SafeImage'
+      });
     }
     
     if (onError) onError(e);

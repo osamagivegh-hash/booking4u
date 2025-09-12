@@ -212,6 +212,37 @@ api.interceptors.response.use(
     // Handle network errors
     if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
       console.error('🌐 Network Error - checking connectivity...');
+      
+      // Log to auto-refresh prevention system
+      if (window.autoRefreshPrevention) {
+        window.autoRefreshPrevention.networkErrors.push({
+          timestamp: new Date().toISOString(),
+          type: 'axios',
+          url: originalRequest?.url,
+          method: originalRequest?.method,
+          error: error.message,
+          stack: error.stack
+        });
+      }
+    }
+    
+    // Handle connection refused errors (like localhost:5001)
+    if (error.message.includes('ERR_CONNECTION_REFUSED') || 
+        error.message.includes('Connection refused') ||
+        error.code === 'ECONNREFUSED') {
+      console.error('🚫 Connection Refused Error:', error.message);
+      
+      // Log to auto-refresh prevention system
+      if (window.autoRefreshPrevention) {
+        window.autoRefreshPrevention.networkErrors.push({
+          timestamp: new Date().toISOString(),
+          type: 'connection_refused',
+          url: originalRequest?.url,
+          method: originalRequest?.method,
+          error: error.message,
+          stack: error.stack
+        });
+      }
     }
     
     return Promise.reject(error);

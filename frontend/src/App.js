@@ -10,6 +10,7 @@ import autoRefreshTest from './utils/autoRefreshTest';
 import imageUrlInterceptor from './utils/imageUrlInterceptor';
 import statePreservation from './utils/statePreservation';
 import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
+import autoRefreshPrevention from './utils/autoRefreshPrevention';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -58,7 +59,9 @@ function App() {
     console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
     console.log('🔍 DEBUG: Image URL interceptor active:', window.imageUrlInterceptor?.isIntegratedDeployment);
     console.log('🔍 DEBUG: State preservation active:', window.statePreservation ? 'Yes' : 'No');
+    console.log('🔍 DEBUG: Auto-refresh prevention active:', window.autoRefreshPrevention ? 'Yes' : 'No');
     console.log('🔍 DEBUG: Use window.autoRefreshTestSuite.runAllTests() to run comprehensive tests');
+    console.log('🔍 DEBUG: Use window.autoRefreshPrevention.getReport() to see auto-refresh monitoring data');
   }, []);
 
   // Initialize authentication on app load
