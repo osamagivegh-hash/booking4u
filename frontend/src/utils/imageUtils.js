@@ -25,7 +25,28 @@ export const getImageUrl = (imagePath) => {
     return imagePath;
   }
   
-  // If it's a relative path, prepend backend URL
+  // Check if we're in integrated deployment (same origin)
+  const isIntegratedDeployment = window.location.hostname.includes('render.com') || 
+                                 window.location.hostname.includes('netlify.app') || 
+                                 window.location.hostname.includes('vercel.app') ||
+                                 window.location.hostname.includes('github.io');
+  
+  if (isIntegratedDeployment) {
+    // In integrated deployment, use relative URLs
+    if (imagePath.startsWith('/uploads/')) {
+      return imagePath; // Already relative
+    }
+    
+    // If it's just a filename, assume it's in uploads/services
+    if (!imagePath.includes('/')) {
+      return `/uploads/services/${imagePath}`;
+    }
+    
+    // Default case - prepend /uploads/
+    return `/uploads/${imagePath}`;
+  }
+  
+  // Development or other environments - use full backend URL
   if (imagePath.startsWith('/uploads/')) {
     return `${getBackendUrl()}${imagePath}`;
   }
@@ -120,9 +141,40 @@ const imageUtils = {
   isValidImageUrl
 };
 
-// Make getImageUrl available globally for env-config.js override
+// Function to convert all localhost URLs in data
+export const convertLocalhostUrlsInData = (data) => {
+  if (!data) return data;
+  
+  if (typeof data === 'string') {
+    if (data.includes('localhost:5001')) {
+      return data.replace('http://localhost:5001', '');
+    }
+    return data;
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(item => convertLocalhostUrlsInData(item));
+  }
+  
+  if (typeof data === 'object') {
+    const converted = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'url' || key === 'image' || key === 'images' || key.includes('image') || key.includes('Image')) {
+        converted[key] = convertLocalhostUrlsInData(value);
+      } else {
+        converted[key] = value;
+      }
+    }
+    return converted;
+  }
+  
+  return data;
+};
+
+// Make functions available globally
 if (typeof window !== 'undefined') {
   window.getImageUrl = getImageUrl;
+  window.convertLocalhostUrlsInData = convertLocalhostUrlsInData;
 }
 
 export default imageUtils;

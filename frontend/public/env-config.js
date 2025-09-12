@@ -64,8 +64,69 @@
       return originalXHROpen.call(this, method, url, async, user, password);
     };
     
-    // Image URL handling will be managed by the imageUrlInterceptor utility
-    // to avoid conflicts with multiple overrides
+    // Override image URL handling for localhost URLs
+    const originalImageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    if (!originalImageSrc || originalImageSrc.configurable) {
+      Object.defineProperty(HTMLImageElement.prototype, 'src', {
+        get: function() {
+          return this._src || '';
+        },
+        set: function(value) {
+          try {
+            let convertedValue = value;
+            if (typeof value === 'string' && value.includes('localhost:5001')) {
+              convertedValue = value.replace('http://localhost:5001', '');
+              console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
+            }
+            this._src = convertedValue;
+            
+            // Add error handler to prevent failed image loads
+            this.onerror = function(e) {
+              console.warn('🔧 Image failed to load, using fallback:', this._src);
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            };
+          } catch (error) {
+            console.warn('🔧 Error in image src override:', error);
+            this._src = value;
+          }
+        },
+        configurable: true
+      });
+    }
+    
+    // Override global getImageUrl function if it exists
+    if (window.getImageUrl) {
+      const originalGetImageUrl = window.getImageUrl;
+      window.getImageUrl = function(imagePath) {
+        if (typeof imagePath === 'string' && imagePath.includes('localhost:5001')) {
+          const convertedPath = imagePath.replace('http://localhost:5001', '');
+          console.log('🔧 getImageUrl converted:', imagePath, '→', convertedPath);
+          return originalGetImageUrl(convertedPath);
+        }
+        return originalGetImageUrl(imagePath);
+      };
+    }
+    
+    // Function to convert existing image URLs in the DOM
+    window.convertExistingImageUrls = function() {
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        if (img.src && img.src.includes('localhost:5001')) {
+          const newSrc = img.src.replace('http://localhost:5001', '');
+          console.log('🔧 Converting existing image URL:', img.src, '→', newSrc);
+          img.src = newSrc;
+        }
+      });
+    };
+    
+    // Convert existing image URLs immediately
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', window.convertExistingImageUrls);
+    } else {
+      window.convertExistingImageUrls();
+    }
     
     console.log('🔧 API and image configuration overridden for integrated deployment');
   }
