@@ -8,6 +8,34 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const ApiResponse = require('../utils/apiResponse');
 const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware/upload');
 
+// Utility function to convert localhost URLs to relative paths in service data
+const convertLocalhostUrlsInService = (service) => {
+  if (!service) return service;
+  
+  // Convert service.image if it exists
+  if (service.image && service.image.includes('localhost:5001')) {
+    service.image = service.image.replace('http://localhost:5001', '');
+  }
+  
+  // Convert service.images array if it exists
+  if (service.images && Array.isArray(service.images)) {
+    service.images = service.images.map(img => {
+      if (img.url && img.url.includes('localhost:5001')) {
+        img.url = img.url.replace('http://localhost:5001', '');
+      }
+      return img;
+    });
+  }
+  
+  return service;
+};
+
+// Utility function to convert localhost URLs in array of services
+const convertLocalhostUrlsInServices = (services) => {
+  if (!Array.isArray(services)) return services;
+  return services.map(service => convertLocalhostUrlsInService(service));
+};
+
 const router = express.Router();
 
 // @desc    Get all services (public)
@@ -72,8 +100,11 @@ router.get('/', asyncHandler(async (req, res) => {
 
   const total = await Service.countDocuments(query);
 
+  // Convert any localhost URLs to relative paths
+  const convertedServices = convertLocalhostUrlsInServices(services);
+
   return ApiResponse.success(res, {
-    services,
+    services: convertedServices,
     pagination: {
       currentPage: parseInt(page),
       totalPages: Math.ceil(total / parseInt(limit)),
@@ -138,9 +169,12 @@ router.get('/:businessId/:serviceId', async (req, res) => {
       });
     }
 
+    // Convert any localhost URLs to relative paths
+    const convertedService = convertLocalhostUrlsInService(service);
+
     res.json({
       success: true,
-      data: service
+      data: convertedService
     });
   } catch (error) {
     console.error('Get service error:', error);
