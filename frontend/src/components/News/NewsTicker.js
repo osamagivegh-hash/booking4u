@@ -3,25 +3,67 @@ import { Link } from 'react-router-dom';
 import { ChevronRightIcon, FireIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 
+// Global news cache to prevent multiple API calls
+let globalNewsCache = {
+  data: [],
+  timestamp: 0,
+  isFetching: false
+};
+
 const NewsTicker = () => {
   const [breakingNews, setBreakingNews] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState(0);
 
   useEffect(() => {
-    fetchBreakingNews();
+    // Check global cache first
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+    const isCacheValid = (now - globalNewsCache.timestamp) < fiveMinutes;
+    
+    if (isCacheValid && globalNewsCache.data.length > 0) {
+      // Use cached data
+      setBreakingNews(globalNewsCache.data);
+      setLoading(false);
+      console.log('🔧 NewsTicker: Using cached news data');
+    } else if (!globalNewsCache.isFetching) {
+      // Fetch new data if not already fetching
+      fetchBreakingNews();
+    } else {
+      // Wait for ongoing fetch to complete
+      setLoading(false);
+    }
   }, []);
 
   const fetchBreakingNews = async () => {
+    if (globalNewsCache.isFetching) {
+      console.log('🔧 NewsTicker: Already fetching, skipping...');
+      return;
+    }
+    
+    globalNewsCache.isFetching = true;
+    
     try {
+      console.log('🔧 NewsTicker: Fetching breaking news...');
       const response = await api.get('/news/breaking?limit=5');
       if (response.data && response.data.success) {
-        setBreakingNews(response.data.data.news || []);
+        const newsData = response.data.data.news || [];
+        setBreakingNews(newsData);
+        setLastFetchTime(Date.now());
+        
+        // Update global cache
+        globalNewsCache.data = newsData;
+        globalNewsCache.timestamp = Date.now();
+        
+        console.log('🔧 NewsTicker: Breaking news fetched successfully');
       }
     } catch (error) {
-      console.error('Error fetching breaking news:', error);
+      console.error('🔧 NewsTicker: Error fetching breaking news:', error);
+      // Don't show error to user, just log it
     } finally {
       setLoading(false);
+      globalNewsCache.isFetching = false;
     }
   };
 

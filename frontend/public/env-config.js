@@ -74,9 +74,16 @@
         set: function(value) {
           try {
             let convertedValue = value;
-            if (typeof value === 'string' && value.includes('localhost:5001')) {
-              convertedValue = value.replace('http://localhost:5001', '');
-              console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
+            if (typeof value === 'string') {
+              if (value.includes('localhost:5001')) {
+                convertedValue = value.replace('http://localhost:5001', '');
+                console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
+              }
+              // Handle bare filenames (like serviceImages-xxx.webp)
+              else if (value.includes('serviceImages-') && !value.startsWith('/') && !value.startsWith('http')) {
+                convertedValue = '/uploads/services/' + value;
+                console.log('🔧 Bare filename converted to full path:', value, '→', convertedValue);
+              }
             }
             this._src = convertedValue;
             
@@ -113,10 +120,23 @@
     window.convertExistingImageUrls = function() {
       const images = document.querySelectorAll('img');
       images.forEach(img => {
-        if (img.src && img.src.includes('localhost:5001')) {
-          const newSrc = img.src.replace('http://localhost:5001', '');
-          console.log('🔧 Converting existing image URL:', img.src, '→', newSrc);
-          img.src = newSrc;
+        if (img.src) {
+          let newSrc = img.src;
+          
+          // Handle localhost URLs
+          if (img.src.includes('localhost:5001')) {
+            newSrc = img.src.replace('http://localhost:5001', '');
+            console.log('🔧 Converting localhost image URL:', img.src, '→', newSrc);
+          }
+          // Handle bare filenames (like serviceImages-xxx.webp)
+          else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+            newSrc = '/uploads/services/' + img.src;
+            console.log('🔧 Converting bare filename to full path:', img.src, '→', newSrc);
+          }
+          
+          if (newSrc !== img.src) {
+            img.src = newSrc;
+          }
         }
       });
     };
