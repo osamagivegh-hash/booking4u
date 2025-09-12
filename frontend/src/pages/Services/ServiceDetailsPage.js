@@ -24,7 +24,6 @@ import { StarIcon as StarSolidIcon, HeartIcon as HeartSolidIcon } from '@heroico
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import imageUrlInterceptor from '../../utils/imageUrlInterceptor';
 
 const ServiceDetailsPage = () => {
   const { businessId, serviceId } = useParams();
@@ -203,21 +202,24 @@ const ServiceDetailsPage = () => {
     return labels[category] || category;
   };
 
-  // Get service images with error handling
+  // Get service images - use URLs directly from backend
   const getServiceImages = () => {
-    // Process service data to convert localhost URLs
-    const processedService = imageUrlInterceptor.convertImageUrlsInData(service);
-    
-    if (processedService?.images && processedService.images.length > 0) {
-      return processedService.images.map(img => ({
+    if (service?.images && service.images.length > 0) {
+      return service.images.map(img => ({
         ...img,
+        // Use URL directly from backend - it should already be a relative path
         url: img.url || '/default-service-image.svg'
       }));
     }
-    if (processedService?.image) {
-      return [{ url: processedService.image, alt: processedService.name, isPrimary: true }];
+    if (service?.image) {
+      return [{ 
+        // Use URL directly from backend - it should already be a relative path
+        url: service.image || '/default-service-image.svg', 
+        alt: service.name || 'Service Image', 
+        isPrimary: true 
+      }];
     }
-    return [{ url: '/default-service-image.svg', alt: processedService?.name || 'Service', isPrimary: true }];
+    return [{ url: '/default-service-image.svg', alt: service?.name || 'Service', isPrimary: true }];
   };
 
   const serviceImages = getServiceImages();

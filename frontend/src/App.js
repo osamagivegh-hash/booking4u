@@ -7,7 +7,6 @@ import ResourceErrorBoundary from './components/ErrorBoundary/ResourceErrorBound
 import ImageErrorBoundary from './components/ErrorBoundary/ImageErrorBoundary';
 import debugLogger from './utils/debugLogger';
 import autoRefreshTest from './utils/autoRefreshTest';
-import imageUrlInterceptor from './utils/imageUrlInterceptor';
 import statePreservation from './utils/statePreservation';
 import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 import autoRefreshPrevention from './utils/autoRefreshPrevention';
@@ -57,12 +56,12 @@ function App() {
     console.log('🔍 DEBUG: Use window.debugLogger.exportLogs() to export logs');
     console.log('🔍 DEBUG: Use window.autoRefreshTest.logStatus() to check auto-refresh status');
     console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
-    console.log('🔍 DEBUG: Image URL interceptor active:', window.imageUrlInterceptor?.isIntegratedDeployment);
+    console.log('🔍 DEBUG: Image URL handling simplified - using relative paths directly');
     console.log('🔍 DEBUG: State preservation active:', window.statePreservation ? 'Yes' : 'No');
     console.log('🔍 DEBUG: Auto-refresh prevention active:', window.autoRefreshPrevention ? 'Yes' : 'No');
     console.log('🔍 DEBUG: Use window.autoRefreshTestSuite.runAllTests() to run comprehensive tests');
     console.log('🔍 DEBUG: Use window.autoRefreshPrevention.getReport() to see auto-refresh monitoring data');
-    console.log('🔍 DEBUG: Use window.convertAllLocalhostImageUrls() to manually convert localhost image URLs');
+    console.log('🔍 DEBUG: Image URLs now use relative paths directly from backend');
   }, []);
 
   // Initialize authentication on app load

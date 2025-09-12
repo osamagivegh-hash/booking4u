@@ -18,7 +18,6 @@ import useAuthStore from '../../stores/authStore';
 import SocialShare from '../Social/SocialShare';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import imageUrlInterceptor from '../../utils/imageUrlInterceptor';
 import { getServiceImages, handleImageError } from '../../utils/imageUtils';
 
 const ServiceCard = ({ service, showProvider = true, compact = false, showActions = false, onBook, onInquire }) => {
@@ -107,9 +106,8 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
     return labels[category] || category;
   };
 
-  // Get service images with proper URL handling
-  const processedService = imageUrlInterceptor.convertImageUrlsInData(service);
-  const serviceImages = getServiceImages(processedService);
+  // Get service images - use URLs directly from backend
+  const serviceImages = getServiceImages(service);
 
   // Image navigation functions
   const nextImage = (e) => {

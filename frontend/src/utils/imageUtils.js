@@ -60,35 +60,39 @@ export const getImageUrl = (imagePath) => {
   return `/uploads/${imagePath}`;
 };
 
-// Get service image with fallback
+// Get service image with fallback - use URLs directly from backend
 export const getServiceImage = (service) => {
   // Check if service has images array
   if (service?.images && service.images.length > 0) {
     const primaryImage = service.images.find(img => img.isPrimary) || service.images[0];
-    return getImageUrl(primaryImage.url);
+    // Use URL directly from backend - it should already be a relative path
+    return primaryImage.url || '/default-service-image.svg';
   }
   
   // Check if service has single image
   if (service?.image) {
-    return getImageUrl(service.image);
+    // Use URL directly from backend - it should already be a relative path
+    return service.image || '/default-service-image.svg';
   }
   
   // Return default image
   return '/default-service-image.svg';
 };
 
-// Get all service images with fallbacks
+// Get all service images with fallbacks - use URLs directly from backend
 export const getServiceImages = (service) => {
   if (service?.images && service.images.length > 0) {
     return service.images.map(img => ({
       ...img,
-      url: getImageUrl(img.url)
+      // Use URL directly from backend - it should already be a relative path
+      url: img.url || '/default-service-image.svg'
     }));
   }
   
   if (service?.image) {
     return [{ 
-      url: getImageUrl(service.image), 
+      // Use URL directly from backend - it should already be a relative path
+      url: service.image || '/default-service-image.svg', 
       alt: service.name || 'Service Image', 
       isPrimary: true 
     }];

@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import ImageErrorBoundary from './ErrorBoundary/ImageErrorBoundary';
-import { getImageUrl, handleImageError } from '../utils/imageUtils';
+import { handleImageError } from '../utils/imageUtils';
 
 const SafeImage = ({ 
   src, 
@@ -15,7 +15,7 @@ const SafeImage = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState(() => getImageUrl(src));
+  const [imageSrc, setImageSrc] = useState(() => src || fallbackSrc);
 
   const handleLoad = useCallback((e) => {
     setIsLoading(false);
