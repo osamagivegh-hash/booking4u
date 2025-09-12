@@ -24,9 +24,16 @@ const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
 
-  // Load latest services
+  // Load latest services (with caching to prevent periodic re-fetching)
   useEffect(() => {
-    loadLatestServices();
+    // Only load services once per app session to prevent periodic API calls
+    if (!window.homePageServicesLoaded) {
+      loadLatestServices();
+      window.homePageServicesLoaded = true;
+    } else {
+      // If already loaded, use cached data or empty array
+      setLatestServices([]);
+    }
   }, []);
 
   const loadLatestServices = async () => {
@@ -35,7 +42,11 @@ const HomePage = () => {
       
       // Load latest 6 services
       const response = await api.get('/services/newest?limit=6');
-      setLatestServices(response.data.data?.services || response.data.services || []);
+      const services = response.data.data?.services || response.data.services || [];
+      setLatestServices(services);
+      
+      // Cache the services data globally to prevent re-fetching
+      window.cachedLatestServices = services;
       
     } catch (error) {
       console.error('Error loading latest services:', error);
@@ -424,13 +435,24 @@ const HomePage = () => {
                 <p className="text-gray-600">اكتشف أحدث الخدمات المضافة إلى منصتنا</p>
               </div>
             </div>
-            <Link
-              to="/services"
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              عرض جميع الخدمات
-              <ArrowRightIcon className="h-5 w-5 mr-2" />
-            </Link>
+            <div className="flex items-center space-x-3 space-x-reverse">
+              <button
+                onClick={() => {
+                  window.homePageServicesLoaded = false;
+                  loadLatestServices();
+                }}
+                className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+              >
+                تحديث
+              </button>
+              <Link
+                to="/services"
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                عرض جميع الخدمات
+                <ArrowRightIcon className="h-5 w-5 mr-2" />
+              </Link>
+            </div>
           </div>
           
           {loading ? (
