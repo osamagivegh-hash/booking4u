@@ -81,7 +81,7 @@ class DebugLogger {
       return originalReplace.call(this, url);
     };
     
-    // Detect href changes
+    // Detect href changes (reduced frequency to prevent performance issues)
     let currentHref = window.location.href;
     setInterval(() => {
       if (window.location.href !== currentHref) {
@@ -92,7 +92,7 @@ class DebugLogger {
         });
         currentHref = window.location.href;
       }
-    }, 100);
+    }, 1000); // Changed from 100ms to 1000ms (1 second)
   }
 
   setupIntervalDetection() {

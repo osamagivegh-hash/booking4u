@@ -7,7 +7,16 @@ const BackendStatus = () => {
   const [details, setDetails] = useState(null);
 
   useEffect(() => {
-    checkBackendHealth();
+    // Only check backend health once on app load, not every time component mounts
+    // This prevents unnecessary API calls when navigating between pages
+    if (!window.backendHealthChecked) {
+      checkBackendHealth();
+      window.backendHealthChecked = true;
+    } else {
+      // If already checked, show cached status
+      setStatus('connected');
+      setMessage('Backend is connected ✅');
+    }
   }, []);
 
   const checkBackendHealth = async () => {

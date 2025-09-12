@@ -69,6 +69,9 @@ function App() {
     console.log('🔍 App: Component mounted, initializing auth');
     debugLogger.log('AUTH', '🔐 Initializing authentication');
     
+    // Set global flag to prevent multiple API calls
+    window.appInitialized = true;
+    
     // Only initialize once on mount
     const initializeOnce = async () => {
       try {
