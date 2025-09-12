@@ -112,6 +112,12 @@ const convertLocalhostUrlsInResponse = (data) => {
       console.log('🔧 Converting localhost URL in response:', data, '→', converted);
       return converted;
     }
+    // Convert bare service image filenames to full paths
+    if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
+      const converted = `/uploads/services/${data}`;
+      console.log('🔧 Converting bare service image filename in response:', data, '→', converted);
+      return converted;
+    }
     return data;
   }
   

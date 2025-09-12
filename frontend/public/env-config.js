@@ -11,18 +11,21 @@
     window.REACT_APP_API_URL = 'http://localhost:5001/api';
     window.REACT_APP_BASE_URL = 'http://localhost:5001';
     window.REACT_APP_SOCKET_URL = 'http://localhost:5001';
+    window.REACT_APP_ASSET_URL = 'http://localhost:5001';
     console.log('🔧 Development environment detected');
   } else if (isGitHubPages) {
     // GitHub Pages deployment - use Render backend
     window.REACT_APP_API_URL = 'https://booking4u-backend.onrender.com/api';
     window.REACT_APP_BASE_URL = 'https://booking4u-backend.onrender.com';
     window.REACT_APP_SOCKET_URL = 'https://booking4u-backend.onrender.com';
+    window.REACT_APP_ASSET_URL = 'https://booking4u-backend.onrender.com';
     console.log('🔧 GitHub Pages environment detected');
   } else {
     // Integrated deployment (same origin) - use relative URLs
     window.REACT_APP_API_URL = '/api';
     window.REACT_APP_BASE_URL = '/';
     window.REACT_APP_SOCKET_URL = '/';
+    window.REACT_APP_ASSET_URL = '/';
     console.log('🔧 Integrated deployment environment detected');
     
     // Force override any existing API configuration

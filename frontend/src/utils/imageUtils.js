@@ -6,6 +6,24 @@ const getBackendUrl = () => {
   return getBaseUrl();
 };
 
+// Get the asset URL for images and static files
+const getAssetUrl = () => {
+  // Use window environment variable if available (PRIORITY)
+  if (window.REACT_APP_ASSET_URL) {
+    console.log('🔧 Using window REACT_APP_ASSET_URL:', window.REACT_APP_ASSET_URL);
+    return window.REACT_APP_ASSET_URL;
+  }
+  
+  // Use process environment variable if available
+  if (process.env.REACT_APP_ASSET_URL) {
+    console.log('🔧 Using process REACT_APP_ASSET_URL:', process.env.REACT_APP_ASSET_URL);
+    return process.env.REACT_APP_ASSET_URL;
+  }
+  
+  // Fallback to base URL
+  return getBaseUrl();
+};
+
 // Convert relative image path to full URL
 export const getImageUrl = (imagePath) => {
   if (!imagePath) {
@@ -60,18 +78,20 @@ export const getImageUrl = (imagePath) => {
     return `/uploads/${imagePath}`;
   }
   
-  // Development or other environments - use full backend URL
+  // Development or other environments - use asset URL
+  const assetUrl = getAssetUrl();
+  
   if (imagePath.startsWith('/uploads/')) {
-    return `${getBackendUrl()}${imagePath}`;
+    return `${assetUrl}${imagePath}`;
   }
   
   // If it's just a filename, assume it's in uploads/services
   if (!imagePath.includes('/')) {
-    return `${getBackendUrl()}/uploads/services/${imagePath}`;
+    return `${assetUrl}/uploads/services/${imagePath}`;
   }
   
-  // Default case - prepend backend URL
-  return `${getBackendUrl()}/uploads/${imagePath}`;
+  // Default case - prepend asset URL
+  return `${assetUrl}/uploads/${imagePath}`;
 };
 
 // Get service image with fallback
@@ -257,6 +277,17 @@ window.convertLocalhostUrlsInData = function(data) {
   }
   
   return data;
+};
+
+// Function to get the correct asset URL for images
+window.getAssetUrl = function() {
+  if (window.REACT_APP_ASSET_URL) {
+    return window.REACT_APP_ASSET_URL;
+  }
+  if (process.env.REACT_APP_ASSET_URL) {
+    return process.env.REACT_APP_ASSET_URL;
+  }
+  return window.location.origin;
 };
 
 // Make functions available globally
