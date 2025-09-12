@@ -78,12 +78,14 @@
           try {
             let convertedValue = value;
             if (typeof value === 'string') {
+              console.log('🔧 Image src being set:', value);
+              
               // Handle localhost:5001 URLs
               if (value.includes('localhost:5001')) {
                 convertedValue = value.replace('http://localhost:5001', '');
                 console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
               }
-              // Handle bare filenames (like serviceImages-xxx.webp)
+              // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
               else if (value.includes('serviceImages-') && !value.startsWith('/') && !value.startsWith('http')) {
                 convertedValue = '/uploads/services/' + value;
                 console.log('🔧 Bare filename converted to full path:', value, '→', convertedValue);
@@ -92,6 +94,11 @@
               else if (value.includes('localhost:') && !value.startsWith('/')) {
                 convertedValue = value.replace(/https?:\/\/localhost:\d+/, '');
                 console.log('🔧 Localhost URL converted:', value, '→', convertedValue);
+              }
+              // Handle any bare filename that looks like an image
+              else if (value.includes('.webp') && !value.startsWith('/') && !value.startsWith('http')) {
+                convertedValue = '/uploads/services/' + value;
+                console.log('🔧 Bare webp filename converted to full path:', value, '→', convertedValue);
               }
             }
             this._src = convertedValue;
@@ -134,6 +141,8 @@
     // Function to convert existing image URLs in the DOM
     window.convertExistingImageUrls = function() {
       const images = document.querySelectorAll('img');
+      let convertedCount = 0;
+      
       images.forEach(img => {
         if (img.src) {
           let newSrc = img.src;
@@ -142,16 +151,25 @@
           if (img.src.includes('localhost:5001')) {
             newSrc = img.src.replace('http://localhost:5001', '');
             console.log('🔧 Converting localhost image URL:', img.src, '→', newSrc);
+            convertedCount++;
           }
-          // Handle bare filenames (like serviceImages-xxx.webp)
+          // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
           else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
             newSrc = '/uploads/services/' + img.src;
             console.log('🔧 Converting bare filename to full path:', img.src, '→', newSrc);
+            convertedCount++;
           }
           // Handle any other localhost URLs
           else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
             newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
             console.log('🔧 Converting localhost URL:', img.src, '→', newSrc);
+            convertedCount++;
+          }
+          // Handle any bare webp filename
+          else if (img.src.includes('.webp') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+            newSrc = '/uploads/services/' + img.src;
+            console.log('🔧 Converting bare webp filename to full path:', img.src, '→', newSrc);
+            convertedCount++;
           }
           
           if (newSrc !== img.src) {
@@ -159,6 +177,10 @@
           }
         }
       });
+      
+      if (convertedCount > 0) {
+        console.log(`🔧 convertExistingImageUrls: Converted ${convertedCount} image URLs`);
+      }
     };
 
     // DOM Observer to catch new images as they're added
@@ -198,7 +220,7 @@
         newSrc = img.src.replace('http://localhost:5001', '');
         console.log('🔧 Observer: Converting localhost image URL:', img.src, '→', newSrc);
       }
-      // Handle bare filenames
+      // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
       else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
         newSrc = '/uploads/services/' + img.src;
         console.log('🔧 Observer: Converting bare filename:', img.src, '→', newSrc);
@@ -207,6 +229,11 @@
       else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
         newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
         console.log('🔧 Observer: Converting localhost URL:', img.src, '→', newSrc);
+      }
+      // Handle any bare webp filename
+      else if (img.src.includes('.webp') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+        newSrc = '/uploads/services/' + img.src;
+        console.log('🔧 Observer: Converting bare webp filename:', img.src, '→', newSrc);
       }
       
       if (newSrc !== img.src) {
@@ -232,7 +259,22 @@
       if (window.convertAllLocalhostImageUrls) {
         window.convertAllLocalhostImageUrls();
       }
-    }, 2000); // Check every 2 seconds
+    }, 1000); // Check every 1 second for more aggressive conversion
+    
+    // Manual conversion function that can be called immediately
+    window.forceConvertAllImages = function() {
+      console.log('🔧 Force converting all images...');
+      window.convertExistingImageUrls();
+      if (window.convertAllLocalhostImageUrls) {
+        window.convertAllLocalhostImageUrls();
+      }
+      console.log('🔧 Force conversion completed');
+    };
+    
+    // Run immediate conversion
+    setTimeout(() => {
+      window.forceConvertAllImages();
+    }, 100);
     
     console.log('🔧 API and image configuration overridden for integrated deployment');
   }

@@ -21,22 +21,30 @@ class ImageUrlInterceptor {
 
   convertLocalhostUrl(url) {
     if (typeof url === 'string') {
+      console.log('🔧 ImageUrlInterceptor: Processing URL:', url);
+      
       // Handle localhost:5001 URLs
       if (url.includes('localhost:5001')) {
         const convertedUrl = url.replace('http://localhost:5001', '');
-        console.log('🔧 Image URL converted:', url, '→', convertedUrl);
+        console.log('🔧 ImageUrlInterceptor: localhost URL converted:', url, '→', convertedUrl);
+        return convertedUrl;
+      }
+      // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
+      else if (url.includes('serviceImages-') && !url.startsWith('/') && !url.startsWith('http')) {
+        const convertedUrl = '/uploads/services/' + url;
+        console.log('🔧 ImageUrlInterceptor: Bare filename converted:', url, '→', convertedUrl);
         return convertedUrl;
       }
       // Handle any other localhost URLs
       else if (url.includes('localhost:') && !url.startsWith('/')) {
         const convertedUrl = url.replace(/https?:\/\/localhost:\d+/, '');
-        console.log('🔧 Localhost URL converted:', url, '→', convertedUrl);
+        console.log('🔧 ImageUrlInterceptor: Localhost URL converted:', url, '→', convertedUrl);
         return convertedUrl;
       }
-      // Handle bare filenames
-      else if (url.includes('serviceImages-') && !url.startsWith('/') && !url.startsWith('http')) {
+      // Handle any bare webp filename
+      else if (url.includes('.webp') && !url.startsWith('/') && !url.startsWith('http')) {
         const convertedUrl = '/uploads/services/' + url;
-        console.log('🔧 Bare filename converted:', url, '→', convertedUrl);
+        console.log('🔧 ImageUrlInterceptor: Bare webp filename converted:', url, '→', convertedUrl);
         return convertedUrl;
       }
     }
@@ -46,8 +54,8 @@ class ImageUrlInterceptor {
   setupInterceptors() {
     console.log('🔧 Setting up image URL interceptors for integrated deployment');
     
-    // Intercept HTMLImageElement.src setter
-    this.interceptImageSrc();
+    // Skip HTMLImageElement.src interceptor to avoid conflicts with env-config.js
+    // this.interceptImageSrc();
     
     // Intercept fetch requests for images
     this.interceptFetch();
