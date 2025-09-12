@@ -64,7 +64,39 @@
       return originalXHROpen.call(this, method, url, async, user, password);
     };
     
-    console.log('🔧 API configuration overridden for integrated deployment');
+    // Override image URL handling for localhost URLs
+    const originalImageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+    Object.defineProperty(HTMLImageElement.prototype, 'src', {
+      get: function() {
+        return this._src || '';
+      },
+      set: function(value) {
+        if (typeof value === 'string' && value.includes('localhost:5001')) {
+          console.log('🔧 Intercepting image URL with localhost:', value);
+          const newUrl = value.replace('http://localhost:5001', '');
+          console.log('🔧 Redirecting image to relative URL:', newUrl);
+          this._src = newUrl;
+        } else {
+          this._src = value;
+        }
+      }
+    });
+    
+    // Override getImageUrl function if it exists
+    if (window.getImageUrl) {
+      const originalGetImageUrl = window.getImageUrl;
+      window.getImageUrl = function(imagePath) {
+        if (typeof imagePath === 'string' && imagePath.includes('localhost:5001')) {
+          console.log('🔧 Intercepting getImageUrl with localhost:', imagePath);
+          const newUrl = imagePath.replace('http://localhost:5001', '');
+          console.log('🔧 Redirecting getImageUrl to relative URL:', newUrl);
+          return newUrl;
+        }
+        return originalGetImageUrl(imagePath);
+      };
+    }
+    
+    console.log('🔧 API and image configuration overridden for integrated deployment');
   }
 })();
 

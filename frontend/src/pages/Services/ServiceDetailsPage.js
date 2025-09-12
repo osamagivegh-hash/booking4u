@@ -24,6 +24,7 @@ import { StarIcon as StarSolidIcon, HeartIcon as HeartSolidIcon } from '@heroico
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import imageUrlInterceptor from '../../utils/imageUrlInterceptor';
 
 const ServiceDetailsPage = () => {
   const { businessId, serviceId } = useParams();
@@ -204,16 +205,19 @@ const ServiceDetailsPage = () => {
 
   // Get service images with error handling
   const getServiceImages = () => {
-    if (service?.images && service.images.length > 0) {
-      return service.images.map(img => ({
+    // Process service data to convert localhost URLs
+    const processedService = imageUrlInterceptor.convertImageUrlsInData(service);
+    
+    if (processedService?.images && processedService.images.length > 0) {
+      return processedService.images.map(img => ({
         ...img,
         url: img.url || '/default-service-image.svg'
       }));
     }
-    if (service?.image) {
-      return [{ url: service.image, alt: service.name, isPrimary: true }];
+    if (processedService?.image) {
+      return [{ url: processedService.image, alt: processedService.name, isPrimary: true }];
     }
-    return [{ url: '/default-service-image.svg', alt: service?.name || 'Service', isPrimary: true }];
+    return [{ url: '/default-service-image.svg', alt: processedService?.name || 'Service', isPrimary: true }];
   };
 
   const serviceImages = getServiceImages();

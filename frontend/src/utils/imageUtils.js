@@ -12,6 +12,14 @@ export const getImageUrl = (imagePath) => {
     return '/default-service-image.svg';
   }
   
+  // Handle localhost URLs in integrated deployment
+  if (imagePath.includes('localhost:5001')) {
+    console.log('🔧 Converting localhost image URL to relative:', imagePath);
+    const relativePath = imagePath.replace('http://localhost:5001', '');
+    console.log('🔧 Converted to relative path:', relativePath);
+    return relativePath;
+  }
+  
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
@@ -111,6 +119,11 @@ const imageUtils = {
   preloadImage,
   isValidImageUrl
 };
+
+// Make getImageUrl available globally for env-config.js override
+if (typeof window !== 'undefined') {
+  window.getImageUrl = getImageUrl;
+}
 
 export default imageUtils;
 

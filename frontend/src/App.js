@@ -5,6 +5,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
 import debugLogger from './utils/debugLogger';
 import autoRefreshTest from './utils/autoRefreshTest';
+import imageUrlInterceptor from './utils/imageUrlInterceptor';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -51,6 +52,7 @@ function App() {
     console.log('🔍 DEBUG: Use window.debugLogger.exportLogs() to export logs');
     console.log('🔍 DEBUG: Use window.autoRefreshTest.logStatus() to check auto-refresh status');
     console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
+    console.log('🔍 DEBUG: Image URL interceptor active:', window.imageUrlInterceptor?.isIntegratedDeployment);
   }, []);
 
   // Initialize authentication on app load
