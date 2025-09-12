@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import useAuthStore from '../../stores/authStore';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import statePreservation from '../../utils/statePreservation';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,15 @@ const RegisterPage = () => {
 
   const password = watch('password');
 
+  // Restore form state on component mount
+  useEffect(() => {
+    const formId = 'register-form';
+    const restored = statePreservation.restoreFormState(formId);
+    if (restored) {
+      console.log('🔧 Registration form state restored');
+    }
+  }, []);
+
   const onSubmit = async (data, event) => {
     // Explicitly prevent default form submission
     if (event) {
@@ -31,6 +41,10 @@ const RegisterPage = () => {
       console.log('🌐 Current API URL:', window.getApiUrl ? window.getApiUrl() : 'Not available');
       
       await registerUser(data);
+      
+      // Clear form state after successful registration
+      statePreservation.clearFormState('register-form');
+      
       toast.success('تم إنشاء الحساب بنجاح');
       navigate('/dashboard');
     } catch (error) {
@@ -89,7 +103,7 @@ const RegisterPage = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form id="register-form" className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
             {/* Name Field */}
             <div>

@@ -3,9 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './stores/authStore';
 import { LanguageProvider } from './contexts/LanguageContext';
 import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
+import ResourceErrorBoundary from './components/ErrorBoundary/ResourceErrorBoundary';
 import debugLogger from './utils/debugLogger';
 import autoRefreshTest from './utils/autoRefreshTest';
 import imageUrlInterceptor from './utils/imageUrlInterceptor';
+import statePreservation from './utils/statePreservation';
+import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -53,6 +56,8 @@ function App() {
     console.log('🔍 DEBUG: Use window.autoRefreshTest.logStatus() to check auto-refresh status');
     console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
     console.log('🔍 DEBUG: Image URL interceptor active:', window.imageUrlInterceptor?.isIntegratedDeployment);
+    console.log('🔍 DEBUG: State preservation active:', window.statePreservation ? 'Yes' : 'No');
+    console.log('🔍 DEBUG: Use window.autoRefreshTestSuite.runAllTests() to run comprehensive tests');
   }, []);
 
   // Initialize authentication on app load
@@ -95,9 +100,10 @@ function App() {
   return (
     <LanguageProvider>
       <ApiErrorBoundary>
-        <div className="App">
-          <ServiceWorkerUpdateNotification />
-          <Routes>
+        <ResourceErrorBoundary>
+          <div className="App">
+            <ServiceWorkerUpdateNotification />
+            <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
@@ -159,8 +165,9 @@ function App() {
 
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </div>
+            </Routes>
+          </div>
+        </ResourceErrorBoundary>
       </ApiErrorBoundary>
     </LanguageProvider>
   );

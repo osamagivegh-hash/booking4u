@@ -6,13 +6,14 @@ import { Toaster } from 'react-hot-toast';
 import './index.css';
 import App from './App';
 
-// Performance optimization
-if (process.env.NODE_ENV === 'production') {
-  // Disable console logs in production
-  console.log = () => {};
-  console.warn = () => {};
-  console.error = () => {};
-}
+// Performance optimization - Keep console logs for debugging
+// Note: Console logs are kept enabled to help with debugging auto-refresh issues
+// if (process.env.NODE_ENV === 'production') {
+//   // Disable console logs in production
+//   console.log = () => {};
+//   console.warn = () => {};
+//   console.error = () => {};
+// }
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({

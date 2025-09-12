@@ -35,11 +35,25 @@ const ServiceWorkerUpdateNotification = () => {
       // Tell the service worker to skip waiting and become active
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       
-      // Reload the page to get the new version
-      window.location.reload();
+      // Instead of reloading, show a success message and let the user decide
+      toast.success('تم تحديث التطبيق بنجاح! سيتم تطبيق التحديثات عند إعادة تحميل الصفحة.', {
+        duration: 8000,
+        position: 'top-center',
+      });
+      
+      // Hide the notification after successful update
+      setUpdateAvailable(false);
+      setRegistration(null);
     } else {
-      // Fallback: just reload the page
-      window.location.reload();
+      // Show message that update is available
+      toast.info('تحديث متاح. يرجى إعادة تحميل الصفحة يدوياً للحصول على أحدث الميزات.', {
+        duration: 8000,
+        position: 'top-center',
+      });
+      
+      // Hide the notification
+      setUpdateAvailable(false);
+      setRegistration(null);
     }
   };
 

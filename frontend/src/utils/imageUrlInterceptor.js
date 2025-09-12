@@ -47,40 +47,77 @@ class ImageUrlInterceptor {
   interceptImageSrc() {
     const self = this;
     
-    // Store original descriptor
+    // Store original descriptor if it exists
     const originalDescriptor = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
     
-    // Override the src setter
-    Object.defineProperty(HTMLImageElement.prototype, 'src', {
-      get: function() {
-        return this._src || '';
-      },
-      set: function(value) {
-        const convertedValue = self.convertLocalhostUrl(value);
-        this._src = convertedValue;
-      },
-      configurable: true
-    });
+    // Only override if not already overridden
+    if (!originalDescriptor || originalDescriptor.configurable) {
+      // Override the src setter with error handling
+      Object.defineProperty(HTMLImageElement.prototype, 'src', {
+        get: function() {
+          return this._src || '';
+        },
+        set: function(value) {
+          try {
+            const convertedValue = self.convertLocalhostUrl(value);
+            this._src = convertedValue;
+            
+            // Add error handler to prevent failed image loads from causing issues
+            this.onerror = function(e) {
+              console.warn('🔧 Image failed to load, using fallback:', this._src);
+              // Don't let image errors cause page reloads
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            };
+          } catch (error) {
+            console.warn('🔧 Error in image src interceptor:', error);
+            this._src = value; // Fallback to original value
+          }
+        },
+        configurable: true
+      });
+    }
   }
 
   interceptFetch() {
     const self = this;
     const originalFetch = window.fetch;
     
-    window.fetch = function(url, options) {
-      const convertedUrl = self.convertLocalhostUrl(url);
-      return originalFetch.call(this, convertedUrl, options);
-    };
+    // Only override if not already overridden
+    if (originalFetch === window.fetch) {
+      window.fetch = function(url, options) {
+        try {
+          const convertedUrl = self.convertLocalhostUrl(url);
+          return originalFetch.call(this, convertedUrl, options).catch(error => {
+            // Handle fetch errors gracefully without causing page reloads
+            console.warn('🔧 Fetch error handled gracefully:', error);
+            return Promise.reject(error);
+          });
+        } catch (error) {
+          console.warn('🔧 Error in fetch interceptor:', error);
+          return originalFetch.call(this, url, options);
+        }
+      };
+    }
   }
 
   interceptXHR() {
     const self = this;
     const originalOpen = XMLHttpRequest.prototype.open;
     
-    XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
-      const convertedUrl = self.convertLocalhostUrl(url);
-      return originalOpen.call(this, method, convertedUrl, async, user, password);
-    };
+    // Only override if not already overridden
+    if (originalOpen === XMLHttpRequest.prototype.open) {
+      XMLHttpRequest.prototype.open = function(method, url, async, user, password) {
+        try {
+          const convertedUrl = self.convertLocalhostUrl(url);
+          return originalOpen.call(this, method, convertedUrl, async, user, password);
+        } catch (error) {
+          console.warn('🔧 Error in XHR interceptor:', error);
+          return originalOpen.call(this, method, url, async, user, password);
+        }
+      };
+    }
   }
 
   overrideGetImageUrl() {
