@@ -6,22 +6,10 @@ const getBackendUrl = () => {
   return getBaseUrl();
 };
 
-// Get the asset URL for images and static files
+// Get the asset URL for images and static files - always use relative paths
 const getAssetUrl = () => {
-  // Use window environment variable if available (PRIORITY)
-  if (window.REACT_APP_ASSET_URL) {
-    console.log('🔧 Using window REACT_APP_ASSET_URL:', window.REACT_APP_ASSET_URL);
-    return window.REACT_APP_ASSET_URL;
-  }
-  
-  // Use process environment variable if available
-  if (process.env.REACT_APP_ASSET_URL) {
-    console.log('🔧 Using process REACT_APP_ASSET_URL:', process.env.REACT_APP_ASSET_URL);
-    return process.env.REACT_APP_ASSET_URL;
-  }
-  
-  // Fallback to base URL
-  return getBaseUrl();
+  // Always use relative path to avoid localhost issues
+  return '/';
 };
 
 // Convert image path to proper URL - simplified for relative paths
@@ -257,15 +245,10 @@ window.convertLocalhostUrlsInData = function(data) {
   return data;
 };
 
-// Function to get the correct asset URL for images
+// Function to get the correct asset URL for images - always use relative path
 window.getAssetUrl = function() {
-  if (window.REACT_APP_ASSET_URL) {
-    return window.REACT_APP_ASSET_URL;
-  }
-  if (process.env.REACT_APP_ASSET_URL) {
-    return process.env.REACT_APP_ASSET_URL;
-  }
-  return window.location.origin;
+  // Always use relative path to avoid localhost issues
+  return '/';
 };
 
 // Make functions available globally

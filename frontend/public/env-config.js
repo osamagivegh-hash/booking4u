@@ -11,8 +11,9 @@
     window.REACT_APP_API_URL = 'http://localhost:5001/api';
     window.REACT_APP_BASE_URL = 'http://localhost:5001';
     window.REACT_APP_SOCKET_URL = 'http://localhost:5001';
-    window.REACT_APP_ASSET_URL = 'http://localhost:5001';
-    console.log('🔧 Development environment detected');
+    // Use relative path for assets to avoid localhost issues with images
+    window.REACT_APP_ASSET_URL = '/';
+    console.log('🔧 Development environment detected - using relative paths for images');
   } else if (isGitHubPages) {
     // GitHub Pages deployment - use Render backend
     window.REACT_APP_API_URL = 'https://booking4u-backend.onrender.com/api';

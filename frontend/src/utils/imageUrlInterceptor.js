@@ -151,16 +151,50 @@ class ImageUrlInterceptor {
       this.originalMethods.getImageUrl = window.getImageUrl;
     }
     
-    // Override global getImageUrl function
+    // Override global getImageUrl function with simplified logic
     window.getImageUrl = function(imagePath) {
-      const convertedPath = self.convertLocalhostUrl(imagePath);
-      
-      // If we have an original function, use it with the converted path
-      if (self.originalMethods.getImageUrl) {
-        return self.originalMethods.getImageUrl(convertedPath);
+      if (!imagePath) {
+        return '/default-service-image.svg';
       }
       
-      return convertedPath;
+      // Handle legacy localhost URLs (should not happen with new backend)
+      if (imagePath.includes('localhost:5001')) {
+        const convertedPath = imagePath.replace('http://localhost:5001', '');
+        console.log('🔧 ImageUrlInterceptor: Legacy localhost URL converted:', imagePath, '→', convertedPath);
+        return convertedPath;
+      }
+      
+      // Handle any other localhost URLs (should not happen with new backend)
+      if (imagePath.includes('localhost:') && !imagePath.startsWith('/')) {
+        const convertedPath = imagePath.replace(/https?:\/\/localhost:\d+/, '');
+        console.log('🔧 ImageUrlInterceptor: Legacy localhost URL converted:', imagePath, '→', convertedPath);
+        return convertedPath;
+      }
+      
+      // If it's already a full URL, return as is
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+        return imagePath;
+      }
+      
+      // Backend now always returns relative paths, so we can use them directly
+      // If it's already a relative path starting with /uploads/, return as is
+      if (imagePath.startsWith('/uploads/')) {
+        return imagePath;
+      }
+      
+      // Handle bare filenames that look like service images
+      if (imagePath.includes('serviceImages-') && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+        console.log('🔧 ImageUrlInterceptor: Bare service image filename converted:', imagePath);
+        return `/uploads/services/${imagePath}`;
+      }
+      
+      // If it's just a filename, assume it's in uploads/services
+      if (!imagePath.includes('/')) {
+        return `/uploads/services/${imagePath}`;
+      }
+      
+      // Default case - prepend /uploads/
+      return `/uploads/${imagePath}`;
     };
   }
 

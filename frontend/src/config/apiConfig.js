@@ -68,26 +68,17 @@ export const getApiUrl = () => {
 
 // Get the base URL for images and static files
 export const getBaseUrl = () => {
-  if (window.REACT_APP_BASE_URL) {
-    return window.REACT_APP_BASE_URL;
+  // For images, always use relative paths to avoid localhost issues
+  if (window.REACT_APP_ASSET_URL) {
+    return window.REACT_APP_ASSET_URL;
   }
   
-  if (process.env.REACT_APP_BASE_URL) {
-    return process.env.REACT_APP_BASE_URL;
+  if (process.env.REACT_APP_ASSET_URL) {
+    return process.env.REACT_APP_ASSET_URL;
   }
   
-  if (process.env.NODE_ENV === 'development') {
-    return API_CONFIG.DEVELOPMENT;
-  }
-  
-  // For integrated deployment, use relative URL
-  if (window.location.hostname.includes('render.com') || 
-      window.location.hostname.includes('netlify.app') || 
-      window.location.hostname.includes('vercel.app')) {
-    return '/';
-  }
-  
-  return API_CONFIG.PRIMARY;
+  // Always use relative path for images to avoid localhost issues
+  return '/';
 };
 
 // Get socket URL
