@@ -24,26 +24,37 @@ const getAssetUrl = () => {
   return getBaseUrl();
 };
 
-// Convert relative image path to full URL
+// Convert image path to proper URL - simplified for relative paths
 export const getImageUrl = (imagePath) => {
   if (!imagePath) {
     return '/default-service-image.svg';
   }
   
-  // Handle localhost URLs in integrated deployment - More comprehensive
+  // Handle legacy localhost URLs (should not happen with new backend)
   if (imagePath.includes('localhost:5001')) {
-    console.log('🔧 Converting localhost:5001 image URL to relative:', imagePath);
+    console.log('🔧 Converting legacy localhost:5001 image URL to relative:', imagePath);
     const relativePath = imagePath.replace('http://localhost:5001', '');
     console.log('🔧 Converted to relative path:', relativePath);
     return relativePath;
   }
   
-  // Handle any other localhost URLs
+  // Handle any other localhost URLs (should not happen with new backend)
   if (imagePath.includes('localhost:') && !imagePath.startsWith('/')) {
-    console.log('🔧 Converting localhost image URL to relative:', imagePath);
+    console.log('🔧 Converting legacy localhost image URL to relative:', imagePath);
     const relativePath = imagePath.replace(/https?:\/\/localhost:\d+/, '');
     console.log('🔧 Converted to relative path:', relativePath);
     return relativePath;
+  }
+  
+  // If it's already a full URL, return as is
+  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+    return imagePath;
+  }
+  
+  // Backend now always returns relative paths, so we can use them directly
+  // If it's already a relative path starting with /uploads/, return as is
+  if (imagePath.startsWith('/uploads/')) {
+    return imagePath;
   }
   
   // Handle bare filenames that look like service images
@@ -52,47 +63,13 @@ export const getImageUrl = (imagePath) => {
     return `/uploads/services/${imagePath}`;
   }
   
-  // If it's already a full URL, return as is
-  if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-    return imagePath;
-  }
-  
-  // Check if we're in integrated deployment (same origin)
-  const isIntegratedDeployment = window.location.hostname.includes('render.com') || 
-                                 window.location.hostname.includes('netlify.app') || 
-                                 window.location.hostname.includes('vercel.app') ||
-                                 window.location.hostname.includes('github.io') ||
-                                 window.REACT_APP_API_URL === '/api';
-  
-  if (isIntegratedDeployment) {
-    // In integrated deployment, use relative URLs
-    if (imagePath.startsWith('/uploads/')) {
-      return imagePath; // Already relative
-    }
-    
-    // If it's just a filename, assume it's in uploads/services
-    if (!imagePath.includes('/')) {
-      return `/uploads/services/${imagePath}`;
-    }
-    
-    // Default case - prepend /uploads/
-    return `/uploads/${imagePath}`;
-  }
-  
-  // Development or other environments - use asset URL
-  const assetUrl = getAssetUrl();
-  
-  if (imagePath.startsWith('/uploads/')) {
-    return `${assetUrl}${imagePath}`;
-  }
-  
   // If it's just a filename, assume it's in uploads/services
   if (!imagePath.includes('/')) {
-    return `${assetUrl}/uploads/services/${imagePath}`;
+    return `/uploads/services/${imagePath}`;
   }
   
-  // Default case - prepend asset URL
-  return `${assetUrl}/uploads/${imagePath}`;
+  // Default case - prepend /uploads/
+  return `/uploads/${imagePath}`;
 };
 
 // Get service image with fallback

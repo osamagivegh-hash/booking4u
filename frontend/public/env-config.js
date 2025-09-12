@@ -80,20 +80,21 @@
             if (typeof value === 'string') {
               console.log('🔧 Image src being set:', value);
               
-              // Handle localhost:5001 URLs
+              // Backend now returns relative paths, but keep conversion for legacy data compatibility
+              // Handle legacy localhost:5001 URLs (should not happen with new backend)
               if (value.includes('localhost:5001')) {
                 convertedValue = value.replace('http://localhost:5001', '');
-                console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
+                console.log('🔧 Legacy localhost URL converted in env-config:', value, '→', convertedValue);
               }
               // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
               else if (value.includes('serviceImages-') && !value.startsWith('/') && !value.startsWith('http')) {
                 convertedValue = '/uploads/services/' + value;
                 console.log('🔧 Bare filename converted to full path:', value, '→', convertedValue);
               }
-              // Handle any other localhost URLs
+              // Handle any other legacy localhost URLs (should not happen with new backend)
               else if (value.includes('localhost:') && !value.startsWith('/')) {
                 convertedValue = value.replace(/https?:\/\/localhost:\d+/, '');
-                console.log('🔧 Localhost URL converted:', value, '→', convertedValue);
+                console.log('🔧 Legacy localhost URL converted:', value, '→', convertedValue);
               }
               // Handle any bare filename that looks like an image
               else if (value.includes('.webp') && !value.startsWith('/') && !value.startsWith('http')) {

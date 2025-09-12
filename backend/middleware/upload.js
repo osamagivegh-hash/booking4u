@@ -127,27 +127,16 @@ const deleteFile = (filePath) => {
 
 // Utility function to get file URL
 const getFileUrl = (req, filename) => {
-  // In production, use relative URLs to avoid localhost issues
-  if (process.env.NODE_ENV === 'production') {
-    const cleanFilename = filename.replace(/\\/g, '/');
-    const relativeUrl = `/uploads/${cleanFilename}`;
-    console.log('Generated relative image URL:', relativeUrl);
-    return relativeUrl;
-  }
-  
-  // In development, use full URL
-  const protocol = req.protocol || 'http';
-  const host = req.get('host') || 'localhost:5001';
-  const baseUrl = `${protocol}://${host}`;
-  
-  // Clean filename to ensure proper URL
+  // Always use relative URLs to avoid localhost issues in all environments
+  // This ensures images work correctly in both development and production
   const cleanFilename = filename.replace(/\\/g, '/');
+  const relativeUrl = `/uploads/${cleanFilename}`;
   
-  // Ensure the URL is properly formatted
-  const fullUrl = `${baseUrl}/uploads/${cleanFilename}`;
+  console.log('Generated relative image URL:', relativeUrl);
+  console.log('Environment:', process.env.NODE_ENV || 'development');
+  console.log('Request host:', req.get('host') || 'unknown');
   
-  console.log('Generated image URL:', fullUrl);
-  return fullUrl;
+  return relativeUrl;
 };
 
 module.exports = {

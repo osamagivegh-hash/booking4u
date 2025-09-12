@@ -23,25 +23,25 @@ class ImageUrlInterceptor {
     if (typeof url === 'string') {
       console.log('🔧 ImageUrlInterceptor: Processing URL:', url);
       
-      // Handle localhost:5001 URLs
+      // Handle legacy localhost:5001 URLs (should not happen with new backend)
       if (url.includes('localhost:5001')) {
         const convertedUrl = url.replace('http://localhost:5001', '');
-        console.log('🔧 ImageUrlInterceptor: localhost URL converted:', url, '→', convertedUrl);
+        console.log('🔧 ImageUrlInterceptor: Legacy localhost URL converted:', url, '→', convertedUrl);
         return convertedUrl;
       }
-      // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
+      // Handle any other localhost URLs (should not happen with new backend)
+      else if (url.includes('localhost:') && !url.startsWith('/')) {
+        const convertedUrl = url.replace(/https?:\/\/localhost:\d+/, '');
+        console.log('🔧 ImageUrlInterceptor: Legacy localhost URL converted:', url, '→', convertedUrl);
+        return convertedUrl;
+      }
+      // Handle bare filenames (like serviceImages-xxx.webp) - for legacy data
       else if (url.includes('serviceImages-') && !url.startsWith('/') && !url.startsWith('http')) {
         const convertedUrl = '/uploads/services/' + url;
         console.log('🔧 ImageUrlInterceptor: Bare filename converted:', url, '→', convertedUrl);
         return convertedUrl;
       }
-      // Handle any other localhost URLs
-      else if (url.includes('localhost:') && !url.startsWith('/')) {
-        const convertedUrl = url.replace(/https?:\/\/localhost:\d+/, '');
-        console.log('🔧 ImageUrlInterceptor: Localhost URL converted:', url, '→', convertedUrl);
-        return convertedUrl;
-      }
-      // Handle any bare webp filename
+      // Handle any bare webp filename - for legacy data
       else if (url.includes('.webp') && !url.startsWith('/') && !url.startsWith('http')) {
         const convertedUrl = '/uploads/services/' + url;
         console.log('🔧 ImageUrlInterceptor: Bare webp filename converted:', url, '→', convertedUrl);

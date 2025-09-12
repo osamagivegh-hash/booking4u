@@ -165,19 +165,13 @@ api.interceptors.response.use(
       console.log('🔒 CORS Headers received:', corsHeaders);
     }
     
-    // Convert localhost URLs in response data for integrated deployment
+    // Backend now always returns relative paths, so no conversion needed
+    // This interceptor is kept for backward compatibility but should not be needed
     if (response.data && (window.location.hostname.includes('render.com') || 
                          window.location.hostname.includes('netlify.app') || 
                          window.location.hostname.includes('vercel.app') ||
                          window.location.hostname.includes('github.io'))) {
-      console.log('🔧 Converting localhost URLs in API response data');
-      response.data = convertLocalhostUrlsInResponse(response.data);
-    }
-    
-    // Also convert localhost URLs in integrated deployment (same origin)
-    if (response.data && window.REACT_APP_API_URL === '/api') {
-      console.log('🔧 Converting localhost URLs in integrated deployment API response data');
-      response.data = convertLocalhostUrlsInResponse(response.data);
+      console.log('🔧 Backend should now return relative paths - no conversion needed');
     }
     
     return response;
