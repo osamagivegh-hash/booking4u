@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './stores/authStore';
 import { LanguageProvider } from './contexts/LanguageContext';
 import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
+import debugLogger from './utils/debugLogger';
+import autoRefreshTest from './utils/autoRefreshTest';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -30,21 +32,41 @@ import ReviewsPage from './pages/Reviews/ReviewsPage';
 import NewsPage from './pages/News/NewsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ApiDebugger from './components/ApiDebugger';
+import ServiceWorkerUpdateNotification from './components/ServiceWorkerUpdateNotification';
 
 function App() {
   const { isAuthenticated, initializeAuth, logout } = useAuthStore();
 
+  // Initialize debug logging
+  useEffect(() => {
+    debugLogger.log('APP', '🚀 App component mounted', {
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href
+    });
+    
+    // Log debug info to console for immediate visibility
+    console.log('🔍 DEBUG: App mounted, debug logger active');
+    console.log('🔍 DEBUG: Use window.debugLogger.getLogs() to see all logs');
+    console.log('🔍 DEBUG: Use window.debugLogger.exportLogs() to export logs');
+    console.log('🔍 DEBUG: Use window.autoRefreshTest.logStatus() to check auto-refresh status');
+    console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
+  }, []);
+
   // Initialize authentication on app load
   useEffect(() => {
     console.log('🔍 App: Component mounted, initializing auth');
+    debugLogger.log('AUTH', '🔐 Initializing authentication');
     
     // Only initialize once on mount
     const initializeOnce = async () => {
       try {
         await initializeAuth();
         console.log('🔍 App: Auth initialization completed');
+        debugLogger.log('AUTH', '✅ Auth initialization completed');
       } catch (error) {
         console.log('🔍 App: Auth initialization error:', error.message);
+        debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });
       }
     };
     
@@ -72,6 +94,7 @@ function App() {
     <LanguageProvider>
       <ApiErrorBoundary>
         <div className="App">
+          <ServiceWorkerUpdateNotification />
           <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Layout />}>

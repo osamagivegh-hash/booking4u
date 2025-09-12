@@ -200,8 +200,8 @@ const MessagesPage = () => {
         setConnectionStatus(isConnected ? 'connected' : 'disconnected');
       };
 
-      // Check connection status periodically
-      const interval = setInterval(checkConnectionStatus, 5000);
+      // Check connection status periodically (reduced frequency)
+      const interval = setInterval(checkConnectionStatus, 30000); // 30 seconds instead of 5
       connectionIntervalRef.current = interval;
       checkConnectionStatus(); // Initial check
 
@@ -375,7 +375,7 @@ const MessagesPage = () => {
     }
   }, [token, selectedMessage, socketService.getConnectionStatus()]);
 
-  // Auto-refresh messages every 30 seconds
+  // Auto-refresh messages every 2 minutes instead of 30 seconds to reduce load
   useEffect(() => {
     if (token) {
       const interval = setInterval(() => {
@@ -389,7 +389,7 @@ const MessagesPage = () => {
         } catch (error) {
           console.error('Error in auto-refresh:', error);
         }
-      }, 30000);
+      }, 120000); // 2 minutes instead of 30 seconds
       
       return () => clearInterval(interval);
     }

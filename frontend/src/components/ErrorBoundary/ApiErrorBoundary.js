@@ -31,8 +31,9 @@ const ApiErrorBoundary = ({ children }) => {
   useEffect(() => {
     checkApiStatus();
     
-    // Check API status every 30 seconds
-    const interval = setInterval(checkApiStatus, 30000);
+    // Check API status every 5 minutes instead of 30 seconds to reduce load
+    // and prevent potential auto-refresh issues
+    const interval = setInterval(checkApiStatus, 300000); // 5 minutes
     
     return () => clearInterval(interval);
   }, []);
