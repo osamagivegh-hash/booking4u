@@ -13,7 +13,6 @@ import {
 } from '@heroicons/react/24/outline';
 import ServiceCard from '../components/Services/ServiceCard';
 import UnifiedSearch from '../components/Search/UnifiedSearch';
-import BackendStatus from '../components/BackendStatus';
 import api from '../services/api';
 
 const HomePage = () => {
@@ -251,12 +250,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Backend Status Section */}
-      <section className="py-8 bg-gray-50">
-        <div className="container-responsive">
-          <BackendStatus />
-        </div>
-      </section>
 
       {/* Stats Section */}
       <section className="py-16 bg-white">

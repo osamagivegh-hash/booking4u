@@ -10,6 +10,7 @@ import autoRefreshTest from './utils/autoRefreshTest';
 import statePreservation from './utils/statePreservation';
 import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 import autoRefreshPrevention from './utils/autoRefreshPrevention';
+import backendHealthService from './services/backendHealthService';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -38,6 +39,7 @@ import NewsPage from './pages/News/NewsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ApiDebugger from './components/ApiDebugger';
 import ServiceWorkerUpdateNotification from './components/ServiceWorkerUpdateNotification';
+import DiagnosticsPage from './pages/Admin/DiagnosticsPage';
 
 function App() {
   const { isAuthenticated, initializeAuth, logout } = useAuthStore();
@@ -78,6 +80,10 @@ function App() {
         await initializeAuth();
         console.log('🔍 App: Auth initialization completed');
         debugLogger.log('AUTH', '✅ Auth initialization completed');
+        
+        // Initialize backend health service
+        await backendHealthService.initialize();
+        console.log('🔍 App: Backend health service initialized');
       } catch (error) {
         console.log('🔍 App: Auth initialization error:', error.message);
         debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });
@@ -129,6 +135,7 @@ function App() {
           <Route path="services/add" element={<AddServicePage />} />
           <Route path="news" element={<NewsPage />} />
           <Route path="debug" element={<ApiDebugger />} />
+          <Route path="admin/diagnostics" element={<DiagnosticsPage />} />
         </Route>
 
         {/* Protected Routes */}
