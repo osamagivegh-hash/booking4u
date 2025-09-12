@@ -14,6 +14,7 @@ class StatePreservation {
     // Preserve scroll position on page unload
     window.addEventListener('beforeunload', () => {
       this.saveScrollPosition();
+      this.saveAllFormStates();
     });
 
     // Restore scroll position on page load
@@ -21,8 +22,21 @@ class StatePreservation {
       this.restoreScrollPosition();
     });
 
+    // Also restore on DOMContentLoaded for faster restoration
+    document.addEventListener('DOMContentLoaded', () => {
+      this.restoreScrollPosition();
+    });
+
+    // Preserve scroll position on route changes (for SPA)
+    window.addEventListener('popstate', () => {
+      setTimeout(() => this.restoreScrollPosition(), 100);
+    });
+
     // Preserve form states on input changes
     this.setupFormPreservation();
+    
+    // Auto-save scroll position periodically
+    this.setupScrollAutoSave();
   }
 
   setupFormPreservation() {
@@ -37,6 +51,18 @@ class StatePreservation {
       if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'SELECT') {
         this.saveFormState(event.target);
       }
+    });
+  }
+
+  setupScrollAutoSave() {
+    let scrollTimeout;
+    
+    // Save scroll position on scroll events (debounced)
+    window.addEventListener('scroll', () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        this.saveScrollPosition();
+      }, 1000); // Save after 1 second of no scrolling
     });
   }
 
@@ -170,6 +196,102 @@ class StatePreservation {
       window.location.reload = originalReload;
       this.isPreserving = false;
     }, 1000);
+  }
+
+  // Enhanced method to save all form states on page
+  saveAllFormStates() {
+    const forms = document.querySelectorAll('form');
+    let savedCount = 0;
+    
+    forms.forEach(form => {
+      const formId = form.id || form.action || `form-${savedCount}`;
+      const formData = new FormData(form);
+      const formState = {};
+      
+      // Convert FormData to object
+      for (let [key, value] of formData.entries()) {
+        formState[key] = value;
+      }
+      
+      if (Object.keys(formState).length > 0) {
+        this.formStates.set(formId, {
+          data: formState,
+          timestamp: Date.now()
+        });
+        
+        try {
+          sessionStorage.setItem(`form-state-${formId}`, JSON.stringify(formState));
+          savedCount++;
+        } catch (error) {
+          console.warn(`Could not save form state for ${formId}:`, error);
+        }
+      }
+    });
+    
+    console.log(`🔧 Saved ${savedCount} form states`);
+    return savedCount;
+  }
+
+  // Enhanced method to restore all form states
+  restoreAllFormStates() {
+    const forms = document.querySelectorAll('form');
+    let restoredCount = 0;
+    
+    forms.forEach(form => {
+      const formId = form.id || form.action || `form-${restoredCount}`;
+      const restored = this.restoreFormState(formId);
+      if (restored) {
+        restoredCount++;
+      }
+    });
+    
+    console.log(`🔧 Restored ${restoredCount} form states`);
+    return restoredCount;
+  }
+
+  // Method to clear all saved states
+  clearAllStates() {
+    this.formStates.clear();
+    this.scrollPositions.clear();
+    
+    try {
+      // Clear all form states from sessionStorage
+      const keys = Object.keys(sessionStorage);
+      keys.forEach(key => {
+        if (key.startsWith('form-state-') || key === 'scroll-position') {
+          sessionStorage.removeItem(key);
+        }
+      });
+      console.log('🔧 All states cleared');
+    } catch (error) {
+      console.warn('Could not clear all states:', error);
+    }
+  }
+
+  // Method to get comprehensive state report
+  getStateReport() {
+    const formStates = Array.from(this.formStates.entries()).map(([id, state]) => ({
+      id,
+      timestamp: state.timestamp,
+      fieldCount: Object.keys(state.data).length,
+      age: Date.now() - state.timestamp
+    }));
+    
+    const scrollPositions = Array.from(this.scrollPositions.entries()).map(([path, position]) => ({
+      path,
+      x: position.x,
+      y: position.y,
+      timestamp: position.timestamp,
+      age: Date.now() - position.timestamp
+    }));
+    
+    return {
+      formStates,
+      scrollPositions,
+      totalFormStates: formStates.length,
+      totalScrollPositions: scrollPositions.length,
+      isPreserving: this.isPreserving
+    };
   }
 
   // Method to get current form states (for debugging)

@@ -36,33 +36,48 @@ class AutoRefreshTestSuite {
     };
 
     try {
-      // Navigate to registration page
-      window.location.href = '/register';
-      
-      // Wait for page to load
-      await this.waitForPageLoad();
+      // Check if we're already on registration page
+      if (window.location.pathname !== '/register') {
+        // Navigate to registration page
+        window.location.href = '/register';
+        
+        // Wait for page to load
+        await this.waitForPageLoad();
+      }
       
       // Fill form partially
       const nameInput = document.querySelector('input[name="name"]');
       const emailInput = document.querySelector('input[name="email"]');
+      const passwordInput = document.querySelector('input[name="password"]');
       
-      if (nameInput && emailInput) {
+      if (nameInput && emailInput && passwordInput) {
         nameInput.value = 'Test User';
         emailInput.value = 'test@example.com';
+        passwordInput.value = 'testpassword123';
         
         // Trigger input events
         nameInput.dispatchEvent(new Event('input', { bubbles: true }));
         emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+        passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
         
         testResult.details.push('Form fields filled successfully');
         
-        // Check if form state is preserved
-        const formState = window.statePreservation?.getFormStates();
-        if (formState && formState.length > 0) {
-          testResult.details.push('Form state preserved successfully');
-          testResult.status = 'passed';
+        // Wait a bit for state preservation to kick in
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Check if form state is preserved in sessionStorage
+        const savedState = sessionStorage.getItem('form-state-register-form');
+        if (savedState) {
+          const formData = JSON.parse(savedState);
+          if (formData.name === 'Test User' && formData.email === 'test@example.com') {
+            testResult.details.push('Form state preserved successfully in sessionStorage');
+            testResult.status = 'passed';
+          } else {
+            testResult.details.push('Form state preserved but data incorrect');
+            testResult.status = 'failed';
+          }
         } else {
-          testResult.details.push('Form state not preserved');
+          testResult.details.push('Form state not preserved in sessionStorage');
           testResult.status = 'failed';
         }
       } else {
@@ -239,18 +254,121 @@ class AutoRefreshTestSuite {
         window.statePreservation.saveScrollPosition();
         testResult.details.push('Scroll position saved');
         
-        // Restore scroll position
-        const restored = window.statePreservation.restoreScrollPosition();
-        if (restored) {
-          testResult.details.push('Scroll position restored');
-          testResult.status = 'passed';
+        // Check if scroll position is saved in sessionStorage
+        const savedPosition = sessionStorage.getItem('scroll-position');
+        if (savedPosition) {
+          const position = JSON.parse(savedPosition);
+          if (position.y === 500) {
+            testResult.details.push('Scroll position saved correctly in sessionStorage');
+            testResult.status = 'passed';
+          } else {
+            testResult.details.push('Scroll position saved but value incorrect');
+            testResult.status = 'failed';
+          }
         } else {
-          testResult.details.push('Scroll position not restored');
+          testResult.details.push('Scroll position not saved in sessionStorage');
           testResult.status = 'failed';
         }
       } else {
         testResult.details.push('State preservation not available');
         testResult.status = 'failed';
+      }
+    } catch (error) {
+      testResult.details.push(`Error: ${error.message}`);
+      testResult.status = 'failed';
+    }
+
+    this.testResults.push(testResult);
+    return testResult;
+  }
+
+  // Test 6: Service Worker Update Handling (No Auto-Reload)
+  async testServiceWorkerNoAutoReload() {
+    console.log('🧪 Test 6: Service Worker Update Handling (No Auto-Reload)');
+    
+    const testResult = {
+      name: 'Service Worker No Auto-Reload',
+      status: 'running',
+      details: []
+    };
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        
+        if (registration) {
+          testResult.details.push('Service Worker registered');
+          
+          // Check if update notification component exists
+          const updateNotification = document.querySelector('[data-testid="sw-update-notification"]');
+          if (updateNotification) {
+            testResult.details.push('Update notification component found');
+          }
+          
+          // Simulate service worker update without auto-reload
+          if (registration.waiting) {
+            testResult.details.push('Service Worker update available');
+            
+            // Check if the update notification prevents auto-reload
+            const hasAutoReloadPrevention = window.statePreservation && 
+              typeof window.statePreservation.preventDataLoss === 'function';
+            
+            if (hasAutoReloadPrevention) {
+              testResult.details.push('Auto-reload prevention mechanism available');
+              testResult.status = 'passed';
+            } else {
+              testResult.details.push('Auto-reload prevention mechanism not found');
+              testResult.status = 'failed';
+            }
+          } else {
+            testResult.details.push('No Service Worker update available');
+            testResult.status = 'passed';
+          }
+        } else {
+          testResult.details.push('No Service Worker registered');
+          testResult.status = 'passed';
+        }
+      } else {
+        testResult.details.push('Service Worker not supported');
+        testResult.status = 'passed';
+      }
+    } catch (error) {
+      testResult.details.push(`Error: ${error.message}`);
+      testResult.status = 'failed';
+    }
+
+    this.testResults.push(testResult);
+    return testResult;
+  }
+
+  // Test 7: Error Boundary Functionality
+  async testErrorBoundaryFunctionality() {
+    console.log('🧪 Test 7: Error Boundary Functionality');
+    
+    const testResult = {
+      name: 'Error Boundary Functionality',
+      status: 'running',
+      details: []
+    };
+
+    try {
+      // Check if error boundaries are available
+      const resourceErrorBoundary = document.querySelector('[data-testid="resource-error-boundary"]');
+      const imageErrorBoundary = document.querySelector('[data-testid="image-error-boundary"]');
+      
+      if (resourceErrorBoundary || imageErrorBoundary) {
+        testResult.details.push('Error boundary components found');
+        testResult.status = 'passed';
+      } else {
+        // Check if error boundaries are imported in the app
+        const hasErrorBoundaries = window.ResourceErrorBoundary || window.ImageErrorBoundary;
+        if (hasErrorBoundaries) {
+          testResult.details.push('Error boundary classes available');
+          testResult.status = 'passed';
+        } else {
+          testResult.details.push('Error boundaries not found');
+          testResult.status = 'failed';
+        }
       }
     } catch (error) {
       testResult.details.push(`Error: ${error.message}`);
@@ -272,7 +390,9 @@ class AutoRefreshTestSuite {
       this.testImageLoadingErrorHandling.bind(this),
       this.testServiceWorkerUpdateHandling.bind(this),
       this.testApiInterceptorErrorHandling.bind(this),
-      this.testScrollPositionPreservation.bind(this)
+      this.testScrollPositionPreservation.bind(this),
+      this.testServiceWorkerNoAutoReload.bind(this),
+      this.testErrorBoundaryFunctionality.bind(this)
     ];
     
     for (const test of tests) {

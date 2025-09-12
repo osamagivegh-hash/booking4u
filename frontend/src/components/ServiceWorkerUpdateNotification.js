@@ -35,15 +35,38 @@ const ServiceWorkerUpdateNotification = () => {
       // Tell the service worker to skip waiting and become active
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
       
-      // Instead of reloading, show a success message and let the user decide
-      toast.success('تم تحديث التطبيق بنجاح! سيتم تطبيق التحديثات عند إعادة تحميل الصفحة.', {
-        duration: 8000,
+      // Save current state before any potential reload
+      if (window.statePreservation) {
+        window.statePreservation.saveScrollPosition();
+        // Save any active form states
+        const forms = document.querySelectorAll('form');
+        forms.forEach(form => {
+          const formId = form.id || form.action || 'default-form';
+          window.statePreservation.saveFormState(form.querySelector('input, textarea, select'));
+        });
+      }
+      
+      // Show success message without auto-reloading
+      toast.success('تم تحديث التطبيق بنجاح! سيتم تطبيق التحديثات عند إعادة تحميل الصفحة يدوياً.', {
+        duration: 10000,
         position: 'top-center',
+        style: {
+          background: '#10b981',
+          color: '#fff',
+        },
       });
       
       // Hide the notification after successful update
       setUpdateAvailable(false);
       setRegistration(null);
+      
+      // Log the update for debugging
+      if (window.debugLogger) {
+        window.debugLogger.log('SERVICE_WORKER', 'Update applied without auto-reload', {
+          timestamp: new Date().toISOString(),
+          statePreserved: !!window.statePreservation
+        });
+      }
     } else {
       // Show message that update is available
       toast.info('تحديث متاح. يرجى إعادة تحميل الصفحة يدوياً للحصول على أحدث الميزات.', {

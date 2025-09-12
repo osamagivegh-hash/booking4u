@@ -4,6 +4,7 @@ import useAuthStore from './stores/authStore';
 import { LanguageProvider } from './contexts/LanguageContext';
 import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
 import ResourceErrorBoundary from './components/ErrorBoundary/ResourceErrorBoundary';
+import ImageErrorBoundary from './components/ErrorBoundary/ImageErrorBoundary';
 import debugLogger from './utils/debugLogger';
 import autoRefreshTest from './utils/autoRefreshTest';
 import imageUrlInterceptor from './utils/imageUrlInterceptor';
@@ -101,7 +102,8 @@ function App() {
     <LanguageProvider>
       <ApiErrorBoundary>
         <ResourceErrorBoundary>
-          <div className="App">
+          <ImageErrorBoundary>
+            <div className="App">
             <ServiceWorkerUpdateNotification />
             <Routes>
         {/* Public Routes */}
@@ -166,7 +168,8 @@ function App() {
         {/* 404 Route */}
         <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </div>
+            </div>
+          </ImageErrorBoundary>
         </ResourceErrorBoundary>
       </ApiErrorBoundary>
     </LanguageProvider>

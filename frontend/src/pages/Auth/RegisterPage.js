@@ -16,19 +16,76 @@ const RegisterPage = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      role: 'customer'
+    }
+  });
 
   const password = watch('password');
+  
+  // Watch all form values for state preservation
+  const watchedValues = watch();
 
   // Restore form state on component mount
   useEffect(() => {
     const formId = 'register-form';
-    const restored = statePreservation.restoreFormState(formId);
-    if (restored) {
-      console.log('🔧 Registration form state restored');
+    
+    // Try to restore form state from sessionStorage
+    try {
+      const savedState = sessionStorage.getItem(`form-state-${formId}`);
+      if (savedState) {
+        const formData = JSON.parse(savedState);
+        
+        // Restore form values using react-hook-form setValue
+        Object.entries(formData).forEach(([name, value]) => {
+          if (name && value !== undefined && value !== null) {
+            setValue(name, value);
+          }
+        });
+        
+        console.log('🔧 Registration form state restored:', formData);
+        toast.success('تم استعادة بيانات النموذج المحفوظة', {
+          duration: 3000,
+          position: 'top-center'
+        });
+      }
+    } catch (error) {
+      console.warn('Could not restore form state:', error);
     }
-  }, []);
+    
+    // Restore scroll position
+    const scrollRestored = statePreservation.restoreScrollPosition();
+    if (scrollRestored) {
+      console.log('🔧 Scroll position restored');
+    }
+  }, [setValue]);
+
+  // Save form state on changes
+  useEffect(() => {
+    const formId = 'register-form';
+    
+    // Only save if there are actual values (not just default empty values)
+    const hasValues = Object.values(watchedValues).some(value => 
+      value !== undefined && value !== null && value !== ''
+    );
+    
+    if (hasValues) {
+      try {
+        sessionStorage.setItem(`form-state-${formId}`, JSON.stringify(watchedValues));
+        console.log('🔧 Form state saved:', watchedValues);
+      } catch (error) {
+        console.warn('Could not save form state:', error);
+      }
+    }
+  }, [watchedValues]);
 
   const onSubmit = async (data, event) => {
     // Explicitly prevent default form submission

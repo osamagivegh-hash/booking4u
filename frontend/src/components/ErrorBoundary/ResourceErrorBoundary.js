@@ -50,12 +50,23 @@ class ResourceErrorBoundary extends Component {
     // Use a gentle reload that preserves some state
     if (window.statePreservation) {
       window.statePreservation.saveScrollPosition();
+      window.statePreservation.saveAllFormStates();
     }
     
     // Use location.reload with a small delay to allow state saving
     setTimeout(() => {
       window.location.reload();
     }, 100);
+  };
+
+  handleReset = () => {
+    // Reset error boundary state without reloading
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      retryCount: 0
+    });
   };
 
   render() {
@@ -86,6 +97,14 @@ class ResourceErrorBoundary extends Component {
                   المحاولة مرة أخرى ({retryCount + 1}/{maxRetries})
                 </button>
               )}
+              
+              <button
+                onClick={this.handleReset}
+                className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                <ArrowPathIcon className="h-4 w-4 mr-2" />
+                إعادة تعيين (بدون إعادة تحميل)
+              </button>
               
               <button
                 onClick={this.handleReload}
