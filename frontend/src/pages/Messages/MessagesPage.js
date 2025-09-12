@@ -200,8 +200,9 @@ const MessagesPage = () => {
         setConnectionStatus(isConnected ? 'connected' : 'disconnected');
       };
 
-      // Check connection status periodically (reduced frequency)
-      const interval = setInterval(checkConnectionStatus, 30000); // 30 seconds instead of 5
+      // Check connection status periodically (reduced frequency to prevent auto-refresh)
+      // Changed from 30 seconds to 5 minutes to prevent the auto-refresh issue
+      const interval = setInterval(checkConnectionStatus, 300000); // 5 minutes instead of 30 seconds
       connectionIntervalRef.current = interval;
       checkConnectionStatus(); // Initial check
 

@@ -32,12 +32,20 @@ api.interceptors.request.use(
     // Set the base URL dynamically for each request
     config.baseURL = getDynamicApiUrl();
     
+    // Fix for image uploads: Don't override Content-Type for multipart/form-data
+    // This prevents console errors when uploading images
+    if (config.headers['Content-Type'] === 'multipart/form-data') {
+      // Remove the default Content-Type to let axios set it automatically with boundary
+      delete config.headers['Content-Type'];
+    }
+    
     console.log('🔍 API REQUEST INTERCEPTOR:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       fullUrl: `${config.baseURL}${config.url}`,
       origin: window.location.origin,
       baseURL: config.baseURL,
+      contentType: config.headers['Content-Type'],
       timestamp: new Date().toISOString()
     });
     

@@ -197,8 +197,9 @@ class AutoRefreshPrevention {
       }
     };
     
-    // Check for navigation changes periodically
-    setInterval(checkNavigation, 1000);
+    // Check for navigation changes periodically (reduced frequency to prevent performance issues)
+    // Changed from 1 second to 10 seconds to reduce unnecessary checks
+    setInterval(checkNavigation, 10000);
     
     // Also monitor popstate events
     window.addEventListener('popstate', (event) => {

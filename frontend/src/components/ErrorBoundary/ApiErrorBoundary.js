@@ -29,14 +29,11 @@ const ApiErrorBoundary = ({ children }) => {
   };
 
   useEffect(() => {
+    // Only check API status once when component mounts
+    // No periodic checks to prevent unnecessary API calls and potential auto-refresh issues
+    // This ensures the "Checking API connectivity" message only appears once on initial load
     checkApiStatus();
-    
-    // Check API status every 5 minutes instead of 30 seconds to reduce load
-    // and prevent potential auto-refresh issues
-    const interval = setInterval(checkApiStatus, 300000); // 5 minutes
-    
-    return () => clearInterval(interval);
-  }, []);
+  }, []); // Empty dependency array ensures this runs only once
 
   if (apiStatus.isLoading) {
     return (
