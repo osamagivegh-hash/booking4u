@@ -101,7 +101,44 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Response interceptor with refresh token flow
+// Function to recursively convert localhost URLs in response data
+const convertLocalhostUrlsInResponse = (data) => {
+  if (!data) return data;
+  
+  if (typeof data === 'string') {
+    // Convert localhost:5001 URLs to relative paths
+    if (data.includes('localhost:5001')) {
+      const converted = data.replace('http://localhost:5001', '');
+      console.log('🔧 Converting localhost URL in response:', data, '→', converted);
+      return converted;
+    }
+    return data;
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(item => convertLocalhostUrlsInResponse(item));
+  }
+  
+  if (typeof data === 'object') {
+    const converted = {};
+    for (const [key, value] of Object.entries(data)) {
+      // Convert URLs in image-related fields
+      if (key === 'url' || key === 'image' || key === 'images' || 
+          key.includes('image') || key.includes('Image') || 
+          key.includes('photo') || key.includes('Photo') ||
+          key.includes('avatar') || key.includes('Avatar')) {
+        converted[key] = convertLocalhostUrlsInResponse(value);
+      } else {
+        converted[key] = convertLocalhostUrlsInResponse(value);
+      }
+    }
+    return converted;
+  }
+  
+  return data;
+};
+
+// Response interceptor with refresh token flow and URL conversion
 api.interceptors.response.use(
   (response) => {
     console.log('✅ API RESPONSE INTERCEPTOR:', {
@@ -120,6 +157,14 @@ api.interceptors.response.use(
     
     if (Object.values(corsHeaders).some(header => header)) {
       console.log('🔒 CORS Headers received:', corsHeaders);
+    }
+    
+    // Convert localhost URLs in response data for integrated deployment
+    if (response.data && (window.location.hostname.includes('render.com') || 
+                         window.location.hostname.includes('netlify.app') || 
+                         window.location.hostname.includes('vercel.app'))) {
+      console.log('🔧 Converting localhost URLs in API response data');
+      response.data = convertLocalhostUrlsInResponse(response.data);
     }
     
     return response;

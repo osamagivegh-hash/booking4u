@@ -225,6 +225,10 @@
     // Also convert images periodically to catch any missed ones
     setInterval(() => {
       window.convertExistingImageUrls();
+      // Also run the global converter as a backup
+      if (window.convertAllLocalhostImageUrls) {
+        window.convertAllLocalhostImageUrls();
+      }
     }, 2000); // Check every 2 seconds
     
     console.log('🔧 API and image configuration overridden for integrated deployment');

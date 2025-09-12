@@ -28,6 +28,12 @@ export const getImageUrl = (imagePath) => {
     return relativePath;
   }
   
+  // Handle bare filenames that look like service images
+  if (imagePath.includes('serviceImages-') && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+    console.log('🔧 Converting bare service image filename to full path:', imagePath);
+    return `/uploads/services/${imagePath}`;
+  }
+  
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
     return imagePath;
@@ -185,16 +191,72 @@ window.convertAllLocalhostImageUrls = function() {
   let convertedCount = 0;
   
   images.forEach(img => {
-    if (img.src && img.src.includes('localhost:5001')) {
-      const newSrc = img.src.replace('http://localhost:5001', '');
-      console.log('🔧 Global converter: Converting image URL:', img.src, '→', newSrc);
-      img.src = newSrc;
-      convertedCount++;
+    if (img.src) {
+      let newSrc = img.src;
+      
+      // Convert localhost:5001 URLs
+      if (img.src.includes('localhost:5001')) {
+        newSrc = img.src.replace('http://localhost:5001', '');
+        console.log('🔧 Global converter: Converting localhost:5001 URL:', img.src, '→', newSrc);
+        convertedCount++;
+      }
+      // Convert bare service image filenames
+      else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+        newSrc = `/uploads/services/${img.src}`;
+        console.log('🔧 Global converter: Converting bare filename:', img.src, '→', newSrc);
+        convertedCount++;
+      }
+      // Convert any other localhost URLs
+      else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
+        newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
+        console.log('🔧 Global converter: Converting localhost URL:', img.src, '→', newSrc);
+        convertedCount++;
+      }
+      
+      if (newSrc !== img.src) {
+        img.src = newSrc;
+      }
     }
   });
   
   console.log(`🔧 Global converter: Converted ${convertedCount} image URLs`);
   return convertedCount;
+};
+
+// Enhanced function to convert URLs in data objects
+window.convertLocalhostUrlsInData = function(data) {
+  if (!data) return data;
+  
+  if (typeof data === 'string') {
+    if (data.includes('localhost:5001')) {
+      return data.replace('http://localhost:5001', '');
+    }
+    if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
+      return `/uploads/services/${data}`;
+    }
+    return data;
+  }
+  
+  if (Array.isArray(data)) {
+    return data.map(item => window.convertLocalhostUrlsInData(item));
+  }
+  
+  if (typeof data === 'object') {
+    const converted = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'url' || key === 'image' || key === 'images' || 
+          key.includes('image') || key.includes('Image') || 
+          key.includes('photo') || key.includes('Photo') ||
+          key.includes('avatar') || key.includes('Avatar')) {
+        converted[key] = window.convertLocalhostUrlsInData(value);
+      } else {
+        converted[key] = window.convertLocalhostUrlsInData(value);
+      }
+    }
+    return converted;
+  }
+  
+  return data;
 };
 
 // Make functions available globally
