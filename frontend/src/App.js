@@ -62,6 +62,7 @@ function App() {
     console.log('🔍 DEBUG: Auto-refresh prevention active:', window.autoRefreshPrevention ? 'Yes' : 'No');
     console.log('🔍 DEBUG: Use window.autoRefreshTestSuite.runAllTests() to run comprehensive tests');
     console.log('🔍 DEBUG: Use window.autoRefreshPrevention.getReport() to see auto-refresh monitoring data');
+    console.log('🔍 DEBUG: Use window.convertAllLocalhostImageUrls() to manually convert localhost image URLs');
   }, []);
 
   // Initialize authentication on app load

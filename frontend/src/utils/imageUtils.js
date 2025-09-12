@@ -12,10 +12,18 @@ export const getImageUrl = (imagePath) => {
     return '/default-service-image.svg';
   }
   
-  // Handle localhost URLs in integrated deployment
+  // Handle localhost URLs in integrated deployment - More comprehensive
   if (imagePath.includes('localhost:5001')) {
-    console.log('🔧 Converting localhost image URL to relative:', imagePath);
+    console.log('🔧 Converting localhost:5001 image URL to relative:', imagePath);
     const relativePath = imagePath.replace('http://localhost:5001', '');
+    console.log('🔧 Converted to relative path:', relativePath);
+    return relativePath;
+  }
+  
+  // Handle any other localhost URLs
+  if (imagePath.includes('localhost:') && !imagePath.startsWith('/')) {
+    console.log('🔧 Converting localhost image URL to relative:', imagePath);
+    const relativePath = imagePath.replace(/https?:\/\/localhost:\d+/, '');
     console.log('🔧 Converted to relative path:', relativePath);
     return relativePath;
   }
@@ -171,10 +179,29 @@ export const convertLocalhostUrlsInData = (data) => {
   return data;
 };
 
+// Global function to convert any localhost image URLs
+window.convertAllLocalhostImageUrls = function() {
+  const images = document.querySelectorAll('img');
+  let convertedCount = 0;
+  
+  images.forEach(img => {
+    if (img.src && img.src.includes('localhost:5001')) {
+      const newSrc = img.src.replace('http://localhost:5001', '');
+      console.log('🔧 Global converter: Converting image URL:', img.src, '→', newSrc);
+      img.src = newSrc;
+      convertedCount++;
+    }
+  });
+  
+  console.log(`🔧 Global converter: Converted ${convertedCount} image URLs`);
+  return convertedCount;
+};
+
 // Make functions available globally
 if (typeof window !== 'undefined') {
   window.getImageUrl = getImageUrl;
   window.convertLocalhostUrlsInData = convertLocalhostUrlsInData;
+  window.convertAllLocalhostImageUrls = window.convertAllLocalhostImageUrls;
 }
 
 export default imageUtils;

@@ -64,7 +64,7 @@
       return originalXHROpen.call(this, method, url, async, user, password);
     };
     
-    // Override image URL handling for localhost URLs
+    // Override image URL handling for localhost URLs - More aggressive approach
     const originalImageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
     if (!originalImageSrc || originalImageSrc.configurable) {
       Object.defineProperty(HTMLImageElement.prototype, 'src', {
@@ -75,6 +75,7 @@
           try {
             let convertedValue = value;
             if (typeof value === 'string') {
+              // Handle localhost:5001 URLs
               if (value.includes('localhost:5001')) {
                 convertedValue = value.replace('http://localhost:5001', '');
                 console.log('🔧 Image URL converted in env-config:', value, '→', convertedValue);
@@ -84,14 +85,25 @@
                 convertedValue = '/uploads/services/' + value;
                 console.log('🔧 Bare filename converted to full path:', value, '→', convertedValue);
               }
+              // Handle any other localhost URLs
+              else if (value.includes('localhost:') && !value.startsWith('/')) {
+                convertedValue = value.replace(/https?:\/\/localhost:\d+/, '');
+                console.log('🔧 Localhost URL converted:', value, '→', convertedValue);
+              }
             }
             this._src = convertedValue;
             
-            // Add error handler to prevent failed image loads
+            // Add comprehensive error handler
             this.onerror = function(e) {
               console.warn('🔧 Image failed to load, using fallback:', this._src);
               e.preventDefault();
               e.stopPropagation();
+              
+              // Try fallback image
+              if (this._src !== '/default-service-image.svg') {
+                this._src = '/default-service-image.svg';
+              }
+              
               return false;
             };
           } catch (error) {
@@ -133,6 +145,11 @@
             newSrc = '/uploads/services/' + img.src;
             console.log('🔧 Converting bare filename to full path:', img.src, '→', newSrc);
           }
+          // Handle any other localhost URLs
+          else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
+            newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
+            console.log('🔧 Converting localhost URL:', img.src, '→', newSrc);
+          }
           
           if (newSrc !== img.src) {
             img.src = newSrc;
@@ -140,13 +157,75 @@
         }
       });
     };
+
+    // DOM Observer to catch new images as they're added
+    window.setupImageObserver = function() {
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              // Check if the added node is an image
+              if (node.tagName === 'IMG') {
+                window.convertImageUrl(node);
+              }
+              // Check for images within the added node
+              const images = node.querySelectorAll ? node.querySelectorAll('img') : [];
+              images.forEach(img => window.convertImageUrl(img));
+            }
+          });
+        });
+      });
+
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+
+      console.log('🔧 Image observer set up to catch new images');
+    };
+
+    // Function to convert a single image URL
+    window.convertImageUrl = function(img) {
+      if (!img || !img.src) return;
+      
+      let newSrc = img.src;
+      
+      // Handle localhost:5001 URLs
+      if (img.src.includes('localhost:5001')) {
+        newSrc = img.src.replace('http://localhost:5001', '');
+        console.log('🔧 Observer: Converting localhost image URL:', img.src, '→', newSrc);
+      }
+      // Handle bare filenames
+      else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+        newSrc = '/uploads/services/' + img.src;
+        console.log('🔧 Observer: Converting bare filename:', img.src, '→', newSrc);
+      }
+      // Handle any other localhost URLs
+      else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
+        newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
+        console.log('🔧 Observer: Converting localhost URL:', img.src, '→', newSrc);
+      }
+      
+      if (newSrc !== img.src) {
+        img.src = newSrc;
+      }
+    };
     
-    // Convert existing image URLs immediately
+    // Convert existing image URLs immediately and set up observer
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', window.convertExistingImageUrls);
+      document.addEventListener('DOMContentLoaded', () => {
+        window.convertExistingImageUrls();
+        window.setupImageObserver();
+      });
     } else {
       window.convertExistingImageUrls();
+      window.setupImageObserver();
     }
+    
+    // Also convert images periodically to catch any missed ones
+    setInterval(() => {
+      window.convertExistingImageUrls();
+    }, 2000); // Check every 2 seconds
     
     console.log('🔧 API and image configuration overridden for integrated deployment');
   }

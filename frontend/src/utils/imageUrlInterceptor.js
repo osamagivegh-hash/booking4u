@@ -20,10 +20,25 @@ class ImageUrlInterceptor {
   }
 
   convertLocalhostUrl(url) {
-    if (typeof url === 'string' && url.includes('localhost:5001')) {
-      const convertedUrl = url.replace('http://localhost:5001', '');
-      console.log('🔧 Image URL converted:', url, '→', convertedUrl);
-      return convertedUrl;
+    if (typeof url === 'string') {
+      // Handle localhost:5001 URLs
+      if (url.includes('localhost:5001')) {
+        const convertedUrl = url.replace('http://localhost:5001', '');
+        console.log('🔧 Image URL converted:', url, '→', convertedUrl);
+        return convertedUrl;
+      }
+      // Handle any other localhost URLs
+      else if (url.includes('localhost:') && !url.startsWith('/')) {
+        const convertedUrl = url.replace(/https?:\/\/localhost:\d+/, '');
+        console.log('🔧 Localhost URL converted:', url, '→', convertedUrl);
+        return convertedUrl;
+      }
+      // Handle bare filenames
+      else if (url.includes('serviceImages-') && !url.startsWith('/') && !url.startsWith('http')) {
+        const convertedUrl = '/uploads/services/' + url;
+        console.log('🔧 Bare filename converted:', url, '→', convertedUrl);
+        return convertedUrl;
+      }
     }
     return url;
   }
