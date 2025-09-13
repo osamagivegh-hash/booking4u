@@ -257,16 +257,8 @@ api.interceptors.response.use(
     // Handle CORS errors specifically
     if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
       console.error('🚫 CORS Error detected:', error.message);
-      console.log('🔍 Attempting to test API connectivity...');
-      
-      // Test API connectivity when CORS error occurs
-      testApiConnectivity().then(result => {
-        if (result.success) {
-          console.log('✅ Alternative API found:', result.url);
-        } else {
-          console.error('❌ No working API found');
-        }
-      });
+      // DISABLED: API connectivity testing to prevent backend components on homepage
+      console.log('🛡️ API connectivity testing disabled to prevent backend components on homepage');
     }
     
     // Handle network errors

@@ -29,10 +29,16 @@ const ApiErrorBoundary = ({ children }) => {
   };
 
   useEffect(() => {
-    // Only check API status once when component mounts
-    // No periodic checks to prevent unnecessary API calls and potential auto-refresh issues
-    // This ensures the "Checking API connectivity" message only appears once on initial load
-    checkApiStatus();
+    // COMPLETELY DISABLED: No API status checking to prevent backend components from showing
+    // This prevents any backend-related API calls or status checking on the homepage
+    console.log('🛡️ ApiErrorBoundary: API status checking completely disabled to prevent backend components on homepage');
+    
+    // Set default status without making any API calls
+    setApiStatus({
+      isOnline: true, // Assume online to prevent error display
+      isLoading: false,
+      lastChecked: new Date()
+    });
   }, []); // Empty dependency array ensures this runs only once
 
   if (apiStatus.isLoading) {
