@@ -28,7 +28,13 @@
   "author": "Booking4U Team",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "@babel/eslint-parser": "^7.28.4",
+    "concurrently": "^9.1.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0"
   },
   "repository": {
     "type": "git",
