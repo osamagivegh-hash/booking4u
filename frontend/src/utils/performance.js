@@ -88,55 +88,24 @@ export const cacheManager = {
   }
 };
 
-// Service Worker registration with update handling
+// COMPLETELY DISABLED: Service Worker registration to prevent cached files
 export const registerServiceWorker = async () => {
+  console.log('🛡️ Service Worker registration completely disabled to prevent cached files and 30-second refresh');
+  
+  // Unregister any existing service workers
   if ('serviceWorker' in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered:', registration);
-      
-      // Handle service worker updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New service worker is available, but don't auto-reload
-              console.log('New service worker available. User can refresh to update.');
-              
-              // Show notification to user instead of auto-reloading
-              if (window.debugLogger) {
-                window.debugLogger.log('SERVICE_WORKER', '🔄 New service worker available', {
-                  timestamp: new Date().toISOString()
-                });
-              }
-              
-              // Dispatch custom event for UI to show update notification
-              window.dispatchEvent(new CustomEvent('sw-update-available', {
-                detail: { registration }
-              }));
-            }
-          });
-        }
-      });
-      
-      // Listen for messages from service worker
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'SW_UPDATE_AVAILABLE') {
-          console.log('Service Worker update available:', event.data.message);
-          
-          // Show user notification instead of auto-reloading
-          window.dispatchEvent(new CustomEvent('sw-update-available', {
-            detail: { message: event.data.message }
-          }));
-        }
-      });
-      
-      return registration;
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (let registration of registrations) {
+        await registration.unregister();
+        console.log('🛡️ Unregistered existing service worker:', registration.scope);
+      }
     } catch (error) {
-      console.error('Service Worker registration failed:', error);
+      console.log('🛡️ Error unregistering service workers:', error);
     }
   }
+  
+  return; // Exit early, no service worker registration
 };
 
 // Intersection Observer for lazy loading
