@@ -22,63 +22,8 @@ const useBackendHealth = (options = {}) => {
   const [isChecking, setIsChecking] = useState(false);
 
   const checkBackendHealth = useCallback(async () => {
-    if (isChecking) return; // Prevent concurrent checks
-    
-    setIsChecking(true);
-    
-    try {
-      if (enableLogging) {
-        console.log('🔍 Background health check starting...');
-      }
-
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setHealthStatus({
-          status: 'connected',
-          lastChecked: new Date().toISOString(),
-          details: data,
-          error: null
-        });
-        
-        if (enableLogging) {
-          console.log('✅ Background health check successful');
-        }
-      } else {
-        setHealthStatus({
-          status: 'error',
-          lastChecked: new Date().toISOString(),
-          details: { status: response.status, statusText: response.statusText },
-          error: `HTTP ${response.status}`
-        });
-        
-        if (enableLogging) {
-          console.log('❌ Background health check failed:', response.status);
-        }
-      }
-    } catch (error) {
-      setHealthStatus({
-        status: 'error',
-        lastChecked: new Date().toISOString(),
-        details: null,
-        error: error.message
-      });
-      
-      if (enableLogging) {
-        console.log('❌ Background health check error:', error.message);
-      }
-    } finally {
-      setIsChecking(false);
-    }
+    console.log('🛡️ Backend health check DISABLED to prevent 30-second auto-refresh');
+    return Promise.resolve();
   }, [isChecking, enableLogging]);
 
   // Initial check on mount - DISABLED to prevent automatic API calls

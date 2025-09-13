@@ -11,7 +11,8 @@ import statePreservation from './utils/statePreservation';
 import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 import autoRefreshPrevention from './utils/autoRefreshPrevention';
 import disableAutoRefresh from './utils/disableAutoRefresh';
-import backendHealthService from './services/backendHealthService';
+import completeAutoRefreshElimination from './utils/completeAutoRefreshElimination';
+// DISABLED: import backendHealthService from './services/backendHealthService';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -85,9 +86,8 @@ function App() {
         console.log('🔍 App: Auth initialization completed');
         debugLogger.log('AUTH', '✅ Auth initialization completed');
         
-        // DISABLED: Initialize backend health service to prevent automatic API calls
-        // await backendHealthService.initialize();
-        console.log('🔍 App: Backend health service initialization disabled to prevent 30-second refresh');
+        // COMPLETELY DISABLED: Backend health service removed to prevent any automatic API calls
+        console.log('🔍 App: Backend health service completely disabled to prevent 30-second refresh');
       } catch (error) {
         console.log('🔍 App: Auth initialization error:', error.message);
         debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });

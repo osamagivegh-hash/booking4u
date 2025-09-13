@@ -1,8 +1,8 @@
 import { getApiUrl } from '../config/apiConfig';
 
 /**
- * Background Backend Health Service
- * Monitors backend health silently without affecting UI
+ * DISABLED: Background Backend Health Service
+ * COMPLETELY DISABLED to prevent 30-second auto-refresh
  */
 class BackendHealthService {
   constructor() {
@@ -45,84 +45,21 @@ class BackendHealthService {
   }
 
   /**
-   * Check backend health
+   * DISABLED: Check backend health
+   * COMPLETELY DISABLED to prevent 30-second auto-refresh
    */
   async checkHealth() {
-    if (this.isChecking) return; // Prevent concurrent checks
-    
-    this.isChecking = true;
-    
-    try {
-      if (this.enableLogging) {
-        console.log('🔍 Background health check starting...');
-      }
-
-      const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        this.healthStatus = {
-          status: 'connected',
-          lastChecked: new Date().toISOString(),
-          details: data,
-          error: null
-        };
-        
-        if (this.enableLogging) {
-          console.log('✅ Background health check successful');
-        }
-      } else {
-        this.healthStatus = {
-          status: 'error',
-          lastChecked: new Date().toISOString(),
-          details: { status: response.status, statusText: response.statusText },
-          error: `HTTP ${response.status}`
-        };
-        
-        if (this.enableLogging) {
-          console.log('❌ Background health check failed:', response.status);
-        }
-      }
-    } catch (error) {
-      this.healthStatus = {
-        status: 'error',
-        lastChecked: new Date().toISOString(),
-        details: null,
-        error: error.message
-      };
-      
-      if (this.enableLogging) {
-        console.log('❌ Background health check error:', error.message);
-      }
-    } finally {
-      this.isChecking = false;
-      this.notifySubscribers();
-    }
+    console.log('🛡️ Backend health check DISABLED to prevent 30-second auto-refresh');
+    return Promise.resolve();
   }
 
   /**
-   * Start periodic health checks
+   * DISABLED: Start periodic health checks
+   * COMPLETELY DISABLED to prevent 30-second auto-refresh
    */
-  startPeriodicChecks(intervalMs = 300000) { // Default 5 minutes
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval);
-    }
-    
-    this.checkInterval = setInterval(() => {
-      this.checkHealth();
-    }, intervalMs);
-    
-    if (this.enableLogging) {
-      console.log(`🔄 Started periodic health checks every ${intervalMs}ms`);
-    }
+  startPeriodicChecks(intervalMs = 300000) {
+    console.log('🛡️ Periodic health checks DISABLED to prevent 30-second auto-refresh');
+    return;
   }
 
   /**
