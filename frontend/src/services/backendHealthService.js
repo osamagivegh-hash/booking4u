@@ -155,14 +155,15 @@ class BackendHealthService {
 
   /**
    * Initialize the service (run once on app start)
+   * DISABLED: No automatic health checks to prevent 30-second refresh
    */
   async initialize() {
     if (!window.backendHealthServiceInitialized) {
-      await this.checkHealth();
+      // DISABLED: await this.checkHealth();
       window.backendHealthServiceInitialized = true;
       
       if (this.enableLogging) {
-        console.log('🚀 Backend health service initialized');
+        console.log('🚀 Backend health service initialized (automatic checks disabled)');
       }
     }
   }

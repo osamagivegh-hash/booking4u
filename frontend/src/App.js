@@ -10,6 +10,7 @@ import autoRefreshTest from './utils/autoRefreshTest';
 import statePreservation from './utils/statePreservation';
 import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 import autoRefreshPrevention from './utils/autoRefreshPrevention';
+import disableAutoRefresh from './utils/disableAutoRefresh';
 import backendHealthService from './services/backendHealthService';
 
 // Components
@@ -44,8 +45,11 @@ import DiagnosticsPage from './pages/Admin/DiagnosticsPage';
 function App() {
   const { isAuthenticated, initializeAuth, logout } = useAuthStore();
 
-  // Initialize debug logging
+  // Initialize debug logging and auto-refresh prevention
   useEffect(() => {
+    // Initialize comprehensive auto-refresh prevention
+    console.log('🛡️ Initializing comprehensive auto-refresh prevention...');
+    
     debugLogger.log('APP', '🚀 App component mounted', {
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
@@ -81,9 +85,9 @@ function App() {
         console.log('🔍 App: Auth initialization completed');
         debugLogger.log('AUTH', '✅ Auth initialization completed');
         
-        // Initialize backend health service
-        await backendHealthService.initialize();
-        console.log('🔍 App: Backend health service initialized');
+        // DISABLED: Initialize backend health service to prevent automatic API calls
+        // await backendHealthService.initialize();
+        console.log('🔍 App: Backend health service initialization disabled to prevent 30-second refresh');
       } catch (error) {
         console.log('🔍 App: Auth initialization error:', error.message);
         debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });

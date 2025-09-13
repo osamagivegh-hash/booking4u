@@ -1,7 +1,5 @@
 @echo off
-echo Committing changes...
+set GIT_PAGER=
 git commit -m "Remove BackendStatus component to eliminate automatic 30-second refresh"
-echo Pushing to remote...
 git push origin main
-echo Done!
-pause
+echo Changes pushed successfully!

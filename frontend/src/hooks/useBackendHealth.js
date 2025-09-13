@@ -81,12 +81,14 @@ const useBackendHealth = (options = {}) => {
     }
   }, [isChecking, enableLogging]);
 
-  // Initial check on mount
+  // Initial check on mount - DISABLED to prevent automatic API calls
   useEffect(() => {
-    if (checkOnMount && !window.backendHealthChecked) {
-      checkBackendHealth();
-      window.backendHealthChecked = true;
-    }
+    // DISABLED: No automatic health checks to prevent 30-second refresh
+    // if (checkOnMount && !window.backendHealthChecked) {
+    //   checkBackendHealth();
+    //   window.backendHealthChecked = true;
+    // }
+    window.backendHealthChecked = true; // Mark as checked without making API call
   }, [checkOnMount, checkBackendHealth]);
 
   // Periodic checks (if enabled)
