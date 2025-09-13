@@ -17,23 +17,11 @@ const NewsTicker = () => {
   const [lastFetchTime, setLastFetchTime] = useState(0);
 
   useEffect(() => {
-    // Check global cache first
-    const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
-    const isCacheValid = (now - globalNewsCache.timestamp) < fiveMinutes;
-    
-    if (isCacheValid && globalNewsCache.data.length > 0) {
-      // Use cached data
-      setBreakingNews(globalNewsCache.data);
-      setLoading(false);
-      console.log('🔧 NewsTicker: Using cached news data');
-    } else if (!globalNewsCache.isFetching) {
-      // Fetch new data if not already fetching
-      fetchBreakingNews();
-    } else {
-      // Wait for ongoing fetch to complete
-      setLoading(false);
-    }
+    // COMPLETELY DISABLED: No news fetching to prevent backend components
+    console.log('🛡️ NewsTicker: News fetching completely disabled to prevent backend components');
+    setBreakingNews([]);
+    setLoading(false);
+    globalNewsCache.isFetching = false;
   }, []);
 
   const fetchBreakingNews = async () => {

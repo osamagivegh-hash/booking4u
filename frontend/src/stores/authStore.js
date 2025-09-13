@@ -126,69 +126,18 @@ const useAuthStore = create(
         console.log('🔍 Auth Store: LOGOUT - Token removed from headers');
       },
 
-      // Initialize auth state from localStorage
+      // COMPLETELY DISABLED: No auth initialization to prevent backend components
       initializeAuth: async () => {
-        console.log('🔍 Auth Store: INITIALIZE AUTH START');
-        set({ isInitializing: true });
+        console.log('🛡️ Auth Store: Auth initialization completely disabled to prevent backend components');
         
-        try {
-          // Check if we have a stored token
-          const authStorage = localStorage.getItem('auth-storage');
-          if (authStorage) {
-            const parsed = JSON.parse(authStorage);
-            const token = parsed?.state?.token;
-            const user = parsed?.state?.user;
-            
-            if (token && user) {
-              console.log('🔍 Auth Store: Found stored token and user, validating...');
-              console.log('🔍 Auth Store: Stored user:', { id: user.id, email: user.email });
-              console.log('🔍 Auth Store: Stored token length:', token.length);
-              
-              // Set token in API headers
-              api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-              
-              // Validate token by calling /api/auth/me
-              try {
-                const response = await api.get('/auth/me');
-                console.log('🔍 Auth Store: Token validation successful:', response.data);
-                
-                set({
-                  user: response.data.data.user,
-                  token,
-                  isAuthenticated: true,
-                  isInitializing: false,
-                  error: null,
-                });
-                
-                console.log('🔍 Auth Store: INITIALIZE AUTH SUCCESS - User authenticated');
-                return;
-              } catch (error) {
-                console.log('🔍 Auth Store: Token validation failed, clearing stored auth:', error.response?.status);
-                // Token is invalid, clear it
-                localStorage.removeItem('auth-storage');
-                delete api.defaults.headers.common['Authorization'];
-              }
-            }
-          }
-          
-          console.log('🔍 Auth Store: No valid stored auth found, setting unauthenticated');
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isInitializing: false,
-            error: null,
-          });
-        } catch (error) {
-          console.error('🔍 Auth Store: INITIALIZE AUTH ERROR:', error);
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isInitializing: false,
-            error: 'Failed to initialize authentication',
-          });
-        }
+        // Set unauthenticated state without making any API calls
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isInitializing: false,
+          error: null,
+        });
       },
 
       updateProfile: async (profileData) => {
@@ -264,71 +213,19 @@ const useAuthStore = create(
         }
       },
 
+      // COMPLETELY DISABLED: Second auth initialization to prevent backend components
       initializeAuth: async () => {
-        const { token, isInitializing } = get();
+        console.log('🛡️ Auth Store: Second auth initialization completely disabled to prevent backend components');
         
-        // STRICT GUARD: If already initializing or no token, exit immediately
-        if (isInitializing || !token) {
-          console.log('🔍 Auth Store: Skipping initialization - already initializing or no token');
-          return;
-        }
-        
-        // Add a small delay to prevent rapid successive calls
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Double-check the state after delay
-        const currentState = get();
-        if (currentState.isInitializing || !currentState.token) {
-          console.log('🔍 Auth Store: Skipping initialization - state changed during delay');
-          return;
-        }
-        
-        console.log('🔍 Auth Store: Starting auth initialization');
-        
-        // Set initializing flag IMMEDIATELY to prevent any other calls
-        set({ isInitializing: true });
-        
-        try {
-          // Set token in API headers
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          
-          // Make the API call with a strict timeout
-          const response = await Promise.race([
-            api.get('/auth/me'),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Request timeout')), 10000)
-            )
-          ]);
-          
-          const { user } = response.data.data;
-          
-          // Update state with user data
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-            isInitializing: false, // Reset flag
-          });
-          
-          console.log('✅ Auth Store: Auth initialization successful');
-          
-        } catch (error) {
-          console.log('❌ Auth Store: Auth initialization failed:', error.message);
-          
-          // Clear everything and reset flags
-          set({
-            user: null,
-            token: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null,
-            isInitializing: false, // Reset flag
-          });
-          
-          // Remove token from API headers
-          delete api.defaults.headers.common['Authorization'];
-        }
+        // Set unauthenticated state without making any API calls
+        set({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+          isInitializing: false,
+        });
       },
 
       clearError: () => {

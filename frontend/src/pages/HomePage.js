@@ -23,16 +23,13 @@ const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
 
-  // Load latest services (with caching to prevent periodic re-fetching)
+  // COMPLETELY DISABLED: No API calls on homepage to prevent backend components
   useEffect(() => {
-    // Only load services once per app session to prevent periodic API calls
-    if (!window.homePageServicesLoaded) {
-      loadLatestServices();
-      window.homePageServicesLoaded = true;
-    } else {
-      // If already loaded, use cached data or empty array
-      setLatestServices([]);
-    }
+    // DISABLED: No services loading to prevent backend components from showing
+    console.log('🛡️ HomePage: Services loading completely disabled to prevent backend components');
+    setLatestServices([]);
+    setLoading(false);
+    window.homePageServicesLoaded = true; // Mark as loaded without making API calls
   }, []);
 
   const loadLatestServices = async () => {

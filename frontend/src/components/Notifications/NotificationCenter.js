@@ -23,9 +23,11 @@ const NotificationCenter = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchNotifications();
-    }
+    // COMPLETELY DISABLED: No notifications fetching to prevent backend components
+    console.log('🛡️ NotificationCenter: Notifications fetching completely disabled to prevent backend components');
+    setNotifications([]);
+    setUnreadCount(0);
+    setLoading(false);
   }, [isAuthenticated]);
 
   const fetchNotifications = async () => {

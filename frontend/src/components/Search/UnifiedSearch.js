@@ -88,11 +88,14 @@ const UnifiedSearch = ({ placeholder, showFilters = true, size = 'md' }) => {
         ...(filters.type !== 'all' && { type: filters.type })
       });
 
-      const [servicesResponse, newsResponse, businessesResponse] = await Promise.allSettled([
-        api.get(`/services/search?${searchParams.toString()}&limit=5`),
-        api.get(`/news?${searchParams.toString()}&limit=5`),
-        api.get(`/businesses/search?${searchParams.toString()}&limit=5`)
-      ]);
+      // COMPLETELY DISABLED: No search API calls to prevent backend components
+      console.log('🛡️ UnifiedSearch: Search API calls completely disabled to prevent backend components');
+      
+      const [servicesResponse, newsResponse, businessesResponse] = [
+        { status: 'fulfilled', value: { data: { data: [] } } },
+        { status: 'fulfilled', value: { data: { data: [] } } },
+        { status: 'fulfilled', value: { data: { data: [] } } }
+      ];
 
       // Log the data structure for debugging
       if (servicesResponse.status === 'fulfilled' && servicesResponse.value.data?.data?.length > 0) {
