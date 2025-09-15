@@ -2,9 +2,10 @@
 // This file is loaded in public/index.html to set environment variables
 
 (function() {
-  // Detect if we're on GitHub Pages
+  // Detect deployment environment
   const isGitHubPages = window.location.hostname.includes('github.io');
   const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isRender = window.location.hostname.includes('onrender.com');
   
   // Set environment variables based on deployment
   if (isDevelopment) {
@@ -14,6 +15,13 @@
     // Use relative path for assets to avoid localhost issues with images
     window.REACT_APP_ASSET_URL = '/';
     console.log('🔧 Development environment detected - using relative paths for images');
+  } else if (isRender) {
+    // Render deployment - use the same Render backend
+    window.REACT_APP_API_URL = 'https://booking4u-backend.onrender.com/api';
+    window.REACT_APP_BASE_URL = 'https://booking4u-backend.onrender.com';
+    window.REACT_APP_SOCKET_URL = 'https://booking4u-backend.onrender.com';
+    window.REACT_APP_ASSET_URL = 'https://booking4u-backend.onrender.com';
+    console.log('🔧 Render deployment environment detected');
   } else if (isGitHubPages) {
     // GitHub Pages deployment - use Render backend
     window.REACT_APP_API_URL = 'https://booking4u-backend.onrender.com/api';
@@ -270,7 +278,7 @@
       window.setupImageObserver();
     }
     
-    // Also convert images periodically to catch any missed ones - MORE AGGRESSIVE
+    // Also convert images periodically to catch any missed ones - OPTIMIZED FREQUENCY
     setInterval(() => {
       window.convertExistingImageUrls();
       // Also run the global converter as a backup
@@ -281,7 +289,7 @@
       if (window.aggressiveImageFix) {
         window.aggressiveImageFix.forceConvertAll();
       }
-    }, 500); // Check every 500ms for more aggressive conversion
+    }, 5000); // Check every 5 seconds to reduce performance impact
     
     // Manual conversion function that can be called immediately
     window.forceConvertAllImages = function() {
