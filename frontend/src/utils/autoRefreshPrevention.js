@@ -163,14 +163,17 @@ class AutoRefreshPrevention {
     
     XMLHttpRequest.prototype.send = function(data) {
       this.addEventListener('error', (event) => {
-        window.autoRefreshPrevention?.networkErrors.push({
-          timestamp: new Date().toISOString(),
-          type: 'xhr',
-          url: this._url,
-          method: this._method,
-          error: 'Network error',
-          stack: new Error().stack
-        });
+        // FIXED: Check if autoRefreshPrevention exists and has networkErrors array
+        if (window.autoRefreshPrevention && Array.isArray(window.autoRefreshPrevention.networkErrors)) {
+          window.autoRefreshPrevention.networkErrors.push({
+            timestamp: new Date().toISOString(),
+            type: 'xhr',
+            url: this._url,
+            method: this._method,
+            error: 'Network error',
+            stack: new Error().stack
+          });
+        }
         
         console.warn('🌐 Network Error (XHR):', {
           url: this._url,
