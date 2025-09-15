@@ -21,6 +21,12 @@ class SocketService {
     // Use the configured socket URL
     const socketUrl = getSocketUrl();
     
+    // For Blueprint Integrated deployment, disable Socket.IO to prevent CORS issues
+    if (socketUrl === '/' && window.location.hostname.includes('render.com')) {
+      console.log('📱 Blueprint Integrated deployment detected - Socket.IO disabled to prevent CORS issues');
+      return null;
+    }
+    
     this.socket = io(socketUrl, {
       auth: {
         token: token

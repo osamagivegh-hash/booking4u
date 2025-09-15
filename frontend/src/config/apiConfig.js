@@ -56,14 +56,10 @@ export const getSocketUrl = () => {
     return API_CONFIG.DEVELOPMENT;
   }
   
-  // For integrated deployment, use relative URL
-  if (window.location.hostname.includes('render.com') || 
-      window.location.hostname.includes('netlify.app') || 
-      window.location.hostname.includes('vercel.app')) {
-    return '/';
-  }
-  
-  return API_CONFIG.PRIMARY;
+  // For Blueprint Integrated deployment, always use relative URL
+  // This ensures same-origin requests with no CORS issues
+  console.log('🔧 Blueprint Integrated deployment - using relative Socket URL');
+  return '/';
 };
 
 // COMPLETELY DISABLED: Test API connectivity - No API calls to prevent auto-refresh

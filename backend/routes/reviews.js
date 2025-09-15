@@ -10,8 +10,100 @@ const { logInfo, logError } = require('../utils/logger');
 
 const router = express.Router();
 
-// Apply authentication middleware to all routes
+// PUBLIC ROUTES (no authentication required)
+
+// @desc    Get reviews for a service
+// @route   GET /api/reviews/service/:serviceId
+// @access  Public
+router.get('/service/:serviceId', asyncHandler(async (req, res) => {
+  const { serviceId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Check if service exists
+  const service = await Service.findById(serviceId);
+  if (!service) {
+    return ApiResponse.notFound(res, 'الخدمة غير موجودة');
+  }
+
+  const query = {
+    serviceId,
+    isPublic: true,
+    isVerified: true
+  };
+
+  // Filter by rating
+  if (req.query.rating) {
+    query.rating = parseInt(req.query.rating);
+  }
+
+  const reviews = await Review.find(query)
+    .populate('customerId', 'name avatar')
+    .populate('businessId', 'name')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Review.countDocuments(query);
+  const totalPages = Math.ceil(total / limit);
+
+  // Calculate service average rating
+  const serviceStats = await Review.aggregate([
+    {
+      $match: {
+        serviceId: service._id,
+        isPublic: true,
+        isVerified: true
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        averageRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 },
+        ratingDistribution: {
+          $push: '$rating'
+        }
+      }
+    }
+  ]);
+
+  const stats = serviceStats[0] || {
+    averageRating: 0,
+    totalReviews: 0,
+    ratingDistribution: []
+  };
+
+  // Calculate rating distribution
+  const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  stats.ratingDistribution.forEach(rating => {
+    if (ratingCounts[rating] !== undefined) {
+      ratingCounts[rating]++;
+    }
+  });
+
+  return ApiResponse.success(res, {
+    reviews,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalReviews: total,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    },
+    serviceStats: {
+      averageRating: Math.round(stats.averageRating * 10) / 10,
+      totalReviews: stats.totalReviews,
+      ratingDistribution: ratingCounts
+    }
+  }, 'تم جلب تقييمات الخدمة بنجاح');
+}));
+
+// Apply authentication middleware to protected routes
 router.use(protect);
+
+// PROTECTED ROUTES (authentication required)
 
 // @desc    Create a new review
 // @route   POST /api/reviews
@@ -180,80 +272,6 @@ router.get('/business/:businessId', asyncHandler(async (req, res) => {
   }, 'تم جلب التقييمات بنجاح');
 }));
 
-// @desc    Get reviews for a service
-// @route   GET /api/reviews/service/:serviceId
-// @access  Public
-router.get('/service/:serviceId', asyncHandler(async (req, res) => {
-  const { serviceId } = req.params;
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const skip = (page - 1) * limit;
-
-  // Check if service exists
-  const service = await Service.findById(serviceId);
-  if (!service) {
-    return ApiResponse.notFound(res, 'الخدمة غير موجودة');
-  }
-
-  const query = {
-    serviceId,
-    isPublic: true,
-    isVerified: true
-  };
-
-  // Filter by rating
-  if (req.query.rating) {
-    query.rating = parseInt(req.query.rating);
-  }
-
-  const reviews = await Review.find(query)
-    .populate('customerId', 'name avatar')
-    .populate('businessId', 'name')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
-
-  const total = await Review.countDocuments(query);
-  const totalPages = Math.ceil(total / limit);
-
-  // Calculate service average rating
-  const serviceStats = await Review.aggregate([
-    {
-      $match: {
-        serviceId: service._id,
-        isPublic: true,
-        isVerified: true
-      }
-    },
-    {
-      $group: {
-        _id: null,
-        averageRating: { $avg: '$rating' },
-        totalReviews: { $sum: 1 }
-      }
-    }
-  ]);
-
-  const stats = serviceStats.length > 0 ? {
-    averageRating: Math.round(serviceStats[0].averageRating * 10) / 10,
-    totalReviews: serviceStats[0].totalReviews
-  } : {
-    averageRating: 0,
-    totalReviews: 0
-  };
-
-  return ApiResponse.success(res, {
-    reviews,
-    stats,
-    pagination: {
-      currentPage: page,
-      totalPages,
-      totalReviews: total,
-      hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
-    }
-  }, 'تم جلب تقييمات الخدمة بنجاح');
-}));
 
 // @desc    Get user's reviews
 // @route   GET /api/reviews/my-reviews
