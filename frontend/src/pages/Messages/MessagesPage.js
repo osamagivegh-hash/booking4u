@@ -1116,11 +1116,9 @@ const MessagesPage = () => {
               
               {/* Connection Status Indicator */}
               <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                <div className={`w-2 h-2 rounded-full ${
-                  connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
+                <div className="w-2 h-2 rounded-full bg-gray-400"></div>
                 <span className="text-xs text-gray-500">
-                  {connectionStatus === 'connected' ? 'متصل' : 'غير متصل'}
+                  REST API
                 </span>
               </div>
               
