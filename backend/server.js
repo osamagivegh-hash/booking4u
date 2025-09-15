@@ -45,28 +45,8 @@ console.log('🌍 Environment:', process.env.NODE_ENV);
 console.log('🚀 Render deployment:', isRender);
 console.log('📡 Port:', PORT);
 
-// CORS Configuration for Blueprint Integrated Deployment
-// Simplified CORS - allow all origins since frontend and backend are on same domain
-const corsOptions = {
-  origin: true, // Allow all origins for Blueprint Integrated
-  credentials: true,
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept',
-    'Access-Control-Request-Method',
-    'Access-Control-Request-Headers'
-  ]
-};
-
-// Apply CORS middleware
-app.use(cors(corsOptions));
-
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
+// No CORS needed for Blueprint Integrated Deployment (same-origin)
+// Frontend and backend are on the same domain, so no cross-origin issues
 
 // Request logging middleware for debugging
 app.use((req, res, next) => {
@@ -209,13 +189,13 @@ process.on('SIGINT', async () => {
 // Health check route for Render Blueprint Integrated Deployment
 app.get('/', (req, res) => {
   res.json({
-    message: 'Booking4U Backend is running',
-    status: 'OK',
-    deployment: 'Blueprint Integrated',
+    message: "Booking4U Backend is running",
+    status: "OK",
+    deployment: "Blueprint Integrated",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    version: '1.0.0',
-    cors: 'Same-origin (no CORS issues)'
+    version: "1.0.0",
+    cors: "Same-origin (no CORS issues)"
   });
 });
 
@@ -310,31 +290,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Simplified CORS debug endpoint
-app.get('/api/debug/cors', (req, res) => {
-  res.json({
-    message: 'CORS Debug - Blueprint Integrated',
-    cors: {
-      allowed: true,
-      deployment: 'Blueprint Integrated',
-      environment: process.env.NODE_ENV,
-      corsEnabled: true,
-      renderDeployment: isRender
-    },
-    server: {
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: '1.0.0'
-    },
-    request: {
-      origin: req.headers.origin,
-      method: req.method,
-      path: req.path
-    }
-  });
-});
-
-// Simplified health check endpoint
+// API health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
     // Test database connection
@@ -370,17 +326,6 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   }
-});
-
-// Simplified CORS test endpoint
-app.get('/api/test-cors', (req, res) => {
-  res.json({ 
-    message: 'CORS test successful - Blueprint Integrated',
-    allowed: true,
-    timestamp: new Date().toISOString(),
-    deployment: 'Blueprint Integrated',
-    environment: process.env.NODE_ENV
-  });
 });
 
 // Error handling middleware

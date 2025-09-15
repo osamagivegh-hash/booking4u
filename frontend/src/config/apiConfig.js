@@ -21,53 +21,9 @@ const API_CONFIG = {
 
 // Get the appropriate API URL based on environment
 export const getApiUrl = () => {
-  console.log('🔍 getApiUrl called - Debug info:', {
-    'window.REACT_APP_API_URL': window.REACT_APP_API_URL,
-    'process.env.REACT_APP_API_URL': process.env.REACT_APP_API_URL,
-    'process.env.NODE_ENV': process.env.NODE_ENV,
-    'window.location.hostname': window.location.hostname,
-    'window.location.origin': window.location.origin
-  });
-  
-  // Use window environment variable if available (PRIORITY)
-  if (window.REACT_APP_API_URL) {
-    console.log('🔧 Using window environment variable API URL:', window.REACT_APP_API_URL);
-    return window.REACT_APP_API_URL;
-  }
-  
-  // Use process environment variable if available
-  if (process.env.REACT_APP_API_URL) {
-    console.log('🔧 Using process environment variable API URL:', process.env.REACT_APP_API_URL);
-    return process.env.REACT_APP_API_URL;
-  }
-  
-  // For Blueprint Integrated Deployment (same origin), use relative URL
-  if (window.location.hostname.includes('render.com')) {
-    console.log('🔧 Blueprint Integrated deployment detected - using relative API URL');
-    return '/api';
-  }
-  
-  // For other integrated deployments (same origin), use relative URL
-  if (window.location.hostname.includes('netlify.app') || 
-      window.location.hostname.includes('vercel.app')) {
-    console.log('🔧 Integrated deployment detected - using relative API URL');
-    return '/api';
-  }
-  
-  // In development, try multiple localhost ports
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 Development mode - using localhost API');
-    return `${API_CONFIG.DEVELOPMENT}/api`;
-  }
-  
-  // For GitHub Pages deployment, use absolute URL to backend
-  if (window.location.hostname.includes('github.io')) {
-    console.log('🔧 GitHub Pages deployment detected - using absolute API URL');
-    return `${API_CONFIG.PRIMARY}/api`;
-  }
-  
-  // Default fallback to relative URL for integrated deployment
-  console.log('🔧 Using default relative API URL for integrated deployment');
+  // For Blueprint Integrated Deployment, always use relative paths
+  // This ensures same-origin requests with no CORS issues
+  console.log('🔧 Blueprint Integrated deployment - using relative API URL');
   return '/api';
 };
 

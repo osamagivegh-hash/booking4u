@@ -1,58 +1,37 @@
 import axios from 'axios';
-import { getApiUrl, testApiConnectivity } from '../config/apiConfig';
 
-// Create axios instance with comprehensive CORS configuration
+// Create axios instance for Blueprint Integrated Deployment
+// Uses relative paths for same-origin requests (no CORS issues)
 const api = axios.create({
-  baseURL: '', // Will be set dynamically
+  baseURL: '/api', // Relative path for same-origin requests
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest'
   },
-  withCredentials: true, // Include credentials for CORS
-  // CORS configuration
-  crossDomain: true,
-  // Additional axios configuration for CORS
+  withCredentials: true, // Include credentials for authentication
   validateStatus: function (status) {
     return status >= 200 && status < 300; // default
   }
 });
 
-// Set the base URL dynamically - this will be called when requests are made
-const getDynamicApiUrl = () => {
-  const url = getApiUrl();
-  console.log('🔧 Dynamic API URL resolved:', url);
-  return url;
-};
-
-// Request interceptor with enhanced CORS handling
+// Request interceptor for Blueprint Integrated Deployment
 api.interceptors.request.use(
   (config) => {
-    // Set the base URL dynamically for each request
-    config.baseURL = getDynamicApiUrl();
-    
     // Fix for image uploads: Don't override Content-Type for multipart/form-data
-    // This prevents console errors when uploading images
     if (config.headers['Content-Type'] === 'multipart/form-data') {
-      // Remove the default Content-Type to let axios set it automatically with boundary
       delete config.headers['Content-Type'];
     }
     
-    console.log('🔍 API REQUEST INTERCEPTOR:', {
+    console.log('🔍 API REQUEST:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       fullUrl: `${config.baseURL}${config.url}`,
-      origin: window.location.origin,
-      baseURL: config.baseURL,
-      contentType: config.headers['Content-Type'],
       timestamp: new Date().toISOString()
     });
     
-    // Note: Origin and Referer headers are automatically set by the browser
-    // and cannot be manually set due to security restrictions
-    
-    // Add token to headers if available
+    // Add authentication token if available
     try {
       const authStorage = localStorage.getItem('auth-storage');
       if (authStorage) {
@@ -66,15 +45,6 @@ api.interceptors.request.use(
     } catch (error) {
       console.log('❌ Error parsing auth storage:', error.message);
     }
-    
-    // Log request configuration for debugging
-    console.log('📋 Request config:', {
-      method: config.method,
-      url: config.url,
-      baseURL: config.baseURL,
-      headers: config.headers,
-      withCredentials: config.withCredentials
-    });
     
     return config;
   },
@@ -100,67 +70,20 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Simplified URL conversion for Blueprint Integrated
-const convertUrlsInResponse = (data) => {
-  if (!data) return data;
-  
-  if (typeof data === 'string') {
-    // Convert any remaining localhost URLs to relative paths
-    if (data.includes('localhost:5001') || data.includes('localhost:10000')) {
-      return data.replace(/http:\/\/localhost:\d+/, '');
-    }
-    // Convert bare service image filenames to full paths
-    if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
-      return `/uploads/services/${data}`;
-    }
-    return data;
-  }
-  
-  if (Array.isArray(data)) {
-    return data.map(item => convertUrlsInResponse(item));
-  }
-  
-  if (typeof data === 'object') {
-    const converted = {};
-    for (const [key, value] of Object.entries(data)) {
-      converted[key] = convertUrlsInResponse(value);
-    }
-    return converted;
-  }
-  
-  return data;
-};
-
-// Response interceptor with refresh token flow and URL conversion
+// Response interceptor for Blueprint Integrated Deployment
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API RESPONSE INTERCEPTOR:', {
+    console.log('✅ API RESPONSE:', {
       status: response.status,
       url: response.config.url,
       method: response.config.method,
       timestamp: new Date().toISOString()
     });
     
-    // Log CORS headers if present
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': response.headers['access-control-allow-origin'],
-      'Access-Control-Allow-Credentials': response.headers['access-control-allow-credentials'],
-      'Access-Control-Allow-Methods': response.headers['access-control-allow-methods']
-    };
-    
-    if (Object.values(corsHeaders).some(header => header)) {
-      console.log('🔒 CORS Headers received:', corsHeaders);
-    }
-    
-    // Convert any remaining localhost URLs in response data
-    if (response.data) {
-      response.data = convertUrlsInResponse(response.data);
-    }
-    
     return response;
   },
   async (error) => {
-    console.error('❌ API RESPONSE INTERCEPTOR ERROR:', {
+    console.error('❌ API ERROR:', {
       status: error.response?.status,
       url: error.config?.url,
       method: error.config?.method,
@@ -217,16 +140,11 @@ api.interceptors.response.use(
         console.error('🔒 Token refresh failed:', refreshError);
         processQueue(refreshError, null);
         
-        // Clear auth data and navigate to login (NO PAGE RELOAD)
+        // Clear auth data and navigate to login
         try {
           localStorage.removeItem('auth-storage');
           delete api.defaults.headers.common['Authorization'];
-          
-          // Use React Router navigation instead of window.location
-          console.log('🔒 Redirecting to login via React Router');
-          // This will be handled by the auth store or App component
           window.dispatchEvent(new CustomEvent('auth:logout'));
-          
         } catch (e) {
           console.error('❌ Error clearing auth storage:', e.message);
         }
@@ -235,37 +153,6 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
-    }
-    
-    // Handle CORS errors specifically
-    if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
-      console.error('🚫 CORS Error detected:', error.message);
-      // DISABLED: API connectivity testing to prevent backend components on homepage
-      console.log('🛡️ API connectivity testing disabled to prevent backend components on homepage');
-    }
-    
-    // Handle network errors
-    if (error.code === 'NETWORK_ERROR' || error.message.includes('Network Error')) {
-      console.error('🌐 Network Error - checking connectivity...');
-      
-      // Log to auto-refresh prevention system
-      if (window.autoRefreshPrevention) {
-        window.autoRefreshPrevention.networkErrors.push({
-          timestamp: new Date().toISOString(),
-          type: 'axios',
-          url: originalRequest?.url,
-          method: originalRequest?.method,
-          error: error.message,
-          stack: error.stack
-        });
-      }
-    }
-    
-    // Handle connection errors
-    if (error.message.includes('ERR_CONNECTION_REFUSED') || 
-        error.message.includes('Connection refused') ||
-        error.code === 'ECONNREFUSED') {
-      console.error('🚫 Connection Error:', error.message);
     }
     
     return Promise.reject(error);
