@@ -3,9 +3,8 @@ services:
     name: booking4u-integrated 
     env: node 
     plan: free 
-    buildCommand: npm run build:render 
-    publishDirectory: backend 
-    startCommand: npm start 
+    buildCommand: npm run build:render
+    startCommand: npm start
     envVars: 
       - key: NODE_ENV 
         value: production 
