@@ -324,7 +324,7 @@ app.use('/api/notifications', notificationRoutes);
 // Enhanced CORS debug endpoint
 app.get('/api/debug/cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = isRender || allowedOrigins.includes(requestOrigin);
+  const isAllowed = true; // All origins allowed for Blueprint Integrated
   const userAgent = req.headers['user-agent'];
   const referer = req.headers.referer;
   
@@ -343,7 +343,7 @@ app.get('/api/debug/cors', (req, res) => {
     },
     cors: {
       allowed: isAllowed,
-      allowedOrigins: allowedOrigins,
+      deployment: 'Blueprint Integrated',
       environment: process.env.NODE_ENV,
       corsEnabled: true,
       renderDeployment: isRender,
@@ -365,7 +365,7 @@ app.get('/api/debug/cors', (req, res) => {
 app.get('/api/health', async (req, res) => {
   try {
     const requestOrigin = req.headers.origin;
-    const isAllowed = isRender || allowedOrigins.includes(requestOrigin);
+    const isAllowed = true; // All origins allowed for Blueprint Integrated
     
     // Test database connection
     let dbStatus = 'disconnected';
@@ -396,11 +396,11 @@ app.get('/api/health', async (req, res) => {
       version: '1.0.0',
       cors: {
         origin: requestOrigin,
-        allowed: isAllowed,
-        allowedOrigins: allowedOrigins,
+        allowed: true, // All origins allowed for Blueprint Integrated
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-        renderDeployment: isRender
+        renderDeployment: isRender,
+        deployment: 'Blueprint Integrated'
       },
       database: {
         connected: dbConnected,
@@ -430,9 +430,7 @@ app.get('/api/health', async (req, res) => {
 // Enhanced CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = isRender && requestOrigin === 'https://booking4u-integrated.onrender.com' || 
-                   allowedOrigins.includes(requestOrigin) ||
-                   (!isProduction && requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1')));
+  const isAllowed = true; // All origins allowed for Blueprint Integrated
   
   res.json({ 
     message: 'CORS test successful',
