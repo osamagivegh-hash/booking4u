@@ -106,20 +106,28 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
     return labels[category] || category;
   };
 
-  // Get service images - use URLs directly from backend
+  // Get service images - use URLs directly from backend with aggressive conversion
   const serviceImages = getServiceImages(service);
+  
+  // Apply aggressive image URL conversion
+  const convertedServiceImages = serviceImages.map(img => ({
+    ...img,
+    url: img.url && !img.url.startsWith('/') && !img.url.startsWith('http') 
+      ? '/uploads/services/' + img.url 
+      : img.url
+  }));
 
   // Image navigation functions
   const nextImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % serviceImages.length);
+    setCurrentImageIndex((prev) => (prev + 1) % convertedServiceImages.length);
   };
 
   const prevImage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + serviceImages.length) % serviceImages.length);
+    setCurrentImageIndex((prev) => (prev - 1 + convertedServiceImages.length) % convertedServiceImages.length);
   };
 
   if (compact) {
@@ -131,15 +139,15 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
         <div className="flex space-x-3 space-x-reverse p-4">
           <div className="flex-shrink-0">
             <img
-              src={serviceImages[currentImageIndex].url}
-              alt={serviceImages[currentImageIndex].alt}
+              src={convertedServiceImages[currentImageIndex].url}
+              alt={convertedServiceImages[currentImageIndex].alt}
               className="w-16 h-16 object-cover rounded-lg"
               onError={(e) => {
-                console.log('🔧 ServiceCard (compact): Image failed to load:', serviceImages[currentImageIndex].url);
+                console.log('🔧 ServiceCard (compact): Image failed to load:', convertedServiceImages[currentImageIndex].url);
                 handleImageError(e, '/default-service-image.svg');
                 
                 // Try to convert the URL and reload
-                const originalUrl = serviceImages[currentImageIndex].url;
+                const originalUrl = convertedServiceImages[currentImageIndex].url;
                 if (originalUrl && !originalUrl.startsWith('/') && !originalUrl.startsWith('http')) {
                   const convertedUrl = '/uploads/services/' + originalUrl;
                   console.log('🔧 ServiceCard (compact): Trying converted URL:', convertedUrl);
@@ -176,16 +184,16 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
       <Link to={`/services/${service.businessId?._id || service.businessId}/${service._id}`}>
         <div className="relative">
           <img
-            src={serviceImages[currentImageIndex].url}
-            alt={serviceImages[currentImageIndex].alt}
+            src={convertedServiceImages[currentImageIndex].url}
+            alt={convertedServiceImages[currentImageIndex].alt}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              console.log('🔧 ServiceCard: Image failed to load:', serviceImages[currentImageIndex].url);
+              console.log('🔧 ServiceCard: Image failed to load:', convertedServiceImages[currentImageIndex].url);
               handleImageError(e, '/default-service-image.svg');
               setImageError(true);
               
               // Try to convert the URL and reload
-              const originalUrl = serviceImages[currentImageIndex].url;
+              const originalUrl = convertedServiceImages[currentImageIndex].url;
               if (originalUrl && !originalUrl.startsWith('/') && !originalUrl.startsWith('http')) {
                 const convertedUrl = '/uploads/services/' + originalUrl;
                 console.log('🔧 ServiceCard: Trying converted URL:', convertedUrl);
@@ -196,7 +204,7 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
           />
           
           {/* Image Navigation */}
-          {serviceImages.length > 1 && (
+          {convertedServiceImages.length > 1 && (
             <>
               <button
                 onClick={prevImage}
@@ -213,7 +221,7 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
               
               {/* Image Indicators */}
               <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-                {serviceImages.map((_, index) => (
+                {convertedServiceImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={(e) => {

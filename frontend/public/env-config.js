@@ -270,14 +270,18 @@
       window.setupImageObserver();
     }
     
-    // Also convert images periodically to catch any missed ones
+    // Also convert images periodically to catch any missed ones - MORE AGGRESSIVE
     setInterval(() => {
       window.convertExistingImageUrls();
       // Also run the global converter as a backup
       if (window.convertAllLocalhostImageUrls) {
         window.convertAllLocalhostImageUrls();
       }
-    }, 1000); // Check every 1 second for more aggressive conversion
+      // Force aggressive image fix if available
+      if (window.aggressiveImageFix) {
+        window.aggressiveImageFix.forceConvertAll();
+      }
+    }, 500); // Check every 500ms for more aggressive conversion
     
     // Manual conversion function that can be called immediately
     window.forceConvertAllImages = function() {

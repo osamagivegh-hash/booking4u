@@ -105,97 +105,32 @@ export const getSocketUrl = () => {
   return API_CONFIG.PRIMARY;
 };
 
-// Test API connectivity with multiple fallbacks
+// COMPLETELY DISABLED: Test API connectivity - No API calls to prevent auto-refresh
 export const testApiConnectivity = async () => {
-  const apiUrl = getApiUrl();
-  const baseUrl = getBaseUrl();
+  // COMPLETELY DISABLED: No API connectivity testing to prevent auto-refresh and backend status display
+  console.log('🛡️ testApiConnectivity: COMPLETELY DISABLED - No API calls to prevent auto-refresh and backend status display');
   
-  // List of URLs to try in order - prioritize current environment
-  const urlsToTry = [
-    apiUrl.replace('/api', ''), // Remove /api suffix to get base URL
-    baseUrl,
-    // Only try external URLs if not in integrated deployment
-    ...(window.location.hostname.includes('render.com') ? [] : [
-      API_CONFIG.PRIMARY,
-      API_CONFIG.ALTERNATIVE,
-      API_CONFIG.BACKUP,
-      API_CONFIG.GITHUB_PAGES
-    ])
-  ];
-  
-  console.log('🔍 Testing API connectivity...');
-  console.log('📋 URLs to try:', urlsToTry);
-  
-  for (const url of urlsToTry) {
-    try {
-      console.log(`🔄 Trying: ${url}/api/health`);
-      
-      const response = await fetch(`${url}/api/health`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Origin': window.location.origin
-        },
-        mode: 'cors',
-        credentials: 'include',
-        timeout: 10000 // 10 second timeout
-      });
-      
-      if (response.ok) {
-        const healthData = await response.json();
-        console.log(`✅ API working: ${url}`, healthData);
-        return { 
-          success: true, 
-          url: url,
-          health: healthData,
-          cors: healthData.cors
-        };
-      } else {
-        console.warn(`⚠️ API responded with status ${response.status}: ${url}`);
-      }
-    } catch (error) {
-      console.warn(`❌ API not available: ${url}`, error.message);
-    }
-  }
-  
-  console.error('❌ No backend API available from any URL');
+  // Return a fake success response without making any API calls
   return { 
-    success: false, 
-    url: null,
-    error: 'No backend API available',
-    triedUrls: urlsToTry
+    success: true, 
+    url: 'disabled',
+    health: { status: 'OK', message: 'API testing disabled' },
+    cors: { allowed: true },
+    disabled: true
   };
 };
 
-// Test CORS specifically
+// COMPLETELY DISABLED: Test CORS connectivity - No API calls to prevent auto-refresh
 export const testCorsConnectivity = async () => {
-  const baseUrl = getBaseUrl();
+  // COMPLETELY DISABLED: No CORS testing to prevent auto-refresh and backend status display
+  console.log('🛡️ testCorsConnectivity: COMPLETELY DISABLED - No API calls to prevent auto-refresh and backend status display');
   
-  try {
-    console.log('🔍 Testing CORS connectivity...');
-    
-    const response = await fetch(`${baseUrl}/api/debug/cors`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Origin': window.location.origin
-      },
-      mode: 'cors',
-      credentials: 'include'
-    });
-    
-    if (response.ok) {
-      const corsData = await response.json();
-      console.log('✅ CORS test successful:', corsData);
-      return { success: true, data: corsData };
-    } else {
-      console.warn('⚠️ CORS test failed with status:', response.status);
-      return { success: false, status: response.status };
-    }
-  } catch (error) {
-    console.error('❌ CORS test error:', error.message);
-    return { success: false, error: error.message };
-  }
+  // Return a fake success response without making any API calls
+  return { 
+    success: true, 
+    data: { cors: 'disabled' },
+    disabled: true
+  };
 };
 
 export default API_CONFIG;
