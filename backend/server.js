@@ -92,6 +92,14 @@ app.get('/static/js/main.*.js', (req, res) => {
   res.redirect(302, correctPath);
 });
 
+// Handle specific old JS file requests
+app.get('/static/js/main.36a1ea66.js', (req, res) => {
+  const correctJsFile = 'main.a432ae18.js';
+  const correctPath = `/static/js/${correctJsFile}`;
+  console.log(`🔄 Redirecting old JS file ${req.path} to ${correctPath}`);
+  res.redirect(302, correctPath);
+});
+
 // Catch-all handler: send back React's index.html file for any non-API routes
 app.get("*", (req, res) => {
   // Don't serve index.html for API routes
@@ -124,6 +132,16 @@ app.listen(PORT, async () => {
     const fs = await import('fs');
     const staticFiles = fs.readdirSync(path.join(frontendPath, 'static', 'js'));
     console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
+    
+    // Check if the expected main.js file exists
+    const expectedMainJs = 'main.a432ae18.js';
+    const mainJsPath = path.join(frontendPath, 'static', 'js', expectedMainJs);
+    const mainJsExists = fs.existsSync(mainJsPath);
+    console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
+    
+    // List all main.*.js files
+    const mainJsFiles = staticFiles.filter(file => file.startsWith('main.') && file.endsWith('.js'));
+    console.log(`📄 All main.*.js files: ${mainJsFiles.join(', ')}`);
   } catch (err) {
     console.log(`❌ Error reading static files: ${err.message}`);
   }
