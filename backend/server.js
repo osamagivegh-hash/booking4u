@@ -7,6 +7,7 @@ const hpp = require('hpp');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 
 // Import configuration and utilities
 const config = require('./config');
@@ -234,8 +235,8 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-// Root route handler
-app.get('/', (req, res) => {
+// API root route handler (moved to /api route)
+app.get('/api', (req, res) => {
   res.json({
     message: 'Booking4U API Server',
     version: '1.0.0',
