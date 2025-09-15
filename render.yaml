@@ -1,23 +1,23 @@
-services:
-  - type: web
-    name: booking4u-integrated
-    env: node
-    plan: free
-    buildCommand: npm run build:render
-    publishDirectory: backend
-    startCommand: npm start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: RENDER
-        value: true
-      - key: MONGODB_URI
-        fromDatabase:
-          name: booking4u-db
-          property: connectionString
-      - key: JWT_SECRET
-        generateValue: true
-      - key: PORT
-        value: 10000
-    autoDeploy: true
-    branch: main
+services: 
+  - type: web 
+    name: booking4u-integrated 
+    env: node 
+    plan: free 
+    buildCommand: npm run build:render 
+    publishDirectory: backend 
+    startCommand: npm start 
+    envVars: 
+      - key: NODE_ENV 
+        value: production 
+      - key: RENDER 
+        value: true 
+      - key: MONGODB_URI 
+        fromDatabase: 
+          name: booking4u-db 
+          property: connectionString 
+      - key: JWT_SECRET 
+        generateValue: true 
+      - key: PORT 
+        value: 10000 
+    autoDeploy: true 
+    branch: main 
