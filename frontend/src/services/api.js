@@ -49,9 +49,8 @@ api.interceptors.request.use(
       timestamp: new Date().toISOString()
     });
     
-    // Add CORS headers
-    config.headers['Origin'] = window.location.origin;
-    config.headers['Referer'] = window.location.href;
+    // Note: Origin and Referer headers are automatically set by the browser
+    // and cannot be manually set due to security restrictions
     
     // Add token to headers if available
     try {

@@ -41,9 +41,14 @@ export const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // For integrated deployment (same origin), use relative URL - PRIORITY
-  if (window.location.hostname.includes('render.com') || 
-      window.location.hostname.includes('netlify.app') || 
+  // For Render deployment, use the separate backend URL
+  if (window.location.hostname.includes('render.com')) {
+    console.log('🔧 Render deployment detected - using separate backend URL');
+    return `${API_CONFIG.PRIMARY}/api`;
+  }
+  
+  // For other integrated deployments (same origin), use relative URL
+  if (window.location.hostname.includes('netlify.app') || 
       window.location.hostname.includes('vercel.app')) {
     console.log('🔧 Integrated deployment detected - using relative API URL');
     return '/api';
