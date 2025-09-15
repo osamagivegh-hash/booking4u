@@ -174,8 +174,20 @@ app.use('/api/', limiter);
 console.log('🔄 Attempting to connect to MongoDB Atlas...');
 console.log('📊 MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
 
-// Fallback MongoDB URI if environment variable is not set
-const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
+// Validate and set MongoDB URI
+let mongoUri = process.env.MONGODB_URI;
+
+// Check if MONGODB_URI is valid
+if (!mongoUri) {
+  console.log('⚠️ MONGODB_URI environment variable not set, using fallback');
+  mongoUri = 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
+} else if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+  console.log('❌ Invalid MONGODB_URI format, using fallback');
+  console.log('🔍 Current MONGODB_URI:', mongoUri);
+  mongoUri = 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
+}
+
+console.log('🔗 Using MongoDB URI:', mongoUri.startsWith('mongodb+srv://') ? 'mongodb+srv://***' : 'mongodb://***');
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
