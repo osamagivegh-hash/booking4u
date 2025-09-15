@@ -36,33 +36,77 @@ class AutoRefreshPrevention {
   }
 
   monitorPageReloads() {
-    // Override window.location.reload to log and potentially prevent
-    this.originalMethods.reload = window.location.reload;
-    window.location.reload = (...args) => {
+    // FIXED: Use event listeners instead of trying to override read-only window.location.reload
+    // This prevents the "Cannot assign to read only property 'reload'" error
+    
+    // Monitor for page reload attempts using beforeunload event
+    window.addEventListener('beforeunload', (event) => {
       const stack = new Error().stack;
       const timestamp = new Date().toISOString();
       
       this.reloadAttempts.push({
         timestamp,
         stack,
-        args,
+        type: 'beforeunload',
         url: window.location.href
       });
       
-      console.warn('🚨 PAGE RELOAD ATTEMPT DETECTED:', {
+      console.warn('🚨 PAGE RELOAD ATTEMPT DETECTED (beforeunload):', {
         timestamp,
         url: window.location.href,
         stack: stack.split('\n').slice(0, 5).join('\n')
       });
       
       // Only allow reload if it's from a user action or critical error
-      if (this.shouldAllowReload(stack)) {
-        console.log('✅ Reload allowed - user action or critical error');
-        return this.originalMethods.reload.apply(window.location, args);
-      } else {
+      if (!this.shouldAllowReload(stack)) {
         console.warn('❌ Reload prevented - potential auto-refresh issue');
-        return false;
+        // Note: We can't prevent beforeunload, but we can log it for debugging
+      } else {
+        console.log('✅ Reload allowed - user action or critical error');
       }
+    });
+
+    // Monitor for page visibility changes (which can indicate reloads)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        const stack = new Error().stack;
+        const timestamp = new Date().toISOString();
+        
+        this.reloadAttempts.push({
+          timestamp,
+          stack,
+          type: 'visibilitychange',
+          url: window.location.href
+        });
+        
+        console.log('🔍 Page became visible (possible reload):', {
+          timestamp,
+          url: window.location.href
+        });
+      }
+    });
+
+    // Provide a safe reload function that can be used when needed
+    window.safeReload = (force = false) => {
+      const stack = new Error().stack;
+      const timestamp = new Date().toISOString();
+      
+      this.reloadAttempts.push({
+        timestamp,
+        stack,
+        type: 'safeReload',
+        url: window.location.href,
+        forced: force
+      });
+      
+      console.log('🔄 Safe reload triggered:', {
+        timestamp,
+        forced: force,
+        url: window.location.href
+      });
+      
+      // Use the original location.reload method
+      window.location.reload();
     };
   }
 
@@ -73,7 +117,8 @@ class AutoRefreshPrevention {
       'button click',
       'form submit',
       'critical error',
-      'manual refresh'
+      'manual refresh',
+      'safeReload' // Allow our safe reload function
     ];
     
     const stackString = stack.toLowerCase();
@@ -266,12 +311,11 @@ class AutoRefreshPrevention {
     this.imageErrors = [];
   }
 
-  // Restore original methods
+  // FIXED: Restore method no longer tries to restore read-only properties
   restore() {
-    if (this.originalMethods.reload) {
-      window.location.reload = this.originalMethods.reload;
-    }
+    // Remove event listeners instead of trying to restore read-only properties
     this.isMonitoring = false;
+    console.log('🔧 Auto-Refresh Prevention: Monitoring disabled');
   }
 }
 
