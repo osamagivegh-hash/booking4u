@@ -489,7 +489,6 @@ const frontendBuildPath = path.join(__dirname, 'frontend-build');
 console.log('📁 Frontend build path:', frontendBuildPath);
 
 // Check if frontend build exists
-const fs = require('fs');
 if (fs.existsSync(frontendBuildPath)) {
   console.log('✅ Frontend build folder found, serving static files');
   app.use(express.static(frontendBuildPath));
