@@ -5,7 +5,6 @@ import {
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
-import socketService from '../services/socket';
 import useAuthStore from '../stores/authStore';
 
 const QuickMessage = () => {
@@ -18,14 +17,14 @@ const QuickMessage = () => {
     loadUnreadCount();
     loadRecentMessages();
     
-    // Connect to WebSocket for real-time updates
-    if (token) {
-      socketService.connect(token);
-      socketService.onMessageReceived(() => {
-        loadUnreadCount();
-        loadRecentMessages();
-      });
-    }
+    // Note: Real-time messaging disabled - using REST API polling
+    // Set up polling for updates
+    const interval = setInterval(() => {
+      loadUnreadCount();
+      loadRecentMessages();
+    }, 60000); // Poll every minute
+    
+    return () => clearInterval(interval);
   }, [token]);
 
   const loadUnreadCount = async () => {

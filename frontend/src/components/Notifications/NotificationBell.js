@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { BellIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import useAuthStore from '../../stores/authStore';
-import socketService from '../../services/socket';
 
 const NotificationBell = () => {
   const { user, token } = useAuthStore();
@@ -15,18 +14,14 @@ const NotificationBell = () => {
     if (user && token) {
       loadUnreadCount();
       
-      // Connect to WebSocket for real-time updates
-      socketService.connect(token);
-      socketService.onMessageReceived((data) => {
-        setUnreadCount(prev => prev + 1);
-        // Add new notification to the top of the list
-        setNotifications(prev => [data.message, ...prev.slice(0, 4)]);
-      });
+      // Note: Real-time notifications disabled - using REST API polling
+      // Set up polling for unread count updates
+      const interval = setInterval(() => {
+        loadUnreadCount();
+      }, 30000); // Poll every 30 seconds
+      
+      return () => clearInterval(interval);
     }
-
-    return () => {
-      socketService.removeAllListeners();
-    };
   }, [user, token]);
 
   const loadUnreadCount = async () => {

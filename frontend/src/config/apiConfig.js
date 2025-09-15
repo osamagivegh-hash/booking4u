@@ -42,25 +42,7 @@ export const getBaseUrl = () => {
   return '/';
 };
 
-// Get socket URL
-export const getSocketUrl = () => {
-  if (window.REACT_APP_SOCKET_URL) {
-    return window.REACT_APP_SOCKET_URL;
-  }
-  
-  if (process.env.REACT_APP_SOCKET_URL) {
-    return process.env.REACT_APP_SOCKET_URL;
-  }
-  
-  if (process.env.NODE_ENV === 'development') {
-    return API_CONFIG.DEVELOPMENT;
-  }
-  
-  // For Blueprint Integrated deployment, always use relative URL
-  // This ensures same-origin requests with no CORS issues
-  console.log('🔧 Blueprint Integrated deployment - using relative Socket URL');
-  return '/';
-};
+// Note: Socket.IO functionality has been removed
 
 // COMPLETELY DISABLED: Test API connectivity - No API calls to prevent auto-refresh
 export const testApiConnectivity = async () => {

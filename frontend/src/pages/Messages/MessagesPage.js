@@ -13,7 +13,6 @@ import {
 import { StarIcon } from '@heroicons/react/24/solid';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
-import socketService from '../../services/socket';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 const MessagesPage = () => {
@@ -37,8 +36,7 @@ const MessagesPage = () => {
   const [typingUser, setTypingUser] = useState(null);
   const [messageStatuses, setMessageStatuses] = useState({});
   const [userStatuses, setUserStatuses] = useState({});
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  const connectionIntervalRef = useRef(null);
+  // Note: Real-time messaging disabled - using REST API only
   const [selectedMessages, setSelectedMessages] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [messageStats, setMessageStats] = useState({
@@ -179,202 +177,14 @@ const MessagesPage = () => {
     console.log('📝 Compose mode changed:', composeMode);
   }, [composeMode]);
 
-  // WebSocket initialization and cleanup
+  // Request notification permission
   useEffect(() => {
-    // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
+  }, []);
 
-    if (token) {
-      // Connect to WebSocket
-      const socket = socketService.connect(token);
-      if (!socket) {
-        console.warn('📱 Failed to connect to WebSocket - invalid token');
-        return;
-      }
-
-      // Monitor connection status
-      const checkConnectionStatus = () => {
-        const isConnected = socketService.getConnectionStatus();
-        setConnectionStatus(isConnected ? 'connected' : 'disconnected');
-      };
-
-      // Check connection status periodically (reduced frequency to prevent auto-refresh)
-      // Changed from 30 seconds to 5 minutes to prevent the auto-refresh issue
-      const interval = setInterval(checkConnectionStatus, 300000); // 5 minutes instead of 30 seconds
-      connectionIntervalRef.current = interval;
-      checkConnectionStatus(); // Initial check
-
-      // Set up real-time message handlers
-      socketService.onMessageReceived((data) => {
-        try {
-          console.log('📩 Received new message via socket:', data);
-          console.log('📩 Current activeTab:', activeTab);
-          console.log('📩 Current user ID:', user._id);
-          console.log('📩 Message receiver ID:', data.message?.receiverId);
-          
-          // Check if this message is for the current user
-          if (data.message && data.message.receiverId === user._id) {
-            console.log('📩 This message is for the current user');
-            
-            // Add new message to inbox if we're viewing inbox
-            if (activeTab === 'inbox') {
-              console.log('📩 Adding message to inbox');
-              setMessages(prev => [data.message, ...prev]);
-            }
-            
-            // Update selected message thread if it's part of the same conversation
-            if (selectedMessage && data.message && 
-                (selectedMessage.threadId === data.message.threadId || 
-                 selectedMessage._id === data.message.threadId ||
-                 selectedMessage.threadId === data.message._id)) {
-              console.log('📩 Updating selected message thread');
-              setSelectedMessage(prev => ({
-                ...prev,
-                threadMessages: prev.threadMessages 
-                  ? [...prev.threadMessages, data.message]
-                  : [prev, data.message]
-              }));
-            }
-            
-            // Update unread count
-            loadUnreadCount();
-            
-            // Show notification if supported
-            if ('Notification' in window && Notification.permission === 'granted' && data.notification) {
-              console.log('📩 Showing browser notification');
-              new Notification(data.notification.title, {
-                body: data.notification.body,
-                icon: '/logo.svg'
-              });
-            }
-          } else {
-            console.log('📩 This message is not for the current user');
-          }
-        } catch (error) {
-          console.error('Error handling received message:', error);
-        }
-      });
-
-      socketService.onUserTyping((data) => {
-        try {
-          setIsTyping(true);
-          setTypingUser(data?.userName || 'Unknown user');
-          
-          // Clear typing indicator after 3 seconds
-          setTimeout(() => {
-            setIsTyping(false);
-            setTypingUser(null);
-          }, 3000);
-        } catch (error) {
-          console.error('Error handling typing indicator:', error);
-        }
-      });
-
-      socketService.onUserStoppedTyping(() => {
-        try {
-          setIsTyping(false);
-          setTypingUser(null);
-        } catch (error) {
-          console.error('Error handling typing stop:', error);
-        }
-      });
-
-      // Handle message sent confirmation
-      socketService.onMessageSent((data) => {
-        try {
-          console.log('✅ Message sent confirmation:', data);
-          if (data.message) {
-            setMessageStatuses(prev => ({
-              ...prev,
-              [data.message._id]: 'sent'
-            }));
-          }
-        } catch (error) {
-          console.error('Error handling message sent confirmation:', error);
-        }
-      });
-
-      // Handle message read receipts
-      socketService.onMessageRead((data) => {
-        try {
-          console.log('👁️ Message read receipt:', data);
-          setMessageStatuses(prev => ({
-            ...prev,
-            [data.messageId]: 'read'
-          }));
-        } catch (error) {
-          console.error('Error handling message read receipt:', error);
-        }
-      });
-
-      // Handle message delivery confirmation
-      socketService.onMessageDeliveryConfirmed((data) => {
-        try {
-          console.log('📬 Message delivery confirmed:', data);
-          setMessageStatuses(prev => ({
-            ...prev,
-            [data.messageId]: 'delivered'
-          }));
-        } catch (error) {
-          console.error('Error handling message delivery confirmation:', error);
-        }
-      });
-
-      // Handle user status changes
-      socketService.onUserStatusChanged((data) => {
-        try {
-          console.log('👤 User status changed:', data);
-          setUserStatuses(prev => ({
-            ...prev,
-            [data.userId]: {
-              status: data.status,
-              timestamp: data.timestamp
-            }
-          }));
-        } catch (error) {
-          console.error('Error handling user status change:', error);
-        }
-      });
-    }
-
-    return () => {
-      try {
-        if (connectionIntervalRef.current) {
-          clearInterval(connectionIntervalRef.current);
-        }
-        socketService.removeAllListeners();
-        socketService.disconnect();
-      } catch (error) {
-        console.error('Error cleaning up socket service:', error);
-      }
-    };
-  }, [token]);
-
-  // Handle real-time message updates
-  useEffect(() => {
-    if (token && socketService.getConnectionStatus()) {
-      // Join conversation room if viewing a specific message thread
-      if (selectedMessage && selectedMessage.threadId) {
-        try {
-          socketService.joinConversation(selectedMessage.threadId);
-        } catch (error) {
-          console.error('Error joining conversation:', error);
-        }
-      }
-      
-      return () => {
-        if (selectedMessage && selectedMessage.threadId) {
-          try {
-            socketService.leaveConversation(selectedMessage.threadId);
-          } catch (error) {
-            console.error('Error leaving conversation:', error);
-          }
-        }
-      };
-    }
-  }, [token, selectedMessage, socketService.getConnectionStatus()]);
+  // Note: Real-time messaging disabled - using REST API only
 
   // Auto-refresh messages every 2 minutes instead of 30 seconds to reduce load
   useEffect(() => {
@@ -858,19 +668,7 @@ const MessagesPage = () => {
       console.log('✅ Message sent successfully:', newMessage);
       console.log('✅ Response data:', response.data);
       
-      // Emit real-time message event
-      try {
-        socketService.emitNewMessage({
-          receiverId: composeForm.receiverId,
-          message: newMessage
-        });
-        
-        // Emit delivery confirmation
-        socketService.emitMessageDelivered(newMessage._id, user._id);
-      } catch (error) {
-        console.error('Error emitting real-time message event:', error);
-        // Continue with the flow even if socket emission fails
-      }
+      // Note: Real-time messaging disabled - using REST API only
       
       // Add message to sent messages if we're viewing sent tab
       if (activeTab === 'sent') {
@@ -2167,14 +1965,7 @@ const MessagesPage = () => {
                       onChange={(e) => {
                         setComposeForm({ ...composeForm, content: e.target.value });
                         
-                        // Emit typing events
-                        if (composeForm.receiverId) {
-                          if (e.target.value.length > 0) {
-                            socketService.emitTypingStart(composeForm.receiverId, selectedMessage?.threadId);
-                          } else {
-                            socketService.emitTypingStop(composeForm.receiverId, selectedMessage?.threadId);
-                          }
-                        }
+                        // Note: Real-time typing indicators disabled
                       }}
                       onMouseEnter={(e) => {
                         e.preventDefault();
@@ -2189,9 +1980,7 @@ const MessagesPage = () => {
                       }}
                       onBlur={(e) => {
                         e.stopPropagation();
-                        if (composeForm.receiverId) {
-                          socketService.emitTypingStop(composeForm.receiverId);
-                        }
+                        // Note: Real-time typing indicators disabled
                       }}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                       required

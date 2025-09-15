@@ -41,7 +41,7 @@ REACT_APP_ENABLE_PWA=true
 The frontend has been updated to use environment variables for API endpoints:
 
 - **API Service** (`src/services/api.js`): Uses `REACT_APP_API_URL` or falls back to production URL
-- **Socket Service** (`src/services/socket.js`): Uses `REACT_APP_SOCKET_URL` for WebSocket connections
+- **Socket Service**: Disabled - Real-time messaging removed
 - **Image Utils** (`src/utils/imageUtils.js`): Uses `REACT_APP_BASE_URL` for image URLs
 
 ## Build Process

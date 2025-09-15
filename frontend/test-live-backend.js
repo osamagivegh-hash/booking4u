@@ -61,14 +61,8 @@ async function testBackendConnection() {
     }
     console.log('');
 
-    // Test 5: Socket.IO Connection
-    console.log('5. Testing Socket.IO Configuration...');
-    try {
-      const socketResponse = await fetch(`${BACKEND_URL}/socket.io/`);
-      console.log('✅ Socket.IO:', socketResponse.status === 200 ? 'Available' : 'Not Available');
-    } catch (error) {
-      console.log('❌ Socket.IO:', error.message);
-    }
+    // Test 5: Socket.IO Connection (Disabled)
+    console.log('5. Socket.IO: Disabled - Real-time messaging removed');
     console.log('');
 
     console.log('🎉 Backend Integration Tests Completed!');
