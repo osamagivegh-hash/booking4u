@@ -27,7 +27,6 @@ const LoginPage = () => {
     
     try {
       console.log('🔍 Attempting login with:', data);
-      console.log('🌐 Current API URL:', window.getApiUrl ? window.getApiUrl() : 'Not available');
       
       const result = await login(data);
       console.log('✅ Login result:', result);

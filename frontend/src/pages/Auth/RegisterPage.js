@@ -95,7 +95,6 @@ const RegisterPage = () => {
     
     try {
       console.log('🔍 Attempting registration with:', { ...data, password: '[HIDDEN]' });
-      console.log('🌐 Current API URL:', window.getApiUrl ? window.getApiUrl() : 'Not available');
       
       // Save form state before submission in case of error
       statePreservation.saveAllFormStates();
