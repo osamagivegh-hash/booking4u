@@ -12,6 +12,7 @@ import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
 import autoRefreshPrevention from './utils/autoRefreshPrevention';
 import disableAutoRefresh from './utils/disableAutoRefresh';
 import completeAutoRefreshElimination from './utils/completeAutoRefreshElimination';
+import './utils/aggressiveImageFix'; // Import aggressive image fix
 // DISABLED: import backendHealthService from './services/backendHealthService';
 
 // Components

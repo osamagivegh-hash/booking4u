@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+        .test-image {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            margin: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Image Fix Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Test Image URL Conversion</h2>
+        <p>This page tests the image URL conversion fixes for service images.</p>
+        
+        <div class="status info">
+            <strong>Test Images:</strong> The following images should load properly with converted URLs.
+        </div>
+        
+        <div>
+            <h3>Service Images (should convert to /uploads/services/)</h3>
+            <img src="serviceImages-1757180986920-51015621.webp" alt="Service Image 1" class="test-image" onerror="handleImageError(this)">
+            <img src="serviceImages-1757180466173-767386138.webp" alt="Service Image 2" class="test-image" onerror="handleImageError(this)">
+            <img src="serviceImages-1757180070220-228320618.webp" alt="Service Image 3" class="test-image" onerror="handleImageError(this)">
+        </div>
+        
+        <div>
+            <h3>Other Image Formats</h3>
+            <img src="test-image.jpg" alt="JPG Image" class="test-image" onerror="handleImageError(this)">
+            <img src="test-image.png" alt="PNG Image" class="test-image" onerror="handleImageError(this)">
+            <img src="test-image.jpeg" alt="JPEG Image" class="test-image" onerror="handleImageError(this)">
+        </div>
+        
+        <div>
+            <h3>Legacy localhost URLs (should convert to relative paths)</h3>
+            <img src="http://localhost:5001/uploads/services/test-image.webp" alt="Localhost Image" class="test-image" onerror="handleImageError(this)">
+        </div>
+        
+        <div>
+            <h3>Already Correct URLs (should remain unchanged)</h3>
+            <img src="/uploads/services/correct-image.webp" alt="Correct Image" class="test-image" onerror="handleImageError(this)">
+            <img src="https://example.com/image.webp" alt="External Image" class="test-image" onerror="handleImageError(this)">
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button class="btn-primary" onclick="testImageConversion()">Test Image Conversion</button>
+        <button class="btn-success" onclick="forceConvertAll()">Force Convert All Images</button>
+        <button class="btn-warning" onclick="checkImageStats()">Check Image Stats</button>
+        <button class="btn-primary" onclick="addTestImages()">Add More Test Images</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Logs</h2>
+        <p>Open your browser's Developer Tools (F12) and check the Console tab for detailed conversion logs.</p>
+        <p>Look for messages starting with 🔧 to see image URL conversions.</p>
+    </div>
+
+    <script>
+        // Load the env-config.js to get the image conversion functions
+        const script = document.createElement('script');
+        script.src = '/env-config.js';
+        document.head.appendChild(script);
+        
+        script.onload = function() {
+            console.log('🔧 env-config.js loaded, image conversion functions available');
+            
+            // Wait a bit for initialization
+            setTimeout(() => {
+                if (window.convertExistingImageUrls) {
+                    window.convertExistingImageUrls();
+                    console.log('🔧 Initial image conversion completed');
+                }
+                
+                if (window.aggressiveImageFix) {
+                    window.aggressiveImageFix.forceConvertAll();
+                    console.log('🔧 Aggressive image fix applied');
+                }
+            }, 1000);
+        };
+        
+        function handleImageError(img) {
+            console.warn('🔧 Image failed to load:', img.src);
+            img.style.border = '2px solid red';
+            img.alt = 'Failed to load: ' + img.src;
+        }
+        
+        function testImageConversion() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">Testing image conversion...</div>';
+            
+            const images = document.querySelectorAll('img');
+            let convertedCount = 0;
+            let errorCount = 0;
+            
+            images.forEach(img => {
+                if (img.src) {
+                    const originalSrc = img.src;
+                    let newSrc = originalSrc;
+                    
+                    // Test conversion logic
+                    if (originalSrc.includes('serviceImages-') && !originalSrc.startsWith('/') && !originalSrc.startsWith('http')) {
+                        newSrc = '/uploads/services/' + originalSrc;
+                        convertedCount++;
+                    } else if ((originalSrc.includes('.webp') || originalSrc.includes('.jpg') || originalSrc.includes('.jpeg') || originalSrc.includes('.png')) && !originalSrc.startsWith('/') && !originalSrc.startsWith('http')) {
+                        newSrc = '/uploads/services/' + originalSrc;
+                        convertedCount++;
+                    } else if (originalSrc.includes('localhost:5001')) {
+                        newSrc = originalSrc.replace('http://localhost:5001', '');
+                        convertedCount++;
+                    }
+                    
+                    if (newSrc !== originalSrc) {
+                        console.log('🔧 Test: Would convert:', originalSrc, '→', newSrc);
+                    }
+                }
+            });
+            
+            results.innerHTML = `
+                <div class="status success">
+                    <strong>Conversion Test Results:</strong><br>
+                    Total images: ${images.length}<br>
+                    Would convert: ${convertedCount}<br>
+                    Errors: ${errorCount}
+                </div>
+            `;
+        }
+        
+        function forceConvertAll() {
+            if (window.convertExistingImageUrls) {
+                window.convertExistingImageUrls();
+            }
+            if (window.aggressiveImageFix) {
+                window.aggressiveImageFix.forceConvertAll();
+            }
+            
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status success">Force conversion completed. Check console for details.</div>';
+        }
+        
+        function checkImageStats() {
+            const images = document.querySelectorAll('img');
+            let stats = {
+                total: images.length,
+                withErrors: 0,
+                converted: 0
+            };
+            
+            images.forEach(img => {
+                if (img.style.border === '2px solid red') {
+                    stats.withErrors++;
+                }
+                if (img.src.includes('/uploads/services/')) {
+                    stats.converted++;
+                }
+            });
+            
+            const results = document.getElementById('test-results');
+            results.innerHTML = `
+                <div class="status info">
+                    <strong>Image Statistics:</strong><br>
+                    Total images: ${stats.total}<br>
+                    With errors: ${stats.withErrors}<br>
+                    Using /uploads/services/: ${stats.converted}
+                </div>
+            `;
+        }
+        
+        function addTestImages() {
+            const container = document.querySelector('.test-section');
+            const newDiv = document.createElement('div');
+            newDiv.innerHTML = `
+                <h3>Dynamically Added Images</h3>
+                <img src="dynamic-serviceImages-${Date.now()}.webp" alt="Dynamic Image 1" class="test-image" onerror="handleImageError(this)">
+                <img src="dynamic-image-${Date.now()}.jpg" alt="Dynamic Image 2" class="test-image" onerror="handleImageError(this)">
+            `;
+            container.appendChild(newDiv);
+            
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">Added dynamic test images. Check if they get converted automatically.</div>';
+        }
+        
+        // Monitor for new images
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'IMG') {
+                        console.log('🔧 New image detected:', node.src);
+                    }
+                });
+            });
+        });
+        
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        console.log('🔧 Image fix test page loaded');
+    </script>
+</body>
+</html>

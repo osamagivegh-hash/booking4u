@@ -87,7 +87,7 @@
                 convertedValue = value.replace('http://localhost:5001', '');
                 console.log('🔧 Legacy localhost URL converted in env-config:', value, '→', convertedValue);
               }
-              // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
+              // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY - FIXED
               else if (value.includes('serviceImages-') && !value.startsWith('/') && !value.startsWith('http')) {
                 convertedValue = '/uploads/services/' + value;
                 console.log('🔧 Bare filename converted to full path:', value, '→', convertedValue);
@@ -97,15 +97,20 @@
                 convertedValue = value.replace(/https?:\/\/localhost:\d+/, '');
                 console.log('🔧 Legacy localhost URL converted:', value, '→', convertedValue);
               }
-              // Handle any bare filename that looks like an image
-              else if (value.includes('.webp') && !value.startsWith('/') && !value.startsWith('http')) {
+              // Handle any bare filename that looks like an image - ENHANCED
+              else if ((value.includes('.webp') || value.includes('.jpg') || value.includes('.jpeg') || value.includes('.png')) && !value.startsWith('/') && !value.startsWith('http')) {
                 convertedValue = '/uploads/services/' + value;
-                console.log('🔧 Bare webp filename converted to full path:', value, '→', convertedValue);
+                console.log('🔧 Bare image filename converted to full path:', value, '→', convertedValue);
+              }
+              // Handle any bare filename without extension that looks like a service image
+              else if (value.match(/^[a-zA-Z0-9-_]+$/) && !value.startsWith('/') && !value.startsWith('http') && value.length > 10) {
+                convertedValue = '/uploads/services/' + value;
+                console.log('🔧 Bare filename without extension converted to full path:', value, '→', convertedValue);
               }
             }
             this._src = convertedValue;
             
-            // Add comprehensive error handler
+            // Add comprehensive error handler with better fallback
             this.onerror = function(e) {
               console.warn('🔧 Image failed to load, using fallback:', this._src);
               e.preventDefault();
@@ -155,7 +160,7 @@
             console.log('🔧 Converting localhost image URL:', img.src, '→', newSrc);
             convertedCount++;
           }
-          // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
+          // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY - ENHANCED
           else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
             newSrc = '/uploads/services/' + img.src;
             console.log('🔧 Converting bare filename to full path:', img.src, '→', newSrc);
@@ -167,10 +172,16 @@
             console.log('🔧 Converting localhost URL:', img.src, '→', newSrc);
             convertedCount++;
           }
-          // Handle any bare webp filename
-          else if (img.src.includes('.webp') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+          // Handle any bare image filename - ENHANCED
+          else if ((img.src.includes('.webp') || img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png')) && !img.src.startsWith('/') && !img.src.startsWith('http')) {
             newSrc = '/uploads/services/' + img.src;
-            console.log('🔧 Converting bare webp filename to full path:', img.src, '→', newSrc);
+            console.log('🔧 Converting bare image filename to full path:', img.src, '→', newSrc);
+            convertedCount++;
+          }
+          // Handle bare filenames without extension that look like service images
+          else if (img.src.match(/^[a-zA-Z0-9-_]+$/) && !img.src.startsWith('/') && !img.src.startsWith('http') && img.src.length > 10) {
+            newSrc = '/uploads/services/' + img.src;
+            console.log('🔧 Converting bare filename without extension to full path:', img.src, '→', newSrc);
             convertedCount++;
           }
           
@@ -222,7 +233,7 @@
         newSrc = img.src.replace('http://localhost:5001', '');
         console.log('🔧 Observer: Converting localhost image URL:', img.src, '→', newSrc);
       }
-      // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY
+      // Handle bare filenames (like serviceImages-xxx.webp) - PRIORITY - ENHANCED
       else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
         newSrc = '/uploads/services/' + img.src;
         console.log('🔧 Observer: Converting bare filename:', img.src, '→', newSrc);
@@ -232,10 +243,15 @@
         newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
         console.log('🔧 Observer: Converting localhost URL:', img.src, '→', newSrc);
       }
-      // Handle any bare webp filename
-      else if (img.src.includes('.webp') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+      // Handle any bare image filename - ENHANCED
+      else if ((img.src.includes('.webp') || img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png')) && !img.src.startsWith('/') && !img.src.startsWith('http')) {
         newSrc = '/uploads/services/' + img.src;
-        console.log('🔧 Observer: Converting bare webp filename:', img.src, '→', newSrc);
+        console.log('🔧 Observer: Converting bare image filename:', img.src, '→', newSrc);
+      }
+      // Handle bare filenames without extension that look like service images
+      else if (img.src.match(/^[a-zA-Z0-9-_]+$/) && !img.src.startsWith('/') && !img.src.startsWith('http') && img.src.length > 10) {
+        newSrc = '/uploads/services/' + img.src;
+        console.log('🔧 Observer: Converting bare filename without extension:', img.src, '→', newSrc);
       }
       
       if (newSrc !== img.src) {

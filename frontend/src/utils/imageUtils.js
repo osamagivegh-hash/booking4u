@@ -45,9 +45,21 @@ export const getImageUrl = (imagePath) => {
     return imagePath;
   }
   
-  // Handle bare filenames that look like service images
+  // Handle bare filenames that look like service images - ENHANCED
   if (imagePath.includes('serviceImages-') && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
     console.log('🔧 Converting bare service image filename to full path:', imagePath);
+    return `/uploads/services/${imagePath}`;
+  }
+  
+  // Handle any bare image filename - ENHANCED
+  if ((imagePath.includes('.webp') || imagePath.includes('.jpg') || imagePath.includes('.jpeg') || imagePath.includes('.png')) && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
+    console.log('🔧 Converting bare image filename to full path:', imagePath);
+    return `/uploads/services/${imagePath}`;
+  }
+  
+  // Handle bare filenames without extension that look like service images
+  if (imagePath.match(/^[a-zA-Z0-9-_]+$/) && !imagePath.startsWith('/') && !imagePath.startsWith('http') && imagePath.length > 10) {
+    console.log('🔧 Converting bare filename without extension to full path:', imagePath);
     return `/uploads/services/${imagePath}`;
   }
   
@@ -190,10 +202,22 @@ window.convertAllLocalhostImageUrls = function() {
         console.log('🔧 Global converter: Converting localhost:5001 URL:', img.src, '→', newSrc);
         convertedCount++;
       }
-      // Convert bare service image filenames
+      // Convert bare service image filenames - ENHANCED
       else if (img.src.includes('serviceImages-') && !img.src.startsWith('/') && !img.src.startsWith('http')) {
         newSrc = `/uploads/services/${img.src}`;
         console.log('🔧 Global converter: Converting bare filename:', img.src, '→', newSrc);
+        convertedCount++;
+      }
+      // Convert any bare image filename - ENHANCED
+      else if ((img.src.includes('.webp') || img.src.includes('.jpg') || img.src.includes('.jpeg') || img.src.includes('.png')) && !img.src.startsWith('/') && !img.src.startsWith('http')) {
+        newSrc = `/uploads/services/${img.src}`;
+        console.log('🔧 Global converter: Converting bare image filename:', img.src, '→', newSrc);
+        convertedCount++;
+      }
+      // Convert bare filenames without extension that look like service images
+      else if (img.src.match(/^[a-zA-Z0-9-_]+$/) && !img.src.startsWith('/') && !img.src.startsWith('http') && img.src.length > 10) {
+        newSrc = `/uploads/services/${img.src}`;
+        console.log('🔧 Global converter: Converting bare filename without extension:', img.src, '→', newSrc);
         convertedCount++;
       }
       // Convert any other localhost URLs
@@ -222,6 +246,14 @@ window.convertLocalhostUrlsInData = function(data) {
       return data.replace('http://localhost:5001', '');
     }
     if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
+      return `/uploads/services/${data}`;
+    }
+    // Handle any bare image filename - ENHANCED
+    if ((data.includes('.webp') || data.includes('.jpg') || data.includes('.jpeg') || data.includes('.png')) && !data.startsWith('/') && !data.startsWith('http')) {
+      return `/uploads/services/${data}`;
+    }
+    // Handle bare filenames without extension that look like service images
+    if (data.match(/^[a-zA-Z0-9-_]+$/) && !data.startsWith('/') && !data.startsWith('http') && data.length > 10) {
       return `/uploads/services/${data}`;
     }
     return data;

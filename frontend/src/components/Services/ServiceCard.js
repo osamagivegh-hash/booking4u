@@ -134,7 +134,18 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
               src={serviceImages[currentImageIndex].url}
               alt={serviceImages[currentImageIndex].alt}
               className="w-16 h-16 object-cover rounded-lg"
-              onError={(e) => handleImageError(e, '/default-service-image.svg')}
+              onError={(e) => {
+                console.log('🔧 ServiceCard (compact): Image failed to load:', serviceImages[currentImageIndex].url);
+                handleImageError(e, '/default-service-image.svg');
+                
+                // Try to convert the URL and reload
+                const originalUrl = serviceImages[currentImageIndex].url;
+                if (originalUrl && !originalUrl.startsWith('/') && !originalUrl.startsWith('http')) {
+                  const convertedUrl = '/uploads/services/' + originalUrl;
+                  console.log('🔧 ServiceCard (compact): Trying converted URL:', convertedUrl);
+                  e.target.src = convertedUrl;
+                }
+              }}
             />
           </div>
           <div className="flex-1 min-w-0">
@@ -169,9 +180,17 @@ const ServiceCard = ({ service, showProvider = true, compact = false, showAction
             alt={serviceImages[currentImageIndex].alt}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {
-              console.log('Image failed to load:', serviceImages[currentImageIndex].url);
+              console.log('🔧 ServiceCard: Image failed to load:', serviceImages[currentImageIndex].url);
               handleImageError(e, '/default-service-image.svg');
               setImageError(true);
+              
+              // Try to convert the URL and reload
+              const originalUrl = serviceImages[currentImageIndex].url;
+              if (originalUrl && !originalUrl.startsWith('/') && !originalUrl.startsWith('http')) {
+                const convertedUrl = '/uploads/services/' + originalUrl;
+                console.log('🔧 ServiceCard: Trying converted URL:', convertedUrl);
+                e.target.src = convertedUrl;
+              }
             }}
             onLoad={() => setImageError(false)}
           />
