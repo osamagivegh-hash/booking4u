@@ -86,15 +86,15 @@ app.use(express.static(frontendPath, {
 
 // Handle missing JS files - redirect to the correct file
 app.get('/static/js/main.*.js', (req, res) => {
-  const correctJsFile = 'main.a432ae18.js';
+  const correctJsFile = 'main.36a1ea66.js';
   const correctPath = `/static/js/${correctJsFile}`;
   console.log(`🔄 Redirecting ${req.path} to ${correctPath}`);
   res.redirect(302, correctPath);
 });
 
 // Handle specific old JS file requests
-app.get('/static/js/main.36a1ea66.js', (req, res) => {
-  const correctJsFile = 'main.a432ae18.js';
+app.get('/static/js/main.a432ae18.js', (req, res) => {
+  const correctJsFile = 'main.36a1ea66.js';
   const correctPath = `/static/js/${correctJsFile}`;
   console.log(`🔄 Redirecting old JS file ${req.path} to ${correctPath}`);
   res.redirect(302, correctPath);
@@ -134,7 +134,7 @@ app.listen(PORT, async () => {
     console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
     
     // Check if the expected main.js file exists
-    const expectedMainJs = 'main.a432ae18.js';
+    const expectedMainJs = 'main.36a1ea66.js';
     const mainJsPath = path.join(frontendPath, 'static', 'js', expectedMainJs);
     const mainJsExists = fs.existsSync(mainJsPath);
     console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
