@@ -67,3 +67,4 @@ echo 🎉 All API calls now use relative paths!
 echo    Blueprint Integrated deployment will work perfectly!
 echo.
 pause
+

@@ -3,9 +3,7 @@ services:
     name: booking4u-integrated
     env: node
     plan: free
-    buildCommand: npm run build:blueprint
     publishDirectory: backend
-    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -19,6 +17,20 @@ services:
         generateValue: true
       - key: PORT
         value: 10000
-    healthCheckPath: /api/health
+    healthCheckPath: /api/info
     autoDeploy: true
     branch: main
+    disk:
+      name: booking4u-disk
+      mountPath: /opt/render/project/src/backend/uploads
+      sizeGB: 1
+    buildFilter:
+      paths:
+        - "backend/**"
+        - "frontend/**"
+        - "package*.json"
+        - "render.yaml"
+    buildTimeout: 1800
+    deployTimeout: 1800
+    buildCommand: npm run build:render
+    startCommand: npm start

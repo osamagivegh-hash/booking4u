@@ -115,3 +115,12 @@ Thumbs.db
 # Backup files
 *.backup
 *.bak
+
+# Render specific
+.renderignore
+Dockerfile.render
+build-render.sh
+
+# Build artifacts
+*.map
+*.LICENSE.txt
