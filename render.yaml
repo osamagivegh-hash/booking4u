@@ -3,61 +3,21 @@ services:
     name: booking4u-integrated
     env: node
     plan: free
-    region: oregon
-    branch: main
-    buildCommand: |
-      echo "🔧 Installing root dependencies..."
-      npm install
-      echo "🔧 Installing backend dependencies..."
-      cd backend && npm install
-      echo "🔧 Installing frontend dependencies..."
-      cd ../frontend && npm install
-      echo "🔧 Building frontend..."
-      npm run build
-      echo "🔧 Copying frontend build to backend..."
-      cp -r build ../backend/frontend-build
-      echo "✅ Build completed successfully!"
-    startCommand: cd backend && npm start
-    healthCheckPath: /api/health
+    buildCommand: npm run build:render
+    startCommand: npm start
     envVars:
-      # Environment
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-      
-      # Database
+      - key: RENDER
+        value: true
       - key: MONGODB_URI
-        value: mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0
-      
-      # Security
+        fromDatabase:
+          name: booking4u-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
-      - key: JWT_EXPIRE
-        value: 7d
-      
-      # CORS Configuration
-      - key: CORS_ORIGIN
-        value: https://booking4u-integrated.onrender.com
-      - key: CORS_CREDENTIALS
-        value: true
-      - key: CORS_METHODS
-        value: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
-      - key: CORS_MAX_AGE
-        value: 86400
-      
-      # Frontend Environment Variables
-      - key: REACT_APP_API_URL
-        value: /api
-      - key: REACT_APP_BASE_URL
-        value: /
-      - key: REACT_APP_SOCKET_URL
-        value: /
-      
-      # Logging
-      - key: LOG_LEVEL
-        value: info
-      - key: LOG_FILE
-        value: logs/app.log
-
-# No local database needed - using MongoDB Atlas
+      - key: PORT
+        value: 10000
+    healthCheckPath: /api/health
+    autoDeploy: true
+    branch: main

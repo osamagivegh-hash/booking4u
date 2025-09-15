@@ -4,6 +4,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 // Import configuration and utilities
 const config = require('./config');
@@ -32,8 +35,14 @@ try {
 
 const app = express();
 
-// CORS Configuration - Simplified for Integrated Deployment
-console.log('🌍 Environment:', config.server.nodeEnv);
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production';
+const isRender = process.env.RENDER === 'true';
+const PORT = process.env.PORT || 10000;
+
+console.log('🌍 Environment:', process.env.NODE_ENV);
+console.log('🚀 Render deployment:', isRender);
+console.log('📡 Port:', PORT);
 
 // CORS Configuration for Integrated Deployment
 const allowedOrigins = [
@@ -42,19 +51,12 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
-  
-  // Integrated deployment origin (same origin - no CORS needed)
-  'https://booking4u-integrated.onrender.com',
-  
-  // Development with different ports
   'http://localhost:10000',
-  'http://127.0.0.1:10000'
+  'http://127.0.0.1:10000',
+  
+  // Render deployment origin
+  'https://booking4u-integrated.onrender.com'
 ];
-
-// Environment detection
-const isProduction = config.server.nodeEnv === 'production';
-const isRenderDeployment = process.env.RENDER === 'true' || process.env.NODE_ENV === 'production';
-const isLocalDevelopment = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -65,7 +67,7 @@ const corsOptions = {
     }
     
     // In production/Render deployment, allow specific Render domain
-    if (isRenderDeployment && origin === 'https://booking4u-integrated.onrender.com') {
+    if (isRender && origin === 'https://booking4u-integrated.onrender.com') {
       console.log('✅ CORS: Allowing Render frontend domain:', origin);
       return callback(null, true);
     }
@@ -77,20 +79,13 @@ const corsOptions = {
     }
     
     // Allow localhost for development (dynamic ports)
-    if (isLocalDevelopment && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
+    if (!isProduction && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
       console.log('✅ CORS: Allowed development origin:', origin);
       return callback(null, true);
     }
     
     // Log blocked origin for debugging
     console.log('❌ CORS: Blocked origin:', origin);
-    console.log('🔍 CORS Debug Info:', {
-      origin,
-      isProduction,
-      isRenderDeployment,
-      isLocalDevelopment,
-      allowedOrigins
-    });
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -107,10 +102,10 @@ const corsOptions = {
   ]
 };
 
-// تطبيق middleware الـ CORS
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// معالجة طلبات preflight بشكل صريح
+// Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
 // Request logging middleware for debugging
@@ -152,45 +147,34 @@ app.use(helmet({
   referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 
-// middleware لتسجيل الطلبات
+// Request logging middleware
 app.use(requestLogger);
 
-// middleware لتحليل البيانات
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// middleware للضغط
-const compression = require('compression');
+// Compression middleware
 app.use(compression());
 
-// الملفات الثابتة
-app.use('/uploads', express.static('uploads'));
-
-// Serve React frontend static files
-const path = require('path');
-app.use(express.static(path.join(__dirname, 'frontend-build')));
-
-// middleware لتطهير البيانات
+// Data sanitization middleware
 app.use(mongoSanitize());
 app.use(hpp());
 
-// معدل الحد للطلبات
-const rateLimit = require('express-rate-limit');
-const limiter = rateLimit(config.rateLimit);
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
 app.use('/api/', limiter);
 
-// Database connection with standard MongoDB Atlas connection
+// Database connection
 console.log('🔄 Attempting to connect to MongoDB Atlas...');
 console.log('📊 MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
 
 // Fallback MongoDB URI if environment variable is not set
 const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
-console.log('🔗 Using MongoDB URI:', mongoUri ? 'Set' : 'Not set');
-console.log('🔍 Environment variables check:', {
-  NODE_ENV: process.env.NODE_ENV,
-  MONGODB_URI: process.env.MONGODB_URI ? 'Set' : 'Not set',
-  PORT: process.env.PORT
-});
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
@@ -214,7 +198,6 @@ mongoose.connect(mongoUri, {
     code: err.code,
     message: err.message
   });
-  console.error('🔍 Full error:', err);
 });
 
 // Set up connection event listeners
@@ -255,9 +238,11 @@ process.on('SIGINT', async () => {
 app.get('/', (req, res) => {
   res.json({
     message: 'Booking4U API Server',
-    version: require('./package.json').version,
+    version: '1.0.0',
     status: 'running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    render: isRender,
     endpoints: {
       health: '/api/health',
       corsDebug: '/api/debug/cors',
@@ -329,7 +314,7 @@ app.post('/api/test-save', async (req, res) => {
   }
 });
 
-// مسارات API
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/services', serviceRoutes);
@@ -343,7 +328,7 @@ app.use('/api/notifications', notificationRoutes);
 // Enhanced CORS debug endpoint
 app.get('/api/debug/cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = isRenderDeployment || allowedOrigins.includes(requestOrigin);
+  const isAllowed = isRender || allowedOrigins.includes(requestOrigin);
   const userAgent = req.headers['user-agent'];
   const referer = req.headers.referer;
   
@@ -363,15 +348,15 @@ app.get('/api/debug/cors', (req, res) => {
     cors: {
       allowed: isAllowed,
       allowedOrigins: allowedOrigins,
-      environment: config.server.nodeEnv,
+      environment: process.env.NODE_ENV,
       corsEnabled: true,
-      renderDeployment: isRenderDeployment,
+      renderDeployment: isRender,
       productionMode: isProduction
     },
     server: {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: require('./package.json').version
+      version: '1.0.0'
     },
     message: isAllowed ? '✅ Origin allowed by CORS policy' : '❌ Origin not allowed by CORS policy'
   };
@@ -384,7 +369,7 @@ app.get('/api/debug/cors', (req, res) => {
 app.get('/api/health', async (req, res) => {
   try {
     const requestOrigin = req.headers.origin;
-    const isAllowed = isRenderDeployment || allowedOrigins.includes(requestOrigin);
+    const isAllowed = isRender || allowedOrigins.includes(requestOrigin);
     
     // Test database connection
     let dbStatus = 'disconnected';
@@ -411,15 +396,15 @@ app.get('/api/health', async (req, res) => {
       message: dbConnected ? 'Server is running correctly' : 'Server running but database disconnected',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      environment: config.server.nodeEnv,
-      version: require('./package.json').version,
+      environment: process.env.NODE_ENV,
+      version: '1.0.0',
       cors: {
         origin: requestOrigin,
         allowed: isAllowed,
         allowedOrigins: allowedOrigins,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-        renderDeployment: isRenderDeployment
+        renderDeployment: isRender
       },
       database: {
         connected: dbConnected,
@@ -449,9 +434,9 @@ app.get('/api/health', async (req, res) => {
 // Enhanced CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
   const requestOrigin = req.headers.origin;
-  const isAllowed = isRenderDeployment && requestOrigin === 'https://booking4u-integrated.onrender.com' || 
+  const isAllowed = isRender && requestOrigin === 'https://booking4u-integrated.onrender.com' || 
                    allowedOrigins.includes(requestOrigin) ||
-                   (isLocalDevelopment && requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1')));
+                   (!isProduction && requestOrigin && (requestOrigin.includes('localhost') || requestOrigin.includes('127.0.0.1')));
   
   res.json({ 
     message: 'CORS test successful',
@@ -460,8 +445,8 @@ app.get('/api/test-cors', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: {
       isProduction,
-      isRenderDeployment,
-      isLocalDevelopment
+      isRender,
+      isLocalDevelopment: !isProduction
     },
     corsHeaders: {
       'Access-Control-Allow-Origin': requestOrigin,
@@ -471,7 +456,7 @@ app.get('/api/test-cors', (req, res) => {
   });
 });
 
-// معالجة الأخطاء
+// Error handling middleware
 app.use(errorLogger);
 app.use((err, req, res, next) => {
   console.error('❌ Server Error:', err.message);
@@ -482,22 +467,40 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Serve static files from React build (Integrated Deployment)
-if (config.server.nodeEnv === 'production') {
-  console.log('📁 Serving static files from:', path.join(__dirname, 'frontend-build'));
-  app.use(express.static(path.join(__dirname, 'frontend-build')));
+// CRITICAL: Serve static files BEFORE catch-all route
+// Serve uploads folder as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve React frontend build folder as static files
+const frontendBuildPath = path.join(__dirname, 'frontend-build');
+console.log('📁 Frontend build path:', frontendBuildPath);
+
+// Check if frontend build exists
+const fs = require('fs');
+if (fs.existsSync(frontendBuildPath)) {
+  console.log('✅ Frontend build folder found, serving static files');
+  app.use(express.static(frontendBuildPath));
+} else {
+  console.log('⚠️ Frontend build folder not found at:', frontendBuildPath);
+  console.log('📂 Available directories:', fs.readdirSync(__dirname));
 }
 
-// Catch-all handler for React Router (must be after all API routes)
+// Catch-all handler for React Router (MUST be after all API routes and static files)
 app.get('*', (req, res) => {
   // Only serve index.html for non-API routes
   if (!req.path.startsWith('/api/')) {
-    if (config.server.nodeEnv === 'production') {
-      res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
+    const indexPath = path.join(frontendBuildPath, 'index.html');
+    
+    // Check if index.html exists
+    if (fs.existsSync(indexPath)) {
+      console.log('🎯 Serving React app for route:', req.path, 'from:', indexPath);
+      res.sendFile(indexPath);
     } else {
-      res.status(404).json({ 
-        error: 'Frontend not available in development mode',
-        message: 'Please run frontend separately with npm run dev:frontend',
+      console.log('❌ index.html not found at:', indexPath);
+      res.status(404).json({
+        error: 'Frontend not built',
+        message: 'React build folder not found. Please run: npm run build',
+        path: req.path,
         timestamp: new Date().toISOString()
       });
     }
@@ -511,10 +514,8 @@ app.get('*', (req, res) => {
   }
 });
 
-const PORT = config.server.port || 10000;
-
 // Start server with comprehensive logging
-if (config.server.nodeEnv !== 'test') {
+if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(80));
     console.log('🚀 BOOKING4U INTEGRATED SERVER STARTED');
@@ -522,7 +523,8 @@ if (config.server.nodeEnv !== 'test') {
     console.log(`📡 Server running on port ${PORT}`);
     console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
     console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
-    console.log(`🌍 Environment: ${config.server.nodeEnv}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🚀 Render deployment: ${isRender}`);
     console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
     console.log(`🔧 CORS test: http://0.0.0.0:${PORT}/api/test-cors`);
     console.log(`🐛 Debug endpoint: http://0.0.0.0:${PORT}/api/debug/cors`);
@@ -533,8 +535,9 @@ if (config.server.nodeEnv !== 'test') {
     console.log(`   ✅ Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD`);
     console.log('');
     console.log('🎯 Integrated Deployment:');
-    console.log(`   ✅ Frontend served from: ${path.join(__dirname, 'frontend-build')}`);
+    console.log(`   ✅ Frontend served from: ${frontendBuildPath}`);
     console.log(`   ✅ React Router catch-all enabled`);
+    console.log(`   ✅ Uploads served from: ${path.join(__dirname, 'uploads')}`);
     console.log(`   ✅ No CORS issues (same origin)`);
     console.log('='.repeat(80));
   });
