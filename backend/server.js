@@ -108,7 +108,7 @@ app.get("*", (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`📡 Server running on port ${PORT}`);
   console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
   console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
