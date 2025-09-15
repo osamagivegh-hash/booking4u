@@ -213,20 +213,6 @@ const useAuthStore = create(
         }
       },
 
-      // COMPLETELY DISABLED: Second auth initialization to prevent backend components
-      initializeAuth: async () => {
-        console.log('🛡️ Auth Store: Second auth initialization completely disabled to prevent backend components');
-        
-        // Set unauthenticated state without making any API calls
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-          isInitializing: false,
-        });
-      },
 
       clearError: () => {
         set({ error: null });
