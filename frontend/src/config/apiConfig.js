@@ -41,10 +41,10 @@ export const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // For Render deployment, use the separate backend URL
+  // For Blueprint Integrated Deployment (same origin), use relative URL
   if (window.location.hostname.includes('render.com')) {
-    console.log('🔧 Render deployment detected - using separate backend URL');
-    return `${API_CONFIG.PRIMARY}/api`;
+    console.log('🔧 Blueprint Integrated deployment detected - using relative API URL');
+    return '/api';
   }
   
   // For other integrated deployments (same origin), use relative URL

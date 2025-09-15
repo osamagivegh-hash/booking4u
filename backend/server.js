@@ -45,49 +45,20 @@ console.log('🌍 Environment:', process.env.NODE_ENV);
 console.log('🚀 Render deployment:', isRender);
 console.log('📡 Port:', PORT);
 
-// CORS Configuration for Integrated Deployment
-const allowedOrigins = [
-  // Development origins
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
-  'http://localhost:10000',
-  'http://127.0.0.1:10000',
-  
-  // Render deployment origin
-  'https://booking4u-integrated.onrender.com'
-];
-
+// CORS Configuration for Blueprint Integrated Deployment
+// For same-origin deployment, we can use a simpler CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (same-origin requests, mobile apps, etc.)
     if (!origin) {
-      console.log('🔓 CORS: Allowing same-origin request');
+      console.log('🔓 CORS: Allowing same-origin request (no origin header)');
       return callback(null, true);
     }
     
-    // In production/Render deployment, allow specific Render domain
-    if (isRender && origin === 'https://booking4u-integrated.onrender.com') {
-      console.log('✅ CORS: Allowing Render frontend domain:', origin);
-      return callback(null, true);
-    }
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.includes(origin)) {
-      console.log('✅ CORS: Allowed origin:', origin);
-      return callback(null, true);
-    }
-    
-    // Allow localhost for development (dynamic ports)
-    if (!isProduction && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-      console.log('✅ CORS: Allowed development origin:', origin);
-      return callback(null, true);
-    }
-    
-    // Log blocked origin for debugging
-    console.log('❌ CORS: Blocked origin:', origin);
-    callback(new Error('Not allowed by CORS'));
+    // For Blueprint Integrated Deployment, all requests are same-origin
+    // Allow all origins for simplicity since frontend and backend are on same domain
+    console.log('✅ CORS: Allowing origin for Blueprint Integrated:', origin);
+    return callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200,
@@ -96,8 +67,7 @@ const corsOptions = {
     'Content-Type', 
     'Authorization', 
     'X-Requested-With', 
-    'Accept', 
-    'Origin',
+    'Accept',
     'Access-Control-Request-Method',
     'Access-Control-Request-Headers'
   ]
@@ -245,6 +215,19 @@ process.on('SIGINT', async () => {
   await mongoose.connection.close();
   console.log('🔌 MongoDB connection closed through app termination');
   process.exit(0);
+});
+
+// Health check route for Render Blueprint Integrated Deployment
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Booking4U Backend is running',
+    status: 'OK',
+    deployment: 'Blueprint Integrated',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    version: '1.0.0',
+    cors: 'Same-origin (no CORS issues)'
+  });
 });
 
 // API root route handler (moved to /api route)
@@ -530,27 +513,28 @@ app.get('*', (req, res) => {
 if (process.env.NODE_ENV !== 'test') {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('='.repeat(80));
-    console.log('🚀 BOOKING4U INTEGRATED SERVER STARTED');
+    console.log('🚀 BOOKING4U BLUEPRINT INTEGRATED SERVER STARTED');
     console.log('='.repeat(80));
     console.log(`📡 Server running on port ${PORT}`);
     console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
     console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-    console.log(`🚀 Render deployment: ${isRender}`);
-    console.log(`📊 Health check: http://0.0.0.0:${PORT}/api/health`);
-    console.log(`🔧 CORS test: http://0.0.0.0:${PORT}/api/test-cors`);
-    console.log(`🐛 Debug endpoint: http://0.0.0.0:${PORT}/api/debug/cors`);
+    console.log(`🚀 Render Blueprint Integrated: ${isRender}`);
+    console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
+    console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/health`);
     console.log('');
     console.log('🔒 CORS Configuration:');
-    console.log(`   ✅ Same-origin requests: enabled`);
-    console.log(`   ✅ Development localhost: enabled`);
+    console.log(`   ✅ Same-origin requests: enabled (Blueprint Integrated)`);
+    console.log(`   ✅ All origins allowed: enabled`);
     console.log(`   ✅ Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD`);
+    console.log(`   ✅ Credentials: enabled`);
     console.log('');
-    console.log('🎯 Integrated Deployment:');
+    console.log('🎯 Blueprint Integrated Deployment:');
     console.log(`   ✅ Frontend served from: ${frontendBuildPath}`);
     console.log(`   ✅ React Router catch-all enabled`);
     console.log(`   ✅ Uploads served from: ${path.join(__dirname, 'uploads')}`);
     console.log(`   ✅ No CORS issues (same origin)`);
+    console.log(`   ✅ Relative API paths: /api/*`);
     console.log('='.repeat(80));
   });
 
