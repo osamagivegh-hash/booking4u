@@ -400,34 +400,61 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve React frontend build folder as static files
 const frontendBuildPath = path.join(__dirname, 'frontend-build');
+const frontendBuildPathAlt = path.join(__dirname, '..', 'frontend', 'build');
 console.log('📁 Frontend build path:', frontendBuildPath);
+console.log('📁 Alternative frontend build path:', frontendBuildPathAlt);
 
-// Check if frontend build exists
+// Check if frontend build exists in either location
+let staticPath = null;
 if (fs.existsSync(frontendBuildPath)) {
-  console.log('✅ Frontend build folder found, serving static files');
-  app.use(express.static(frontendBuildPath));
+  console.log('✅ Frontend build folder found at:', frontendBuildPath);
+  staticPath = frontendBuildPath;
+} else if (fs.existsSync(frontendBuildPathAlt)) {
+  console.log('✅ Frontend build folder found at alternative path:', frontendBuildPathAlt);
+  staticPath = frontendBuildPathAlt;
 } else {
-  console.log('⚠️ Frontend build folder not found at:', frontendBuildPath);
-  console.log('📂 Available directories:', fs.readdirSync(__dirname));
+  console.log('⚠️ Frontend build folder not found in either location');
+  console.log('📂 Available directories in backend:', fs.readdirSync(__dirname));
+  console.log('📂 Available directories in root:', fs.readdirSync(path.join(__dirname, '..')));
+}
+
+// Serve static files if build exists
+if (staticPath) {
+  app.use(express.static(staticPath));
+  console.log('✅ Serving static files from:', staticPath);
 }
 
 // Catch-all handler for React Router (MUST be after all API routes and static files)
 app.get('*', (req, res) => {
   // Only serve index.html for non-API routes
   if (!req.path.startsWith('/api/')) {
-    const indexPath = path.join(frontendBuildPath, 'index.html');
+    // Try both possible build paths
+    const indexPath1 = path.join(frontendBuildPath, 'index.html');
+    const indexPath2 = path.join(frontendBuildPathAlt, 'index.html');
     
-    // Check if index.html exists
-    if (fs.existsSync(indexPath)) {
+    let indexPath = null;
+    if (fs.existsSync(indexPath1)) {
+      indexPath = indexPath1;
+    } else if (fs.existsSync(indexPath2)) {
+      indexPath = indexPath2;
+    }
+    
+    if (indexPath) {
       console.log('🎯 Serving React app for route:', req.path, 'from:', indexPath);
       res.sendFile(indexPath);
     } else {
-      console.log('❌ index.html not found at:', indexPath);
+      console.log('❌ index.html not found in either location');
+      console.log('   Tried:', indexPath1);
+      console.log('   Tried:', indexPath2);
       res.status(404).json({
         error: 'Frontend not built',
         message: 'React build folder not found. Please run: npm run build',
         path: req.path,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        buildPaths: {
+          primary: frontendBuildPath,
+          alternative: frontendBuildPathAlt
+        }
       });
     }
   } else {

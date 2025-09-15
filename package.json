@@ -10,6 +10,7 @@
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "build": "cd frontend && npm install && npm run build && cd ../backend && mkdir -p frontend-build && cp -r ../frontend/build/* frontend-build/",
     "build:render": "npm run install:all && npm run build",
+    "build:blueprint": "cd frontend && npm install && npm run build && cd ../backend && mkdir -p frontend-build && cp -r ../frontend/build/* frontend-build/ && npm install",
     "start": "cd backend && npm start",
     "postinstall": "cd backend && npm install",
     "heroku-postbuild": "npm run build",
