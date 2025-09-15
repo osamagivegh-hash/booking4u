@@ -6,13 +6,16 @@ const getBackendUrl = () => {
   return getBaseUrl();
 };
 
-// Get the asset URL for images and static files - always use relative paths
+// Get the asset URL for images and static files - use absolute API paths
 const getAssetUrl = () => {
-  // Always use relative path to avoid localhost issues
+  // Use absolute API URL for images to ensure proper loading
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL.replace('/api', '');
+  }
   return '/';
 };
 
-// Convert image path to proper URL - simplified for relative paths
+// Convert image path to proper URL - use absolute API paths for images
 export const getImageUrl = (imagePath) => {
   if (!imagePath) {
     return '/default-service-image.svg';
@@ -20,18 +23,22 @@ export const getImageUrl = (imagePath) => {
   
   // Handle legacy localhost URLs (should not happen with new backend)
   if (imagePath.includes('localhost:5001')) {
-    console.log('🔧 Converting legacy localhost:5001 image URL to relative:', imagePath);
+    console.log('🔧 Converting legacy localhost:5001 image URL to absolute:', imagePath);
+    const baseUrl = getAssetUrl();
     const relativePath = imagePath.replace('http://localhost:5001', '');
-    console.log('🔧 Converted to relative path:', relativePath);
-    return relativePath;
+    const absolutePath = `${baseUrl}${relativePath}`;
+    console.log('🔧 Converted to absolute path:', absolutePath);
+    return absolutePath;
   }
   
   // Handle any other localhost URLs (should not happen with new backend)
   if (imagePath.includes('localhost:') && !imagePath.startsWith('/')) {
-    console.log('🔧 Converting legacy localhost image URL to relative:', imagePath);
+    console.log('🔧 Converting legacy localhost image URL to absolute:', imagePath);
+    const baseUrl = getAssetUrl();
     const relativePath = imagePath.replace(/https?:\/\/localhost:\d+/, '');
-    console.log('🔧 Converted to relative path:', relativePath);
-    return relativePath;
+    const absolutePath = `${baseUrl}${relativePath}`;
+    console.log('🔧 Converted to absolute path:', absolutePath);
+    return absolutePath;
   }
   
   // If it's already a full URL, return as is
@@ -39,37 +46,42 @@ export const getImageUrl = (imagePath) => {
     return imagePath;
   }
   
-  // Backend now always returns relative paths, so we can use them directly
-  // If it's already a relative path starting with /uploads/, return as is
+  // Convert relative paths to absolute API paths
   if (imagePath.startsWith('/uploads/')) {
-    return imagePath;
+    const baseUrl = getAssetUrl();
+    return `${baseUrl}${imagePath}`;
   }
   
   // Handle bare filenames that look like service images - ENHANCED
   if (imagePath.includes('serviceImages-') && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
-    console.log('🔧 Converting bare service image filename to full path:', imagePath);
-    return `/uploads/services/${imagePath}`;
+    console.log('🔧 Converting bare service image filename to absolute path:', imagePath);
+    const baseUrl = getAssetUrl();
+    return `${baseUrl}/uploads/services/${imagePath}`;
   }
   
   // Handle any bare image filename - ENHANCED
   if ((imagePath.includes('.webp') || imagePath.includes('.jpg') || imagePath.includes('.jpeg') || imagePath.includes('.png')) && !imagePath.startsWith('/') && !imagePath.startsWith('http')) {
-    console.log('🔧 Converting bare image filename to full path:', imagePath);
-    return `/uploads/services/${imagePath}`;
+    console.log('🔧 Converting bare image filename to absolute path:', imagePath);
+    const baseUrl = getAssetUrl();
+    return `${baseUrl}/uploads/services/${imagePath}`;
   }
   
   // Handle bare filenames without extension that look like service images
   if (imagePath.match(/^[a-zA-Z0-9-_]+$/) && !imagePath.startsWith('/') && !imagePath.startsWith('http') && imagePath.length > 10) {
-    console.log('🔧 Converting bare filename without extension to full path:', imagePath);
-    return `/uploads/services/${imagePath}`;
+    console.log('🔧 Converting bare filename without extension to absolute path:', imagePath);
+    const baseUrl = getAssetUrl();
+    return `${baseUrl}/uploads/services/${imagePath}`;
   }
   
   // If it's just a filename, assume it's in uploads/services
   if (!imagePath.includes('/')) {
-    return `/uploads/services/${imagePath}`;
+    const baseUrl = getAssetUrl();
+    return `${baseUrl}/uploads/services/${imagePath}`;
   }
   
-  // Default case - prepend /uploads/
-  return `/uploads/${imagePath}`;
+  // Default case - prepend /uploads/ and make absolute
+  const baseUrl = getAssetUrl();
+  return `${baseUrl}/uploads/${imagePath}`;
 };
 
 // Get service image with fallback - use URLs directly from backend
@@ -281,9 +293,12 @@ window.convertLocalhostUrlsInData = function(data) {
   return data;
 };
 
-// Function to get the correct asset URL for images - always use relative path
+// Function to get the correct asset URL for images - use absolute API paths
 window.getAssetUrl = function() {
-  // Always use relative path to avoid localhost issues
+  // Use absolute API URL for images to ensure proper loading
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL.replace('/api', '');
+  }
   return '/';
 };
 

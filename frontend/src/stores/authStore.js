@@ -48,6 +48,16 @@ const useAuthStore = create(
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           console.log('🔍 Auth Store: Token set in API headers');
           console.log('🔍 Auth Store: Updated API headers:', api.defaults.headers);
+          
+          // Ensure user data is also stored in localStorage for immediate access
+          try {
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('token', token);
+            console.log('🔍 Auth Store: User and token stored in localStorage');
+          } catch (error) {
+            console.error('🔍 Auth Store: Error storing in localStorage:', error);
+          }
+          
           console.log('🔍 Auth Store: LOGIN SUCCESS - Returning result');
           
           return { success: true, user };
@@ -94,6 +104,16 @@ const useAuthStore = create(
 
           // Set token in API headers
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
+          // Ensure user data is also stored in localStorage for immediate access
+          try {
+            localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem('token', token);
+            console.log('🔍 Auth Store: User and token stored in localStorage');
+          } catch (error) {
+            console.error('🔍 Auth Store: Error storing in localStorage:', error);
+          }
+          
           console.log('🔍 Auth Store: REGISTER SUCCESS - Token set in headers');
           
           return { success: true, user };
@@ -123,21 +143,64 @@ const useAuthStore = create(
 
         // Remove token from API headers
         delete api.defaults.headers.common['Authorization'];
+        
+        // Clear localStorage
+        try {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth-storage');
+          console.log('🔍 Auth Store: LOGOUT - localStorage cleared');
+        } catch (error) {
+          console.error('🔍 Auth Store: Error clearing localStorage:', error);
+        }
+        
         console.log('🔍 Auth Store: LOGOUT - Token removed from headers');
       },
 
-      // COMPLETELY DISABLED: No auth initialization to prevent backend components
+      // Initialize auth from localStorage on app load
       initializeAuth: async () => {
-        console.log('🛡️ Auth Store: Auth initialization completely disabled to prevent backend components');
+        console.log('🔍 Auth Store: Initializing auth from localStorage');
         
-        // Set unauthenticated state without making any API calls
-        set({
-          user: null,
-          token: null,
-          isAuthenticated: false,
-          isInitializing: false,
-          error: null,
-        });
+        try {
+          // Try to get user and token from localStorage
+          const storedUser = localStorage.getItem('user');
+          const storedToken = localStorage.getItem('token');
+          
+          if (storedUser && storedToken) {
+            const user = JSON.parse(storedUser);
+            console.log('🔍 Auth Store: Found stored user and token, restoring state');
+            
+            set({
+              user,
+              token: storedToken,
+              isAuthenticated: true,
+              isInitializing: false,
+              error: null,
+            });
+            
+            // Set token in API headers
+            api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+            console.log('🔍 Auth Store: Auth state restored from localStorage');
+          } else {
+            console.log('🔍 Auth Store: No stored auth data found');
+            set({
+              user: null,
+              token: null,
+              isAuthenticated: false,
+              isInitializing: false,
+              error: null,
+            });
+          }
+        } catch (error) {
+          console.error('🔍 Auth Store: Error initializing auth:', error);
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            isInitializing: false,
+            error: null,
+          });
+        }
       },
 
       updateProfile: async (profileData) => {

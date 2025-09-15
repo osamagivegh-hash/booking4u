@@ -59,10 +59,14 @@ app.get("/api/info", (req, res) => {
   });
 });
 
-// Serve React frontend (Blueprint Integration)
+// Serve uploads folder as static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Serve uploads folder as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Serve React frontend (Blueprint Integration)
 const frontendPath = path.join(__dirname, "frontend-build");
 app.use(express.static(frontendPath));
 

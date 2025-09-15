@@ -26,8 +26,11 @@ class SocketService {
         token: token
       },
       autoConnect: false,
-      transports: ['websocket', 'polling'],
-      timeout: 20000
+      transports: ['polling', 'websocket'], // Prioritize polling for Render compatibility
+      timeout: 20000,
+      forceNew: true, // Force new connection
+      upgrade: true, // Allow transport upgrades
+      rememberUpgrade: false // Don't remember upgrade for Render
     });
 
     this.socket.on('connect', () => {
@@ -43,6 +46,15 @@ class SocketService {
     this.socket.on('connect_error', (error) => {
       console.error('📱 Connection error:', error.message);
       this.isConnected = false;
+      
+      // Handle Render WebSocket restrictions
+      if (error.message.includes('websocket') || error.message.includes('WebSocket')) {
+        console.log('📱 WebSocket blocked on Render, falling back to polling only');
+        this.socket.io.opts.transports = ['polling'];
+        this.socket.io.opts.upgrade = false;
+        this.socket.connect();
+        return;
+      }
       
       // If it's an authentication error, try to reconnect after a delay
       if (error.message.includes('Invalid authentication token') || error.message.includes('Authentication token required')) {
