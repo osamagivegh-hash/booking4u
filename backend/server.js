@@ -68,10 +68,43 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve React frontend (Blueprint Integration)
 const frontendPath = path.join(__dirname, "frontend-build");
-app.use(express.static(frontendPath));
 
+// Serve static files with proper headers and caching
+app.use(express.static(frontendPath, {
+  maxAge: '1d', // Cache static files for 1 day
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    // Set proper MIME types
+    if (path.endsWith('.js')) {
+      res.setHeader('Content-Type', 'application/javascript');
+    } else if (path.endsWith('.css')) {
+      res.setHeader('Content-Type', 'text/css');
+    }
+  }
+}));
+
+// Handle missing JS files - redirect to the correct file
+app.get('/static/js/main.*.js', (req, res) => {
+  const correctJsFile = 'main.a432ae18.js';
+  const correctPath = `/static/js/${correctJsFile}`;
+  console.log(`🔄 Redirecting ${req.path} to ${correctPath}`);
+  res.redirect(302, correctPath);
+});
+
+// Catch-all handler: send back React's index.html file for any non-API routes
 app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+  // Don't serve index.html for API routes
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ message: 'API endpoint not found' });
+  }
+  
+  res.sendFile(path.join(frontendPath, "index.html"), (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Error loading application');
+    }
+  });
 });
 
 // Start server
@@ -83,4 +116,15 @@ app.listen(PORT, () => {
   console.log(`🚀 Render Blueprint Integrated: true`);
   console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
   console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/info`);
+  console.log(`📁 Frontend build path: ${frontendPath}`);
+  console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
+  
+  // Log available static files for debugging
+  try {
+    const fs = await import('fs');
+    const staticFiles = fs.readdirSync(path.join(frontendPath, 'static', 'js'));
+    console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
+  } catch (err) {
+    console.log(`❌ Error reading static files: ${err.message}`);
+  }
 });
