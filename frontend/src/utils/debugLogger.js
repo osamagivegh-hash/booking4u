@@ -49,37 +49,33 @@ class DebugLogger {
   setupPageReloadDetection() {
     const self = this;
     
-    // Detect page reloads
-    const originalReload = window.location.reload;
-    window.location.reload = function() {
+    // Detect page reloads using beforeunload event instead of overriding read-only properties
+    window.addEventListener('beforeunload', (event) => {
       self.log('CRITICAL', '🚨 PAGE RELOAD TRIGGERED', {
         stack: new Error().stack,
         timestamp: new Date().toISOString(),
         url: window.location.href
       });
-      return originalReload.call(this);
-    };
+    });
     
-    // Detect location changes
-    const originalAssign = window.location.assign;
-    window.location.assign = function(url) {
-      self.log('CRITICAL', '🚨 LOCATION ASSIGN', {
-        url,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString()
-      });
-      return originalAssign.call(this, url);
-    };
+    // Detect page visibility changes (which can indicate reloads)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        self.log('CRITICAL', '🚨 PAGE BECAME VISIBLE (possible reload)', {
+          timestamp: new Date().toISOString(),
+          url: window.location.href
+        });
+      }
+    });
     
-    const originalReplace = window.location.replace;
-    window.location.replace = function(url) {
-      self.log('CRITICAL', '🚨 LOCATION REPLACE', {
-        url,
-        stack: new Error().stack,
-        timestamp: new Date().toISOString()
+    // Detect location changes using popstate event
+    window.addEventListener('popstate', (event) => {
+      self.log('CRITICAL', '🚨 POPSTATE EVENT (navigation)', {
+        state: event.state,
+        timestamp: new Date().toISOString(),
+        url: window.location.href
       });
-      return originalReplace.call(this, url);
-    };
+    });
     
     // Detect href changes (reduced frequency to prevent performance issues)
     let currentHref = window.location.href;
