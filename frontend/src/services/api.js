@@ -100,42 +100,30 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Function to recursively convert localhost URLs in response data
-const convertLocalhostUrlsInResponse = (data) => {
+// Simplified URL conversion for Blueprint Integrated
+const convertUrlsInResponse = (data) => {
   if (!data) return data;
   
   if (typeof data === 'string') {
-    // Convert localhost:5001 URLs to relative paths
-    if (data.includes('localhost:5001')) {
-      const converted = data.replace('http://localhost:5001', '');
-      console.log('🔧 Converting localhost URL in response:', data, '→', converted);
-      return converted;
+    // Convert any remaining localhost URLs to relative paths
+    if (data.includes('localhost:5001') || data.includes('localhost:10000')) {
+      return data.replace(/http:\/\/localhost:\d+/, '');
     }
     // Convert bare service image filenames to full paths
     if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
-      const converted = `/uploads/services/${data}`;
-      console.log('🔧 Converting bare service image filename in response:', data, '→', converted);
-      return converted;
+      return `/uploads/services/${data}`;
     }
     return data;
   }
   
   if (Array.isArray(data)) {
-    return data.map(item => convertLocalhostUrlsInResponse(item));
+    return data.map(item => convertUrlsInResponse(item));
   }
   
   if (typeof data === 'object') {
     const converted = {};
     for (const [key, value] of Object.entries(data)) {
-      // Convert URLs in image-related fields
-      if (key === 'url' || key === 'image' || key === 'images' || 
-          key.includes('image') || key.includes('Image') || 
-          key.includes('photo') || key.includes('Photo') ||
-          key.includes('avatar') || key.includes('Avatar')) {
-        converted[key] = convertLocalhostUrlsInResponse(value);
-      } else {
-        converted[key] = convertLocalhostUrlsInResponse(value);
-      }
+      converted[key] = convertUrlsInResponse(value);
     }
     return converted;
   }
@@ -164,13 +152,9 @@ api.interceptors.response.use(
       console.log('🔒 CORS Headers received:', corsHeaders);
     }
     
-    // Backend now always returns relative paths, so no conversion needed
-    // This interceptor is kept for backward compatibility but should not be needed
-    if (response.data && (window.location.hostname.includes('render.com') || 
-                         window.location.hostname.includes('netlify.app') || 
-                         window.location.hostname.includes('vercel.app') ||
-                         window.location.hostname.includes('github.io'))) {
-      console.log('🔧 Backend should now return relative paths - no conversion needed');
+    // Convert any remaining localhost URLs in response data
+    if (response.data) {
+      response.data = convertUrlsInResponse(response.data);
     }
     
     return response;
@@ -277,23 +261,11 @@ api.interceptors.response.use(
       }
     }
     
-    // Handle connection refused errors (like localhost:5001)
+    // Handle connection errors
     if (error.message.includes('ERR_CONNECTION_REFUSED') || 
         error.message.includes('Connection refused') ||
         error.code === 'ECONNREFUSED') {
-      console.error('🚫 Connection Refused Error:', error.message);
-      
-      // Log to auto-refresh prevention system
-      if (window.autoRefreshPrevention) {
-        window.autoRefreshPrevention.networkErrors.push({
-          timestamp: new Date().toISOString(),
-          type: 'connection_refused',
-          url: originalRequest?.url,
-          method: originalRequest?.method,
-          error: error.message,
-          stack: error.stack
-        });
-      }
+      console.error('🚫 Connection Error:', error.message);
     }
     
     return Promise.reject(error);

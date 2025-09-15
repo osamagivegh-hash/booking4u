@@ -46,20 +46,9 @@ console.log('🚀 Render deployment:', isRender);
 console.log('📡 Port:', PORT);
 
 // CORS Configuration for Blueprint Integrated Deployment
-// For same-origin deployment, we can use a simpler CORS configuration
+// Simplified CORS - allow all origins since frontend and backend are on same domain
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (same-origin requests, mobile apps, etc.)
-    if (!origin) {
-      console.log('🔓 CORS: Allowing same-origin request (no origin header)');
-      return callback(null, true);
-    }
-    
-    // For Blueprint Integrated Deployment, all requests are same-origin
-    // Allow all origins for simplicity since frontend and backend are on same domain
-    console.log('✅ CORS: Allowing origin for Blueprint Integrated:', origin);
-    return callback(null, true);
-  },
+  origin: true, // Allow all origins for Blueprint Integrated
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
@@ -321,101 +310,57 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Enhanced CORS debug endpoint
+// Simplified CORS debug endpoint
 app.get('/api/debug/cors', (req, res) => {
-  const requestOrigin = req.headers.origin;
-  const isAllowed = true; // All origins allowed for Blueprint Integrated
-  const userAgent = req.headers['user-agent'];
-  const referer = req.headers.referer;
-  
-  const debugInfo = {
-    request: {
-      origin: requestOrigin,
-      userAgent: userAgent,
-      referer: referer,
-      method: req.method,
-      path: req.path,
-      headers: {
-        'content-type': req.headers['content-type'],
-        'authorization': req.headers.authorization ? 'Present' : 'Not present',
-        'x-requested-with': req.headers['x-requested-with']
-      }
-    },
+  res.json({
+    message: 'CORS Debug - Blueprint Integrated',
     cors: {
-      allowed: isAllowed,
+      allowed: true,
       deployment: 'Blueprint Integrated',
       environment: process.env.NODE_ENV,
       corsEnabled: true,
-      renderDeployment: isRender,
-      productionMode: isProduction
+      renderDeployment: isRender
     },
     server: {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       version: '1.0.0'
     },
-    message: isAllowed ? '✅ Origin allowed by CORS policy' : '❌ Origin not allowed by CORS policy'
-  };
-  
-  console.log('🔍 CORS Debug Request:', debugInfo);
-  res.json(debugInfo);
+    request: {
+      origin: req.headers.origin,
+      method: req.method,
+      path: req.path
+    }
+  });
 });
 
-// Enhanced health check endpoint with CORS info
+// Simplified health check endpoint
 app.get('/api/health', async (req, res) => {
   try {
-    const requestOrigin = req.headers.origin;
-    const isAllowed = true; // All origins allowed for Blueprint Integrated
-    
     // Test database connection
-    let dbStatus = 'disconnected';
     let dbConnected = false;
-    
     try {
       if (mongoose.connection.readyState === 1) {
-        // Test with a simple ping
         await mongoose.connection.db.admin().ping();
-        dbStatus = 'connected';
         dbConnected = true;
-      } else {
-        dbStatus = 'disconnected';
-        dbConnected = false;
       }
     } catch (dbError) {
       console.error('❌ Database ping failed:', dbError.message);
-      dbStatus = 'error';
-      dbConnected = false;
     }
     
-    const health = {
+    res.json({
       status: dbConnected ? 'OK' : 'WARNING',
       message: dbConnected ? 'Server is running correctly' : 'Server running but database disconnected',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV,
       version: '1.0.0',
-      cors: {
-        origin: requestOrigin,
-        allowed: true, // All origins allowed for Blueprint Integrated
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-        renderDeployment: isRender,
-        deployment: 'Blueprint Integrated'
-      },
+      deployment: 'Blueprint Integrated',
       database: {
         connected: dbConnected,
-        state: mongoose.connection.readyState,
-        status: dbStatus,
-        host: mongoose.connection.host || 'unknown',
-        port: mongoose.connection.port || 'unknown',
-        name: mongoose.connection.name || 'unknown'
+        state: mongoose.connection.readyState
       }
-    };
-    
-    console.log('🏥 Health check requested from origin:', requestOrigin);
-    console.log('📊 Database status:', dbStatus, 'Connected:', dbConnected);
-    
-    res.json(health);
+    });
   } catch (error) {
     console.error('❌ Health check error:', error);
     res.status(500).json({
@@ -427,26 +372,14 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Enhanced CORS test endpoint
+// Simplified CORS test endpoint
 app.get('/api/test-cors', (req, res) => {
-  const requestOrigin = req.headers.origin;
-  const isAllowed = true; // All origins allowed for Blueprint Integrated
-  
   res.json({ 
-    message: 'CORS test successful',
-    origin: requestOrigin,
-    allowed: isAllowed,
+    message: 'CORS test successful - Blueprint Integrated',
+    allowed: true,
     timestamp: new Date().toISOString(),
-    environment: {
-      isProduction,
-      isRender,
-      isLocalDevelopment: !isProduction
-    },
-    corsHeaders: {
-      'Access-Control-Allow-Origin': requestOrigin,
-      'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD'
-    }
+    deployment: 'Blueprint Integrated',
+    environment: process.env.NODE_ENV
   });
 });
 
