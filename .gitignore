@@ -124,3 +124,25 @@ build-render.sh
 # Build artifacts
 *.map
 *.LICENSE.txt
+
+# Ignore build files that cause sync issues
+backend/frontend-build/
+frontend/build/
+
+# Ignore files that cause Render sync issues
+*.log
+logs/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore files that cause Render sync issues
+*.log
+logs/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
