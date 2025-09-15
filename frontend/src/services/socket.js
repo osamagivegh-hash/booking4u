@@ -1,11 +1,27 @@
 import { io } from 'socket.io-client';
 import { getSocketUrl } from '../config/apiConfig';
+import { 
+  getOptimalSocketConfig, 
+  handleSocketConflicts, 
+  monitorSocketHealth,
+  createExponentialBackoff 
+} from '../utils/socketUtils';
 
 class SocketService {
   constructor() {
     this.socket = null;
     this.isConnected = false;
     this.eventListeners = new Map();
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectDelay = 1000; // Start with 1 second
+    this.maxReconnectDelay = 30000; // Max 30 seconds
+    this.connectionTimeout = null;
+    this.isConnecting = false;
+    this.shouldReconnect = true;
+    this.healthMonitor = null;
+    this.conflictCleanup = null;
+    this.backoff = createExponentialBackoff(1000, 30000, 2);
   }
 
   connect(token) {
@@ -18,40 +34,84 @@ class SocketService {
       return this.socket;
     }
 
+    if (this.isConnecting) {
+      console.log('📱 Connection already in progress, skipping...');
+      return null;
+    }
+
     // Use the configured socket URL
     const socketUrl = getSocketUrl();
     
-    // For Blueprint Integrated deployment, disable Socket.IO to prevent CORS issues
+    // For Blueprint Integrated deployment, use relative URL for Socket.IO
     if (socketUrl === '/' && window.location.hostname.includes('render.com')) {
-      console.log('📱 Blueprint Integrated deployment detected - Socket.IO disabled to prevent CORS issues');
-      return null;
+      console.log('📱 Blueprint Integrated deployment detected - using relative Socket.IO URL');
+      // Keep the relative URL for same-origin requests
     }
     
-    this.socket = io(socketUrl, {
+    this.isConnecting = true;
+    this.shouldReconnect = true;
+    
+    // Get optimal configuration based on environment
+    const baseConfig = {
       auth: {
         token: token
       },
-      autoConnect: false,
-      transports: ['polling', 'websocket'], // Prioritize polling for Render compatibility
-      timeout: 20000,
-      forceNew: true, // Force new connection
-      upgrade: true, // Allow transport upgrades
-      rememberUpgrade: false // Don't remember upgrade for Render
-    });
+      reconnection: true,
+      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionDelay: this.reconnectDelay,
+      reconnectionDelayMax: this.maxReconnectDelay,
+      randomizationFactor: 0.5
+    };
+    
+    const optimalConfig = getOptimalSocketConfig(baseConfig);
+    
+    this.socket = io(socketUrl, optimalConfig);
 
     this.socket.on('connect', () => {
       console.log('📱 Connected to messaging server');
       this.isConnected = true;
+      this.isConnecting = false;
+      this.reconnectAttempts = 0;
+      this.reconnectDelay = 1000; // Reset delay
+      this.backoff.reset(); // Reset exponential backoff
+      
+      // Clear any existing connection timeout
+      if (this.connectionTimeout) {
+        clearTimeout(this.connectionTimeout);
+        this.connectionTimeout = null;
+      }
+      
+      // Setup conflict handling and health monitoring
+      this.conflictCleanup = handleSocketConflicts(this.socket);
+      this.healthMonitor = monitorSocketHealth(this.socket, {
+        onHealthCheck: (health) => {
+          console.log('📱 Socket health check:', health);
+        },
+        onUnhealthy: (reason) => {
+          console.warn('📱 Socket unhealthy:', reason);
+          if (this.shouldReconnect) {
+            this.handleReconnection(token);
+          }
+        }
+      });
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('📱 Disconnected from messaging server');
+    this.socket.on('disconnect', (reason) => {
+      console.log('📱 Disconnected from messaging server:', reason);
       this.isConnected = false;
+      this.isConnecting = false;
+      
+      // Don't reconnect if it's a manual disconnect or server shutdown
+      if (reason === 'io server disconnect' || reason === 'io client disconnect') {
+        this.shouldReconnect = false;
+        console.log('📱 Manual disconnect detected, stopping reconnection attempts');
+      }
     });
 
     this.socket.on('connect_error', (error) => {
       console.error('📱 Connection error:', error.message);
       this.isConnected = false;
+      this.isConnecting = false;
       
       // Handle Render WebSocket restrictions
       if (error.message.includes('websocket') || error.message.includes('WebSocket')) {
@@ -62,15 +122,50 @@ class SocketService {
         return;
       }
       
-      // If it's an authentication error, try to reconnect after a delay
+      // Handle timeout errors
+      if (error.message.includes('timeout') || error.message.includes('Timeout')) {
+        console.log('📱 Connection timeout, will retry with exponential backoff');
+        this.handleReconnection(token);
+        return;
+      }
+      
+      // Handle authentication errors
       if (error.message.includes('Invalid authentication token') || error.message.includes('Authentication token required')) {
         console.log('📱 Authentication error, will retry connection...');
-        setTimeout(() => {
-          if (token) {
-            this.reconnect(token);
-          }
-        }, 5000);
+        this.handleReconnection(token);
+        return;
       }
+      
+      // Handle network errors
+      if (error.message.includes('Network Error') || error.message.includes('ERR_NETWORK')) {
+        console.log('📱 Network error, will retry connection...');
+        this.handleReconnection(token);
+        return;
+      }
+      
+      // For other errors, try reconnection with backoff
+      this.handleReconnection(token);
+    });
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log(`📱 Reconnected after ${attemptNumber} attempts`);
+      this.reconnectAttempts = 0;
+      this.reconnectDelay = 1000; // Reset delay
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log(`📱 Reconnection attempt ${attemptNumber}/${this.maxReconnectAttempts}`);
+      this.reconnectAttempts = attemptNumber;
+    });
+
+    this.socket.on('reconnect_error', (error) => {
+      console.error('📱 Reconnection error:', error.message);
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('📱 Reconnection failed after maximum attempts');
+      this.shouldReconnect = false;
+      this.isConnecting = false;
     });
 
     this.socket.connect();
@@ -78,10 +173,64 @@ class SocketService {
   }
 
   disconnect() {
+    this.shouldReconnect = false;
+    this.isConnecting = false;
+    
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
+    }
+    
+    // Cleanup health monitoring
+    if (this.healthMonitor) {
+      this.healthMonitor();
+      this.healthMonitor = null;
+    }
+    
+    // Cleanup conflict handling
+    if (this.conflictCleanup) {
+      this.conflictCleanup();
+      this.conflictCleanup = null;
+    }
+    
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
       this.isConnected = false;
+    }
+  }
+
+  // Handle reconnection with exponential backoff
+  handleReconnection(token) {
+    if (!this.shouldReconnect || this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('📱 Max reconnection attempts reached or reconnection disabled');
+      this.isConnecting = false;
+      return;
+    }
+
+    this.reconnectAttempts++;
+    const delay = this.backoff.getDelay();
+    
+    console.log(`📱 Scheduling reconnection attempt ${this.reconnectAttempts} in ${delay}ms`);
+    
+    this.connectionTimeout = setTimeout(() => {
+      if (this.shouldReconnect && token) {
+        console.log(`📱 Attempting reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+        this.connect(token);
+      }
+    }, delay);
+  }
+
+  // Reset connection state
+  resetConnection() {
+    this.reconnectAttempts = 0;
+    this.reconnectDelay = 1000;
+    this.isConnecting = false;
+    this.shouldReconnect = true;
+    
+    if (this.connectionTimeout) {
+      clearTimeout(this.connectionTimeout);
+      this.connectionTimeout = null;
     }
   }
 
@@ -207,15 +356,37 @@ class SocketService {
 
   // Check connection status
   getConnectionStatus() {
-    return this.isConnected;
+    return {
+      isConnected: this.isConnected,
+      isConnecting: this.isConnecting,
+      reconnectAttempts: this.reconnectAttempts,
+      maxReconnectAttempts: this.maxReconnectAttempts,
+      shouldReconnect: this.shouldReconnect,
+      socketId: this.socket?.id || null
+    };
   }
 
-  // Reconnect method
+  // Reconnect method with better error handling
   reconnect(token) {
+    console.log('📱 Manual reconnect requested');
+    this.resetConnection();
     this.disconnect();
+    
+    // Small delay to ensure clean disconnect
     setTimeout(() => {
-      this.connect(token);
-    }, 1000);
+      if (token) {
+        this.connect(token);
+      }
+    }, 500);
+  }
+
+  // Force reconnection (useful for debugging)
+  forceReconnect(token) {
+    console.log('📱 Force reconnect requested');
+    this.shouldReconnect = true;
+    this.reconnectAttempts = 0;
+    this.reconnectDelay = 1000;
+    this.reconnect(token);
   }
 }
 

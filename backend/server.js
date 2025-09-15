@@ -5,10 +5,13 @@ import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createServer } from "http";
+import SocketServer from "./socket/socketServer.js";
 
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 10000;
 
 // Middleware
@@ -115,15 +118,30 @@ app.get("*", (req, res) => {
   });
 });
 
+// Initialize Socket.IO server
+const socketServer = new SocketServer(server);
+
+// Add Socket.IO stats endpoint
+app.get('/api/socket/stats', (req, res) => {
+  const stats = socketServer.getConnectionStats();
+  res.json({
+    success: true,
+    data: stats,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Start server
-app.listen(PORT, async () => {
+server.listen(PORT, async () => {
   console.log(`📡 Server running on port ${PORT}`);
   console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
   console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
+  console.log(`📱 Socket.IO available at http://0.0.0.0:${PORT}/socket.io/`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
   console.log(`🚀 Render Blueprint Integrated: true`);
   console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
   console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/info`);
+  console.log(`📱 Socket stats: http://0.0.0.0:${PORT}/api/socket/stats`);
   console.log(`📁 Frontend build path: ${frontendPath}`);
   console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
   
