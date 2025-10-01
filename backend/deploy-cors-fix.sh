@@ -74,7 +74,8 @@ if command -v git &> /dev/null; then
 - Add fallback CORS headers middleware
 - Configure for production environment
 
-Fixes CORS errors from https://booking4u-1.onrender.com"
+Fixes CORS errors from 
+https://booking4u-1.onrender.com"
     
     echo "✅ CORS fix committed to git"
     

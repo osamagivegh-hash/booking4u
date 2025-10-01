@@ -194,7 +194,7 @@ console.log('🔄 Attempting to connect to MongoDB Atlas...');
 console.log('📊 MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set');
 
 // Fallback MongoDB URI if environment variable is not set
-const mongoUri = process.env.MONGODB_URI || 'mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/booking4u?retryWrites=true&w=majority&appName=Cluster0';
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/booking4u';
 console.log('🔗 Using MongoDB URI:', mongoUri ? 'Set' : 'Not set');
 console.log('🔍 Environment variables check:', {
   NODE_ENV: process.env.NODE_ENV,

@@ -28,13 +28,15 @@ app.use(
 
 // MongoDB Connection
 mongoose
-  .connect(process.env.MONGO_URI, {
+  .connect(process.env.MONGODB_URI, {
     dbName: "booking4u",
   })
   .then(() => {
-    console.log("🟢 Mongoose connected to MongoDB");
-    console.log("✅ Connected to MongoDB Atlas");
-    console.log("📊 Database name: booking4u");
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("🟢 Mongoose connected to MongoDB");
+      console.log("✅ Connected to MongoDB Atlas");
+      console.log("📊 Database name: booking4u");
+    }
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 

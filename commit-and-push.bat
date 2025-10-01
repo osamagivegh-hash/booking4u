@@ -1,7 +1,0 @@
-@echo off
-echo Committing changes...
-git commit -m "Remove BackendStatus component to eliminate automatic 30-second refresh"
-echo Pushing to remote...
-git push origin main
-echo Done!
-pause
