@@ -186,7 +186,7 @@ const gracefulShutdown = (server) => {
   };
 };
 
-module.exports = {
+export {
   AppError,
   ValidationError,
   AuthenticationError,

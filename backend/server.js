@@ -29,8 +29,16 @@ app.use(
 // MongoDB Connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/booking4u';
 
+console.log('🔍 Environment check:');
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  MONGODB_URI exists:', !!process.env.MONGODB_URI);
+console.log('  MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
+console.log('  MONGODB_URI starts with mongodb:', process.env.MONGODB_URI ? process.env.MONGODB_URI.startsWith('mongodb') : false);
+
 if (!process.env.MONGODB_URI) {
   console.warn('⚠️  MONGODB_URI environment variable not set, using localhost fallback');
+} else {
+  console.log('✅ MONGODB_URI is set');
 }
 
 mongoose
