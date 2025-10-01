@@ -1,8 +1,10 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Business from '../models/Business.js';
+import Booking from '../models/Booking.js';
 
 // Protect routes - require authentication
-exports.protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   let token;
 
   // Check if token exists in headers
@@ -62,7 +64,7 @@ exports.protect = async (req, res, next) => {
 };
 
 // Grant access to specific roles
-exports.authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
@@ -75,7 +77,7 @@ exports.authorize = (...roles) => {
 };
 
 // Check if user owns the business
-exports.checkBusinessOwnership = async (req, res, next) => {
+export const checkBusinessOwnership = async (req, res, next) => {
   try {
     // Business is already imported at the top
     const business = await Business.findById(req.params.businessId || req.body.businessId);
@@ -105,7 +107,7 @@ exports.checkBusinessOwnership = async (req, res, next) => {
 };
 
 // Check if user owns the booking or is business owner
-exports.checkBookingAccess = async (req, res, next) => {
+export const checkBookingAccess = async (req, res, next) => {
   try {
     // Booking is already imported at the top
     const booking = await Booking.findById(req.params.bookingId);
