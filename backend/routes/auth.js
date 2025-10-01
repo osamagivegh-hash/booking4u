@@ -1,6 +1,6 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import User from '../models/User.js';
 const { protect } = require('../middleware/auth');
 const { validateUser } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');

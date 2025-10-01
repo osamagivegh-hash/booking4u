@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 const { protect } = require('../middleware/auth');
-const Notification = require('../models/Notification');
+import Notification from '../models/Notification.js';
 const ApiResponse = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 

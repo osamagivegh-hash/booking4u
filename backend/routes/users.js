@@ -1,7 +1,7 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
 const mongoose = require('mongoose');
-const User = require('../models/User');
+import User from '../models/User.js';
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();

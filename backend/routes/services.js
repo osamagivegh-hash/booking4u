@@ -1,8 +1,8 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const Service = require('../models/Service');
-const Business = require('../models/Business');
-const Review = require('../models/Review');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Service from '../models/Service.js';
+import Business from '../models/Business.js';
+import Review from '../models/Review.js';
 const { protect, authorize, checkBusinessOwnership } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const ApiResponse = require('../utils/apiResponse');

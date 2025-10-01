@@ -1,10 +1,10 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const { body, validationResult } = require('express-validator');
-const Booking = require('../models/Booking');
-const Service = require('../models/Service');
-const Business = require('../models/Business');
-const { protect, authorize, checkBookingAccess } = require('../middleware/auth');
+import express from 'express';
+import mongoose from 'mongoose';
+import { body, validationResult } from 'express-validator';
+import Booking from '../models/Booking.js';
+import Service from '../models/Service.js';
+import Business from '../models/Business.js';
+import { protect, authorize, checkBookingAccess } from '../middleware/auth.js';
 
 const router = express.Router();
 

@@ -1,11 +1,11 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
-const { body, validationResult } = require('express-validator');
-const News = require('../models/News');
-const User = require('../models/User');
-const ApiResponse = require('../utils/apiResponse');
-const asyncHandler = require('../utils/asyncHandler');
+import { protect, authorize } from '../middleware/auth.js';
+import { body, validationResult } from 'express-validator';
+import News from '../models/News.js';
+import User from '../models/User.js';
+import ApiResponse from '../utils/apiResponse.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 // @desc    Get all published news (public)
 // @route   GET /api/news

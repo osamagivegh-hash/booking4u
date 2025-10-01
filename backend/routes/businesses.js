@@ -1,6 +1,6 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const Business = require('../models/Business');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import Business from '../models/Business.js';
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();

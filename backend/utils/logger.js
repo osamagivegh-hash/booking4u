@@ -1,9 +1,9 @@
-const winston = require('winston');
-const path = require('path');
-const config = require('../config');
+import winston from 'winston';
+import path from 'path';
+import config from '../config/index.js';
 
 // Create logs directory if it doesn't exist
-const fs = require('fs');
+import fs from 'fs';
 const logsDir = path.dirname(config.logging.file);
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
@@ -116,7 +116,7 @@ const logDebug = (message, meta = {}) => {
   logger.debug(message, meta);
 };
 
-module.exports = {
+export {
   logger,
   requestLogger,
   errorLogger,

@@ -1,4 +1,4 @@
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 
 // Load environment variables
 dotenv.config();
@@ -102,4 +102,4 @@ if (missingVars.length > 0) {
   console.warn(`⚠️  Missing required environment variables: ${missingVars.join(', ')}`);
 }
 
-module.exports = config;
+export default config;

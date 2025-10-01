@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reviewSchema = new mongoose.Schema({
   customerId: {
@@ -180,5 +180,5 @@ reviewSchema.statics.getAverageRating = async function(businessId) {
   };
 };
 
-module.exports = mongoose.model('Review', reviewSchema);
+export default mongoose.model('Review', reviewSchema);
 

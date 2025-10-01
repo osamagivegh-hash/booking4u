@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const businessSchema = new mongoose.Schema({
   ownerId: {
@@ -167,4 +167,4 @@ businessSchema.index({
   category: 'text' 
 });
 
-module.exports = mongoose.model('Business', businessSchema);
+export default mongoose.model('Business', businessSchema);
