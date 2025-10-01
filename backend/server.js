@@ -27,8 +27,14 @@ app.use(
 );
 
 // MongoDB Connection
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/booking4u';
+
+if (!process.env.MONGODB_URI) {
+  console.warn('⚠️  MONGODB_URI environment variable not set, using localhost fallback');
+}
+
 mongoose
-  .connect(process.env.MONGODB_URI, {
+  .connect(mongoUri, {
     dbName: "booking4u",
   })
   .then(() => {
@@ -38,7 +44,10 @@ mongoose
       console.log("📊 Database name: booking4u");
     }
   })
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+    console.error("🔗 Attempted to connect to:", mongoUri ? 'Set' : 'Not set');
+  });
 
 // API Routes
 app.use("/api/auth", (await import("./routes/auth.js")).default);

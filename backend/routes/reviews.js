@@ -3,10 +3,10 @@ import { body, validationResult } from 'express-validator';
 import Review from '../models/Review.js';
 import Service from '../models/Service.js';
 import Business from '../models/Business.js';
-const { protect } = require('../middleware/auth');
-const { asyncHandler } = require('../middleware/errorHandler');
-const ApiResponse = require('../utils/apiResponse');
-const { logInfo, logError } = require('../utils/logger');
+import { protect } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import ApiResponse from '../utils/apiResponse.js';
+import { logInfo, logError } from '../utils/logger.js';
 
 const router = express.Router();
 

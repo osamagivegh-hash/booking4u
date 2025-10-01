@@ -1,8 +1,8 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 import User from '../models/User.js';
-const { protect, authorize } = require('../middleware/auth');
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 

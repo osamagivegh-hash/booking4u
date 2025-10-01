@@ -3,10 +3,10 @@ import { body, validationResult } from 'express-validator';
 import Service from '../models/Service.js';
 import Business from '../models/Business.js';
 import Review from '../models/Review.js';
-const { protect, authorize, checkBusinessOwnership } = require('../middleware/auth');
-const { asyncHandler } = require('../middleware/errorHandler');
-const ApiResponse = require('../utils/apiResponse');
-const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware/upload');
+import { protect, authorize, checkBusinessOwnership } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import ApiResponse from '../utils/apiResponse.js';
+import { uploadMultiple, handleUploadError, getFileUrl } from '../middleware/upload.js';
 
 // Utility function to convert localhost URLs to relative paths in service data
 const convertLocalhostUrlsInService = (service) => {

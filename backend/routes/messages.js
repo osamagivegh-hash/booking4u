@@ -2,10 +2,10 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
-const { protect } = require('../middleware/auth');
-const { asyncHandler } = require('../middleware/errorHandler');
-const ApiResponse = require('../utils/apiResponse');
-const { logInfo, logError } = require('../utils/logger');
+import { protect } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
+import ApiResponse from '../utils/apiResponse.js';
+import { logInfo, logError } from '../utils/logger.js';
 
 const router = express.Router();
 

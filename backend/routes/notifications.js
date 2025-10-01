@@ -1,9 +1,9 @@
 import express from 'express';
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+import { protect } from '../middleware/auth.js';
 import Notification from '../models/Notification.js';
-const ApiResponse = require('../utils/apiResponse');
-const asyncHandler = require('../utils/asyncHandler');
+import ApiResponse from '../utils/apiResponse.js';
+import asyncHandler from '../utils/asyncHandler.js';
 
 // @desc    Get user notifications
 // @route   GET /api/notifications

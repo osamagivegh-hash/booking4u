@@ -1,5 +1,5 @@
-const { logError } = require('../utils/logger');
-const ApiResponse = require('../utils/apiResponse');
+import { logError } from '../utils/logger.js';
+import ApiResponse from '../utils/apiResponse.js';
 
 /**
  * Enhanced Error Handling Middleware
@@ -167,7 +167,7 @@ const gracefulShutdown = (server) => {
       console.log('✅ HTTP server closed');
       
       // Close database connection
-      const mongoose = require('mongoose');
+      import mongoose from 'mongoose';
       if (mongoose.connection.readyState === 1) {
         mongoose.connection.close(false, () => {
           console.log('✅ Database connection closed');

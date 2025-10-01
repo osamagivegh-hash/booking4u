@@ -77,7 +77,7 @@ exports.authorize = (...roles) => {
 // Check if user owns the business
 exports.checkBusinessOwnership = async (req, res, next) => {
   try {
-    const Business = require('../models/Business');
+    // Business is already imported at the top
     const business = await Business.findById(req.params.businessId || req.body.businessId);
     
     if (!business) {
@@ -107,7 +107,7 @@ exports.checkBusinessOwnership = async (req, res, next) => {
 // Check if user owns the booking or is business owner
 exports.checkBookingAccess = async (req, res, next) => {
   try {
-    const Booking = require('../models/Booking');
+    // Booking is already imported at the top
     const booking = await Booking.findById(req.params.bookingId);
     
     if (!booking) {
@@ -121,7 +121,7 @@ exports.checkBookingAccess = async (req, res, next) => {
     const isCustomer = booking.customerId.toString() === req.user._id.toString();
     
     // Check if user is the business owner
-    const Business = require('../models/Business');
+    // Business is already imported at the top
     const business = await Business.findById(booking.businessId);
     const isBusinessOwner = business && business.ownerId.toString() === req.user._id.toString();
 

@@ -303,7 +303,7 @@ router.post('/', [
 
     // Update user role to 'business' if it's not already
     if (req.user.role !== 'business') {
-      const User = require('../models/User');
+      // User is already imported at the top
       await User.findByIdAndUpdate(req.user._id, { role: 'business' });
       console.log('Updated user role to business');
       
@@ -465,8 +465,7 @@ router.get('/:businessId/stats', [
       });
     }
 
-    const Booking = require('../models/Booking');
-    const Service = require('../models/Service');
+    // Booking and Service are already imported at the top
 
     // Build date filter
     let dateFilter = {};
