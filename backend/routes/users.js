@@ -576,4 +576,4 @@ router.post('/create-test-users', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

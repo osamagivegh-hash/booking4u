@@ -190,7 +190,7 @@ router.get('/stats', protect, asyncHandler(async (req, res) => {
   }, 'تم جلب إحصائيات الإشعارات بنجاح');
 }));
 
-module.exports = router;
+export default router;
 
 
 

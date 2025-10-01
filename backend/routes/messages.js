@@ -422,4 +422,4 @@ router.get('/search', asyncHandler(async (req, res) => {
   }, 'تم البحث في الرسائل بنجاح');
 }));
 
-module.exports = router;
+export default router;

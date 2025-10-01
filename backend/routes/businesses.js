@@ -584,4 +584,4 @@ router.get('/:businessId/stats', [
   }
 });
 
-module.exports = router;
+export default router;

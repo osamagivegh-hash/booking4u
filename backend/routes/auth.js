@@ -369,4 +369,4 @@ router.put('/change-password', protect, [
   }
 });
 
-module.exports = router;
+export default router;

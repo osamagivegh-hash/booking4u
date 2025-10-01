@@ -488,5 +488,5 @@ router.get('/stats/business/:businessId', asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { stats }, 'تم جلب إحصائيات التقييم بنجاح');
 }));
 
-module.exports = router;
+export default router;
 

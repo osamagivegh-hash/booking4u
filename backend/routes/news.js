@@ -306,4 +306,4 @@ router.get('/admin/all', protect, authorize('admin'), asyncHandler(async (req, r
   }, 'تم جلب جميع الأخبار بنجاح');
 }));
 
-module.exports = router;
+export default router;
