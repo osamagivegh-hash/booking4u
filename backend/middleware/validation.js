@@ -237,47 +237,47 @@ const handleValidationErrors = (req, res, next) => {
 };
 
 // Export validation rules and middleware
-module.exports = {
+export {
   customValidators,
   sanitizers,
   commonValidations,
-  handleValidationErrors,
-  
-  // Pre-built validation chains
-  validateUser: [
-    commonValidations.user.name,
-    commonValidations.user.email,
-    commonValidations.user.password,
-    commonValidations.user.phone,
-    commonValidations.user.role,
-    handleValidationErrors
-  ],
-
-  validateBusiness: [
-    commonValidations.business.name,
-    commonValidations.business.category,
-    commonValidations.business.phone,
-    commonValidations.business.email,
-    commonValidations.business.address.city,
-    commonValidations.business.address.street,
-    commonValidations.business.workingHours,
-    handleValidationErrors
-  ],
-
-  validateService: [
-    commonValidations.service.name,
-    commonValidations.service.duration,
-    commonValidations.service.price,
-    commonValidations.service.category,
-    handleValidationErrors
-  ],
-
-  validateBooking: [
-    commonValidations.booking.businessId,
-    commonValidations.booking.serviceId,
-    commonValidations.booking.date,
-    commonValidations.booking.startTime,
-    commonValidations.booking.notes,
-    handleValidationErrors
-  ]
+  handleValidationErrors
 };
+
+// Pre-built validation chains
+export const validateUser = [
+  commonValidations.user.name,
+  commonValidations.user.email,
+  commonValidations.user.password,
+  commonValidations.user.phone,
+  commonValidations.user.role,
+  handleValidationErrors
+];
+
+export const validateBusiness = [
+  commonValidations.business.name,
+  commonValidations.business.category,
+  commonValidations.business.phone,
+  commonValidations.business.email,
+  commonValidations.business.address.city,
+  commonValidations.business.address.street,
+  commonValidations.business.workingHours,
+  handleValidationErrors
+];
+
+export const validateService = [
+  commonValidations.service.name,
+  commonValidations.service.duration,
+  commonValidations.service.price,
+  commonValidations.service.category,
+  handleValidationErrors
+];
+
+export const validateBooking = [
+  commonValidations.booking.businessId,
+  commonValidations.booking.serviceId,
+  commonValidations.booking.date,
+  commonValidations.booking.startTime,
+  commonValidations.booking.notes,
+  handleValidationErrors
+];
