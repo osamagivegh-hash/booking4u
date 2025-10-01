@@ -139,7 +139,7 @@ const getFileUrl = (req, filename) => {
   return relativeUrl;
 };
 
-module.exports = {
+export {
   upload,
   uploadSingle,
   uploadMultiple,
