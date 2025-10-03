@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { ClockIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
-import { getServiceImages, handleImageError } from '../../utils/imageUtils';
+import { getServiceImages, handleImageError, getImageUrl } from '../../utils/imageUtils';
 
 const VerticalServicesTicker = () => {
   const [services, setServices] = useState([]);
@@ -130,10 +130,8 @@ const VerticalServicesTicker = () => {
             const serviceImages = getServiceImages(service);
             const mainImage = serviceImages[0] || { url: '/default-service-image.svg', alt: service.name };
             
-            // Apply proper image URL conversion
-            const convertedImageUrl = mainImage.url && !mainImage.url.startsWith('/') && !mainImage.url.startsWith('http') 
-              ? '/uploads/services/' + mainImage.url 
-              : mainImage.url;
+            // Apply proper image URL conversion using the utility function
+            const convertedImageUrl = getImageUrl(mainImage.url);
             
             return (
               <div key={service._id} className="h-24 mb-4">

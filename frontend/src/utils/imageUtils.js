@@ -12,6 +12,12 @@ const getAssetUrl = () => {
   if (process.env.REACT_APP_API_URL) {
     return process.env.REACT_APP_API_URL.replace('/api', '');
   }
+  
+  // For production, use the Render backend URL
+  if (window.location.hostname !== 'localhost') {
+    return 'https://booking4u-backend.onrender.com';
+  }
+  
   return '/';
 };
 
@@ -21,23 +27,23 @@ export const getImageUrl = (imagePath) => {
     return '/default-service-image.svg';
   }
   
-  // Handle legacy localhost URLs (should not happen with new backend)
+  // Handle legacy localhost URLs - convert to production backend URL
   if (imagePath.includes('localhost:5001')) {
-    console.log('🔧 Converting legacy localhost:5001 image URL to absolute:', imagePath);
+    console.log('🔧 Converting legacy localhost:5001 image URL to production URL:', imagePath);
     const baseUrl = getAssetUrl();
     const relativePath = imagePath.replace('http://localhost:5001', '');
     const absolutePath = `${baseUrl}${relativePath}`;
-    console.log('🔧 Converted to absolute path:', absolutePath);
+    console.log('🔧 Converted to production path:', absolutePath);
     return absolutePath;
   }
   
-  // Handle any other localhost URLs (should not happen with new backend)
+  // Handle any other localhost URLs - convert to production backend URL
   if (imagePath.includes('localhost:') && !imagePath.startsWith('/')) {
-    console.log('🔧 Converting legacy localhost image URL to absolute:', imagePath);
+    console.log('🔧 Converting legacy localhost image URL to production URL:', imagePath);
     const baseUrl = getAssetUrl();
     const relativePath = imagePath.replace(/https?:\/\/localhost:\d+/, '');
     const absolutePath = `${baseUrl}${relativePath}`;
-    console.log('🔧 Converted to absolute path:', absolutePath);
+    console.log('🔧 Converted to production path:', absolutePath);
     return absolutePath;
   }
   
@@ -208,9 +214,10 @@ window.convertAllLocalhostImageUrls = function() {
     if (img.src) {
       let newSrc = img.src;
       
-      // Convert localhost:5001 URLs
+      // Convert localhost:5001 URLs to production backend URL
       if (img.src.includes('localhost:5001')) {
-        newSrc = img.src.replace('http://localhost:5001', '');
+        const baseUrl = getAssetUrl();
+        newSrc = img.src.replace('http://localhost:5001', baseUrl);
         console.log('🔧 Global converter: Converting localhost:5001 URL:', img.src, '→', newSrc);
         convertedCount++;
       }
@@ -232,9 +239,10 @@ window.convertAllLocalhostImageUrls = function() {
         console.log('🔧 Global converter: Converting bare filename without extension:', img.src, '→', newSrc);
         convertedCount++;
       }
-      // Convert any other localhost URLs
+      // Convert any other localhost URLs to production backend URL
       else if (img.src.includes('localhost:') && !img.src.startsWith('/')) {
-        newSrc = img.src.replace(/https?:\/\/localhost:\d+/, '');
+        const baseUrl = getAssetUrl();
+        newSrc = img.src.replace(/https?:\/\/localhost:\d+/, baseUrl);
         console.log('🔧 Global converter: Converting localhost URL:', img.src, '→', newSrc);
         convertedCount++;
       }
@@ -255,7 +263,12 @@ window.convertLocalhostUrlsInData = function(data) {
   
   if (typeof data === 'string') {
     if (data.includes('localhost:5001')) {
-      return data.replace('http://localhost:5001', '');
+      const baseUrl = getAssetUrl();
+      return data.replace('http://localhost:5001', baseUrl);
+    }
+    if (data.includes('localhost:') && !data.startsWith('/')) {
+      const baseUrl = getAssetUrl();
+      return data.replace(/https?:\/\/localhost:\d+/, baseUrl);
     }
     if (data.includes('serviceImages-') && !data.startsWith('/') && !data.startsWith('http')) {
       return `/uploads/services/${data}`;
