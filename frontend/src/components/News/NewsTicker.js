@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NewspaperIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { NewspaperIcon, ArrowRightIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import newsService from '../../services/newsService';
 
 const NewsTicker = ({ className = '', showTitle = true, maxItems = 5 }) => {

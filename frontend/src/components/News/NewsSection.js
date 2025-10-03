@@ -4,7 +4,7 @@ import {
   ArrowRightIcon, 
   ClockIcon,
   ExternalLinkIcon,
-  RefreshIcon
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import newsService from '../../services/newsService';
 
@@ -103,7 +103,7 @@ const NewsSection = ({ className = '', maxItems = 6 }) => {
             onClick={handleRefresh}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            <RefreshIcon className="h-4 w-4 mr-2" />
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
             تحديث
           </button>
         </div>
@@ -126,7 +126,7 @@ const NewsSection = ({ className = '', maxItems = 6 }) => {
           disabled={refreshing}
           className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50"
         >
-          <RefreshIcon className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <ArrowPathIcon className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'جاري التحديث...' : 'تحديث'}
         </button>
       </div>
@@ -173,7 +173,7 @@ const NewsSection = ({ className = '', maxItems = 6 }) => {
           onClick={handleRefresh}
           className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
         >
-          <RefreshIcon className="h-4 w-4 mr-2" />
+          <ArrowPathIcon className="h-4 w-4 mr-2" />
           تحديث الأخبار
         </button>
       </div>
