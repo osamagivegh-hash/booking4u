@@ -3,7 +3,7 @@ import {
   NewspaperIcon, 
   ArrowRightIcon, 
   ClockIcon,
-  ExternalLinkIcon,
+  ArrowTopRightOnSquareIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import newsService from '../../services/newsService';
@@ -147,7 +147,7 @@ const NewsSection = ({ className = '', maxItems = 6 }) => {
                   {newsItem.description}
                 </p>
               </div>
-              <ExternalLinkIcon className="h-4 w-4 text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ArrowTopRightOnSquareIcon className="h-4 w-4 text-gray-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             
             <div className="flex items-center justify-between text-xs text-gray-500">
