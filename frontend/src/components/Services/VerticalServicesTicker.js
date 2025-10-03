@@ -14,11 +14,28 @@ const VerticalServicesTicker = () => {
     loadLatestServices();
   }, []);
 
+  // Apply global image URL conversion when services are loaded
+  useEffect(() => {
+    if (services.length > 0 && window.convertAllLocalhostImageUrls) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        window.convertAllLocalhostImageUrls();
+      }, 100);
+    }
+  }, [services]);
+
   const loadLatestServices = async () => {
     try {
       setLoading(true);
       const response = await api.get('/services/newest?limit=8');
       const servicesData = response.data.data?.services || response.data.services || [];
+      
+      // Debug: Log image URLs to see what we're getting
+      console.log('🔧 VerticalTicker: Loaded services:', servicesData.length);
+      servicesData.forEach((service, index) => {
+        console.log(`🔧 VerticalTicker: Service ${index + 1} images:`, service.images || service.image);
+      });
+      
       setServices(servicesData);
     } catch (error) {
       console.error('Error loading latest services for ticker:', error);
@@ -113,6 +130,11 @@ const VerticalServicesTicker = () => {
             const serviceImages = getServiceImages(service);
             const mainImage = serviceImages[0] || { url: '/default-service-image.svg', alt: service.name };
             
+            // Apply proper image URL conversion
+            const convertedImageUrl = mainImage.url && !mainImage.url.startsWith('/') && !mainImage.url.startsWith('http') 
+              ? '/uploads/services/' + mainImage.url 
+              : mainImage.url;
+            
             return (
               <div key={service._id} className="h-24 mb-4">
                 <Link
@@ -121,19 +143,35 @@ const VerticalServicesTicker = () => {
                 >
                   <div className="flex-shrink-0">
                     <img
-                      src={mainImage.url}
+                      src={convertedImageUrl}
                       alt={mainImage.alt}
                       className="w-16 h-16 object-cover rounded-lg"
                       onError={(e) => {
-                        console.log('🔧 VerticalTicker: Image failed to load:', mainImage.url);
+                        console.log('🔧 VerticalTicker: Image failed to load:', convertedImageUrl);
                         handleImageError(e, '/default-service-image.svg');
                         
-                        // Try to convert the URL and reload
+                        // Try alternative URL formats
                         const originalUrl = mainImage.url;
                         if (originalUrl && !originalUrl.startsWith('/') && !originalUrl.startsWith('http')) {
-                          const convertedUrl = '/uploads/services/' + originalUrl;
-                          console.log('🔧 VerticalTicker: Trying converted URL:', convertedUrl);
-                          e.target.src = convertedUrl;
+                          // Try different path formats
+                          const alternatives = [
+                            '/uploads/services/' + originalUrl,
+                            '/uploads/' + originalUrl,
+                            originalUrl
+                          ];
+                          
+                          let currentIndex = 0;
+                          const tryNextUrl = () => {
+                            if (currentIndex < alternatives.length) {
+                              const nextUrl = alternatives[currentIndex];
+                              console.log('🔧 VerticalTicker: Trying alternative URL:', nextUrl);
+                              e.target.src = nextUrl;
+                              currentIndex++;
+                            }
+                          };
+                          
+                          e.target.onerror = tryNextUrl;
+                          tryNextUrl();
                         }
                       }}
                     />
