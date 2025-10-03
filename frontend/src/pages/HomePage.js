@@ -12,7 +12,10 @@ import {
   ClockIcon as ClockIconSolid
 } from '@heroicons/react/24/outline';
 import ServiceCard from '../components/Services/ServiceCard';
+import VerticalServicesTicker from '../components/Services/VerticalServicesTicker';
 import UnifiedSearch from '../components/Search/UnifiedSearch';
+import NewsTicker from '../components/News/NewsTicker';
+import NewsSection from '../components/News/NewsSection';
 import api from '../services/api';
 
 const HomePage = () => {
@@ -136,6 +139,9 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen">
+      {/* News Ticker */}
+      <NewsTicker className="sticky top-0 z-50" />
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-primary text-white py-24 overflow-hidden">
         {/* Background decoration */}
@@ -381,6 +387,13 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* News Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="container-responsive">
+          <NewsSection />
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 bg-gradient-primary text-white relative overflow-hidden">
         {/* Background decoration */}
@@ -445,30 +458,40 @@ const HomePage = () => {
             </div>
           </div>
           
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-gray-200 rounded-lg h-80 animate-pulse"></div>
-              ))}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Main Services Grid */}
+            <div className="lg:col-span-3">
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="bg-gray-200 rounded-lg h-80 animate-pulse"></div>
+                  ))}
+                </div>
+              ) : latestServices.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {latestServices.map(renderServiceCard)}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-gray-400 text-6xl mb-4">🔍</div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد خدمات متاحة حالياً</h3>
+                  <p className="text-gray-600 mb-6">تحقق مرة أخرى لاحقاً لرؤية الخدمات الجديدة</p>
+                  <Link
+                    to="/services"
+                    className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    تصفح جميع الخدمات
+                    <ArrowRightIcon className="h-5 w-5 mr-2" />
+                  </Link>
+                </div>
+              )}
             </div>
-          ) : latestServices.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {latestServices.map(renderServiceCard)}
+            
+            {/* Vertical Services Ticker */}
+            <div className="lg:col-span-1">
+              <VerticalServicesTicker />
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-6xl mb-4">🔍</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">لا توجد خدمات متاحة حالياً</h3>
-              <p className="text-gray-600 mb-6">تحقق مرة أخرى لاحقاً لرؤية الخدمات الجديدة</p>
-              <Link
-                to="/services"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                تصفح جميع الخدمات
-                <ArrowRightIcon className="h-5 w-5 mr-2" />
-              </Link>
-            </div>
-          )}
+          </div>
         </div>
       </section>
     </div>
