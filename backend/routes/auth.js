@@ -14,11 +14,13 @@ const router = express.Router();
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', validateUser, asyncHandler(async (req, res) => {
-    console.log('🔍 AUTH REGISTER: Request received', {
-      body: { ...req.body, password: '[HIDDEN]' },
-      headers: req.headers,
-      timestamp: new Date().toISOString()
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: Request received', {
+        body: { ...req.body, password: '[HIDDEN]' },
+        headers: req.headers,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     const { name, email, password, phone, role } = req.body;
 
@@ -38,7 +40,9 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
     }
 
     // Create user
-    console.log('🔍 AUTH REGISTER: Creating user in database');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: Creating user in database');
+    }
     const user = await User.create({
       name,
       email,
@@ -46,19 +50,25 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
       phone,
       role
     });
-    console.log('🔍 AUTH REGISTER: User created successfully', {
-      userId: user._id,
-      email: user.email,
-      role: user.role
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: User created successfully', {
+        userId: user._id,
+        email: user.email,
+        role: user.role
+      });
+    }
 
     // Create token
-    console.log('🔍 AUTH REGISTER: Generating JWT token');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: Generating JWT token');
+    }
     const token = user.getSignedJwtToken();
-    console.log('🔍 AUTH REGISTER: Token generated', {
-      tokenLength: token.length,
-      tokenPreview: token.substring(0, 20) + '...'
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: Token generated', {
+        tokenLength: token.length,
+        tokenPreview: token.substring(0, 20) + '...'
+      });
+    }
 
     // Log successful registration
     logInfo('User registered successfully', {
@@ -79,11 +89,13 @@ router.post('/register', validateUser, asyncHandler(async (req, res) => {
       token
     };
 
-    console.log('🔍 AUTH REGISTER: Sending response', {
-      userId: responseData.user.id,
-      userEmail: responseData.user.email,
-      tokenLength: responseData.token.length
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REGISTER: Sending response', {
+        userId: responseData.user.id,
+        userEmail: responseData.user.email,
+        tokenLength: responseData.token.length
+      });
+    }
 
     return ApiResponse.created(res, responseData, 'تم التسجيل بنجاح');
 }));
@@ -100,11 +112,13 @@ router.post('/login', [
     .notEmpty()
     .withMessage('كلمة المرور مطلوبة')
 ], asyncHandler(async (req, res) => {
-    console.log('🔍 AUTH LOGIN: Request received', {
-      body: { ...req.body, password: '[HIDDEN]' },
-      headers: req.headers,
-      timestamp: new Date().toISOString()
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Request received', {
+        body: { ...req.body, password: '[HIDDEN]' },
+        headers: req.headers,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     const { email, password } = req.body;
 
@@ -116,7 +130,9 @@ router.post('/login', [
     }
 
     // Check if user exists
-    console.log('🔍 AUTH LOGIN: Looking up user in database');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Looking up user in database');
+    }
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       console.log('🔍 AUTH LOGIN: User not found');
@@ -129,7 +145,9 @@ router.post('/login', [
     });
 
     // Check if password matches
-    console.log('🔍 AUTH LOGIN: Checking password');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Checking password');
+    }
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       console.log('🔍 AUTH LOGIN: Password mismatch');
@@ -144,12 +162,16 @@ router.post('/login', [
     }
 
     // Create token
-    console.log('🔍 AUTH LOGIN: Generating JWT token');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Generating JWT token');
+    }
     const token = user.getSignedJwtToken();
-    console.log('🔍 AUTH LOGIN: Token generated', {
-      tokenLength: token.length,
-      tokenPreview: token.substring(0, 20) + '...'
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Token generated', {
+        tokenLength: token.length,
+        tokenPreview: token.substring(0, 20) + '...'
+      });
+    }
 
     // Log successful login
     logInfo('User logged in successfully', {
@@ -170,11 +192,13 @@ router.post('/login', [
       token
     };
 
-    console.log('🔍 AUTH LOGIN: Sending response', {
-      userId: responseData.user.id,
-      userEmail: responseData.user.email,
-      tokenLength: responseData.token.length
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH LOGIN: Sending response', {
+        userId: responseData.user.id,
+        userEmail: responseData.user.email,
+        tokenLength: responseData.token.length
+      });
+    }
 
     return ApiResponse.success(res, responseData, 'تم تسجيل الدخول بنجاح');
 }));
@@ -183,17 +207,21 @@ router.post('/login', [
 // @route   GET /api/auth/me
 // @access  Private
 router.get('/me', protect, asyncHandler(async (req, res) => {
-  console.log('🔍 AUTH ME: Request received', {
-    userId: req.user._id,
-    timestamp: new Date().toISOString()
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH ME: Request received', {
+      userId: req.user._id,
+      timestamp: new Date().toISOString()
+    });
+  }
 
   const user = await User.findById(req.user._id);
-  console.log('🔍 AUTH ME: User found', {
-    userId: user._id,
-    email: user.email,
-    isActive: user.isActive
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH ME: User found', {
+      userId: user._id,
+      email: user.email,
+      isActive: user.isActive
+    });
+  }
 
   const responseData = {
     user: {
@@ -209,10 +237,12 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
     }
   };
 
-  console.log('🔍 AUTH ME: Sending response', {
-    userId: responseData.user.id,
-    userEmail: responseData.user.email
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH ME: Sending response', {
+      userId: responseData.user.id,
+      userEmail: responseData.user.email
+    });
+  }
 
   return ApiResponse.success(res, responseData, 'تم جلب بيانات المستخدم بنجاح');
 }));
@@ -221,10 +251,12 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
 // @route   POST /api/auth/refresh
 // @access  Public (needs special handling for expired tokens)
 router.post('/refresh', asyncHandler(async (req, res) => {
-  console.log('🔍 AUTH REFRESH: Request received', {
-    headers: req.headers,
-    timestamp: new Date().toISOString()
-  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REFRESH: Request received', {
+      headers: req.headers,
+      timestamp: new Date().toISOString()
+    });
+  }
 
   let token;
   
@@ -261,21 +293,27 @@ router.post('/refresh', asyncHandler(async (req, res) => {
     }
 
     // Generate new token
-    console.log('🔍 AUTH REFRESH: Generating new JWT token');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REFRESH: Generating new JWT token');
+    }
     const newToken = user.getSignedJwtToken();
-    console.log('🔍 AUTH REFRESH: New token generated', {
-      tokenLength: newToken.length,
-      tokenPreview: newToken.substring(0, 20) + '...'
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REFRESH: New token generated', {
+        tokenLength: newToken.length,
+        tokenPreview: newToken.substring(0, 20) + '...'
+      });
+    }
 
     const responseData = {
       token: newToken
     };
 
-    console.log('🔍 AUTH REFRESH: Sending response', {
-      userId: user._id,
-      tokenLength: responseData.token.length
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('🔍 AUTH REFRESH: Sending response', {
+        userId: user._id,
+        tokenLength: responseData.token.length
+      });
+    }
 
     return ApiResponse.success(res, responseData, 'تم تحديث الرمز المميز بنجاح');
   } catch (error) {

@@ -29,16 +29,18 @@ app.use(
 // MongoDB Connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/booking4u';
 
-console.log('🔍 Environment check:');
-console.log('  NODE_ENV:', process.env.NODE_ENV);
-console.log('  MONGODB_URI exists:', !!process.env.MONGODB_URI);
-console.log('  MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
-console.log('  MONGODB_URI starts with mongodb:', process.env.MONGODB_URI ? process.env.MONGODB_URI.startsWith('mongodb') : false);
+if (process.env.NODE_ENV !== 'production') {
+  console.log('🔍 Environment check:');
+  console.log('  NODE_ENV:', process.env.NODE_ENV);
+  console.log('  MONGODB_URI exists:', !!process.env.MONGODB_URI);
+  console.log('  MONGODB_URI length:', process.env.MONGODB_URI ? process.env.MONGODB_URI.length : 0);
+  console.log('  MONGODB_URI starts with mongodb:', process.env.MONGODB_URI ? process.env.MONGODB_URI.startsWith('mongodb') : false);
 
-if (!process.env.MONGODB_URI) {
-  console.warn('⚠️  MONGODB_URI environment variable not set, using localhost fallback');
-} else {
-  console.log('✅ MONGODB_URI is set');
+  if (!process.env.MONGODB_URI) {
+    console.warn('⚠️  MONGODB_URI environment variable not set, using localhost fallback');
+  } else {
+    console.log('✅ MONGODB_URI is set');
+  }
 }
 
 mongoose
@@ -111,34 +113,36 @@ app.get('/api/socket/stats', (req, res) => {
 
 // Start server
 server.listen(PORT, async () => {
-  console.log(`📡 Server running on port ${PORT}`);
-  console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
-  console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
-  console.log(`📱 Socket.IO available at http://0.0.0.0:${PORT}/socket.io/`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🚀 Render Blueprint Integrated: true`);
-  console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
-  console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/info`);
-  console.log(`📱 Socket stats: http://0.0.0.0:${PORT}/api/socket/stats`);
-  console.log(`📁 Frontend build path: ${path.join(__dirname, 'frontend-build')}`);
-  console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
-  
-  // Log available static files for debugging
-  try {
-    const fs = await import('fs');
-    const staticFiles = fs.readdirSync(path.join(path.join(__dirname, 'frontend-build'), 'static', 'js'));
-    console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`📡 Server running on port ${PORT}`);
+    console.log(`🌐 Frontend available at http://0.0.0.0:${PORT}/`);
+    console.log(`🔧 API available at http://0.0.0.0:${PORT}/api`);
+    console.log(`📱 Socket.IO available at http://0.0.0.0:${PORT}/socket.io/`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🚀 Render Blueprint Integrated: true`);
+    console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
+    console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/info`);
+    console.log(`📱 Socket stats: http://0.0.0.0:${PORT}/api/socket/stats`);
+    console.log(`📁 Frontend build path: ${path.join(__dirname, 'frontend-build')}`);
+    console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
     
-    // Check if the expected main.js file exists
-    const expectedMainJs = 'main.36a1ea66.js';
-    const mainJsPath = path.join(path.join(__dirname, 'frontend-build'), 'static', 'js', expectedMainJs);
-    const mainJsExists = fs.existsSync(mainJsPath);
-    console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
-    
-    // List all main.*.js files
-    const mainJsFiles = staticFiles.filter(file => file.startsWith('main.') && file.endsWith('.js'));
-    console.log(`📄 All main.*.js files: ${mainJsFiles.join(', ')}`);
-  } catch (err) {
-    console.log(`❌ Error reading static files: ${err.message}`);
+    // Log available static files for debugging
+    try {
+      const fs = await import('fs');
+      const staticFiles = fs.readdirSync(path.join(path.join(__dirname, 'frontend-build'), 'static', 'js'));
+      console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
+      
+      // Check if the expected main.js file exists
+      const expectedMainJs = 'main.36a1ea66.js';
+      const mainJsPath = path.join(path.join(__dirname, 'frontend-build'), 'static', 'js', expectedMainJs);
+      const mainJsExists = fs.existsSync(mainJsPath);
+      console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
+      
+      // List all main.*.js files
+      const mainJsFiles = staticFiles.filter(file => file.startsWith('main.') && file.endsWith('.js'));
+      console.log(`📄 All main.*.js files: ${mainJsFiles.join(', ')}`);
+    } catch (err) {
+      console.log(`❌ Error reading static files: ${err.message}`);
+    }
   }
 });
