@@ -30,39 +30,65 @@ class NewsService {
     }
   }
 
-  // Fetch news from RSS feeds (using a CORS proxy)
+  // Fetch news from RSS feeds with robust error handling and multiple proxy options
   async fetchRSSFeed(url, maxItems = 10) {
-    try {
-      // Using a CORS proxy service (you might want to use your own proxy)
-      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-      const response = await axios.get(proxyUrl);
-      
-      if (response.data && response.data.contents) {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response.data.contents, 'text/xml');
-        const items = xmlDoc.querySelectorAll('item');
-        
-        const news = Array.from(items).slice(0, maxItems).map(item => {
-          const title = item.querySelector('title')?.textContent || '';
-          const description = item.querySelector('description')?.textContent || '';
-          const link = item.querySelector('link')?.textContent || '';
-          const pubDate = item.querySelector('pubDate')?.textContent || '';
-          
-          return {
-            title: this.cleanText(title),
-            description: this.cleanText(description),
-            link,
-            pubDate: new Date(pubDate),
-            source: this.extractSourceFromUrl(url)
-          };
+    const proxyOptions = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://cors-anywhere.herokuapp.com/${url}`
+    ];
+    
+    let lastError;
+    
+    // Try each proxy option until one works
+    for (const proxyUrl of proxyOptions) {
+      try {
+        const response = await axios.get(proxyUrl, {
+          timeout: 8000, // 8 second timeout
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Booking4U-App/1.0'
+          }
         });
         
-        return news;
+        if (response.data && response.data.contents) {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(response.data.contents, 'text/xml');
+          const items = xmlDoc.querySelectorAll('item');
+          
+          // Check for XML parsing errors
+          const parseError = xmlDoc.querySelector('parsererror');
+          if (parseError) {
+            throw new Error('Invalid XML response from RSS feed');
+          }
+          
+          const news = Array.from(items).slice(0, maxItems).map(item => {
+            const title = item.querySelector('title')?.textContent || '';
+            const description = item.querySelector('description')?.textContent || '';
+            const link = item.querySelector('link')?.textContent || '';
+            const pubDate = item.querySelector('pubDate')?.textContent || '';
+            
+            return {
+              title: this.cleanText(title),
+              description: this.cleanText(description),
+              link,
+              pubDate: new Date(pubDate),
+              source: this.extractSourceFromUrl(url)
+            };
+          });
+          
+          return news;
+        }
+      } catch (error) {
+        lastError = error;
+        console.warn(`Proxy ${proxyUrl} failed:`, error.message);
+        // Continue to next proxy option
+        continue;
       }
-    } catch (error) {
-      console.error('Error fetching RSS feed:', error);
     }
     
+    // All proxies failed
+    console.warn('All RSS proxies failed for URL:', url, 'Error:', lastError?.message);
     return [];
   }
 
