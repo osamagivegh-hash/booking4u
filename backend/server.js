@@ -88,53 +88,12 @@ const __dirname = path.dirname(__filename);
 // Serve uploads folder as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Serve React frontend (Blueprint Integration)
-const frontendPath = path.join(__dirname, "frontend-build");
+// Serve static files from frontend build directory
+app.use(express.static(path.join(__dirname, 'frontend-build')));
 
-// Serve static files with proper headers and caching
-app.use(express.static(frontendPath, {
-  maxAge: '1d', // Cache static files for 1 day
-  etag: true,
-  lastModified: true,
-  setHeaders: (res, path) => {
-    // Set proper MIME types
-    if (path.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript');
-    } else if (path.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css');
-    }
-  }
-}));
-
-// Handle missing JS files - redirect to the correct file
-app.get('/static/js/main.*.js', (req, res) => {
-  const correctJsFile = 'main.36a1ea66.js';
-  const correctPath = `/static/js/${correctJsFile}`;
-  console.log(`🔄 Redirecting ${req.path} to ${correctPath}`);
-  res.redirect(302, correctPath);
-});
-
-// Handle specific old JS file requests
-app.get('/static/js/main.a432ae18.js', (req, res) => {
-  const correctJsFile = 'main.36a1ea66.js';
-  const correctPath = `/static/js/${correctJsFile}`;
-  console.log(`🔄 Redirecting old JS file ${req.path} to ${correctPath}`);
-  res.redirect(302, correctPath);
-});
-
-// Catch-all handler: send back React's index.html file for any non-API routes
-app.get("*", (req, res) => {
-  // Don't serve index.html for API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ message: 'API endpoint not found' });
-  }
-  
-  res.sendFile(path.join(frontendPath, "index.html"), (err) => {
-    if (err) {
-      console.error('Error serving index.html:', err);
-      res.status(500).send('Error loading application');
-    }
-  });
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
 });
 
 // Initialize Socket.IO server
@@ -161,18 +120,18 @@ server.listen(PORT, async () => {
   console.log(`📊 Health check: http://0.0.0.0:${PORT}/`);
   console.log(`🔧 API health: http://0.0.0.0:${PORT}/api/info`);
   console.log(`📱 Socket stats: http://0.0.0.0:${PORT}/api/socket/stats`);
-  console.log(`📁 Frontend build path: ${frontendPath}`);
+  console.log(`📁 Frontend build path: ${path.join(__dirname, 'frontend-build')}`);
   console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
   
   // Log available static files for debugging
   try {
     const fs = await import('fs');
-    const staticFiles = fs.readdirSync(path.join(frontendPath, 'static', 'js'));
+    const staticFiles = fs.readdirSync(path.join(path.join(__dirname, 'frontend-build'), 'static', 'js'));
     console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
     
     // Check if the expected main.js file exists
     const expectedMainJs = 'main.36a1ea66.js';
-    const mainJsPath = path.join(frontendPath, 'static', 'js', expectedMainJs);
+    const mainJsPath = path.join(path.join(__dirname, 'frontend-build'), 'static', 'js', expectedMainJs);
     const mainJsExists = fs.existsSync(mainJsPath);
     console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
     

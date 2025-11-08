@@ -1,26 +1,12 @@
-services: 
-  - type: web 
-    name: booking4u-integrated 
-    env: node 
-    plan: free 
+services:
+  - type: web
+    name: booking4u
+    env: node
+    plan: free
     buildCommand: npm run build:render
     startCommand: npm start
-    envVars: 
-      - key: NODE_ENV 
-        value: production 
-      - key: RENDER 
-        value: true 
-      - key: MONGODB_URI 
-        value: mongodb+srv://osamagivegh:990099@cluster0.npzs81o.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0 
-      - key: JWT_SECRET 
-        generateValue: true 
-      - key: PORT 
-        value: 10000
-      - key: CORS_ORIGIN 
-        value: https://booking4u-1.onrender.com
-      - key: ENABLE_SWAGGER 
-        value: false
-      - key: ENABLE_LOGGING 
-        value: true 
-    autoDeploy: true 
-    branch: main 
+    envVars:
+      - key: NODE_VERSION
+        value: 20.x
+      - key: NPM_VERSION
+        value: 9.x 
