@@ -6,6 +6,7 @@ import { validateUser } from '../middleware/validation.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import ApiResponse from '../utils/apiResponse.js';
 import { logInfo, logError } from '../utils/logger.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
@@ -218,42 +219,69 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
 
 // @desc    Refresh access token
 // @route   POST /api/auth/refresh
-// @access  Private
-router.post('/refresh', protect, asyncHandler(async (req, res) => {
+// @access  Public (needs special handling for expired tokens)
+router.post('/refresh', asyncHandler(async (req, res) => {
   console.log('🔍 AUTH REFRESH: Request received', {
-    userId: req.user._id,
+    headers: req.headers,
     timestamp: new Date().toISOString()
   });
 
-  const user = await User.findById(req.user._id);
-  if (!user) {
-    console.log('🔍 AUTH REFRESH: User not found');
-    return ApiResponse.unauthorized(res, 'المستخدم غير موجود');
+  let token;
+  
+  // Extract token from headers
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
   }
 
-  if (!user.isActive) {
-    console.log('🔍 AUTH REFRESH: User account is inactive');
-    return ApiResponse.unauthorized(res, 'الحساب معطل');
+  if (!token) {
+    console.log('🔍 AUTH REFRESH: No token provided');
+    return ApiResponse.unauthorized(res, 'Token مطلوب');
   }
 
-  // Generate new token
-  console.log('🔍 AUTH REFRESH: Generating new JWT token');
-  const token = user.getSignedJwtToken();
-  console.log('🔍 AUTH REFRESH: New token generated', {
-    tokenLength: token.length,
-    tokenPreview: token.substring(0, 20) + '...'
-  });
+  try {
+    // Check if JWT_SECRET is set
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ JWT_SECRET not set in environment variables');
+      return ApiResponse.serverError(res, 'Server configuration error');
+    }
 
-  const responseData = {
-    token
-  };
+    // Verify token (allow expired tokens for refresh)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+    
+    // Get user from token
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      console.log('🔍 AUTH REFRESH: User not found');
+      return ApiResponse.unauthorized(res, 'المستخدم غير موجود');
+    }
 
-  console.log('🔍 AUTH REFRESH: Sending response', {
-    userId: user._id,
-    tokenLength: responseData.token.length
-  });
+    if (!user.isActive) {
+      console.log('🔍 AUTH REFRESH: User account is inactive');
+      return ApiResponse.unauthorized(res, 'الحساب معطل');
+    }
 
-  return ApiResponse.success(res, responseData, 'تم تحديث الرمز المميز بنجاح');
+    // Generate new token
+    console.log('🔍 AUTH REFRESH: Generating new JWT token');
+    const newToken = user.getSignedJwtToken();
+    console.log('🔍 AUTH REFRESH: New token generated', {
+      tokenLength: newToken.length,
+      tokenPreview: newToken.substring(0, 20) + '...'
+    });
+
+    const responseData = {
+      token: newToken
+    };
+
+    console.log('🔍 AUTH REFRESH: Sending response', {
+      userId: user._id,
+      tokenLength: responseData.token.length
+    });
+
+    return ApiResponse.success(res, responseData, 'تم تحديث الرمز المميز بنجاح');
+  } catch (error) {
+    console.error('🔍 AUTH REFRESH: Error:', error.message);
+    return ApiResponse.unauthorized(res, 'Token غير صالح');
+  }
 }));
 
 // @desc    Update user profile
