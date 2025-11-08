@@ -4,45 +4,39 @@
 class DebugLogger {
   constructor() {
     this.logs = [];
-    this.startTime = Date.now();
-    this.isEnabled = true;
-    
-    // Override console methods to capture all logs
-    this.originalConsole = {
-      log: console.log,
-      warn: console.warn,
-      error: console.error,
-      info: console.info
-    };
-    
-    this.setupConsoleOverrides();
+    this.originalConsole = { ...console };
+    this.MAX_LOGS = 100; // Limit log storage
+    this.logLevel = process.env.NODE_ENV === 'production' ? 'ERROR' : 'DEBUG';
+
+    this.setupCustomLogging();
     this.setupPageReloadDetection();
-    this.setupIntervalDetection();
-    this.setupTimeoutDetection();
-    this.setupServiceWorkerDetection();
   }
 
-  setupConsoleOverrides() {
+  setupCustomLogging() {
     const self = this;
-    
+
+    // Custom log method with environment-aware logging
     console.log = function(...args) {
+      self.log('DEBUG', ...args);
+      if (self.logLevel !== 'DEBUG') return;
       self.originalConsole.log(...args);
-      self.log('LOG', ...args);
     };
-    
+
     console.warn = function(...args) {
-      self.originalConsole.warn(...args);
       self.log('WARN', ...args);
+      if (self.logLevel === 'ERROR') return;
+      self.originalConsole.warn(...args);
     };
-    
+
     console.error = function(...args) {
-      self.originalConsole.error(...args);
       self.log('ERROR', ...args);
+      self.originalConsole.error(...args);
     };
-    
+
     console.info = function(...args) {
-      self.originalConsole.info(...args);
       self.log('INFO', ...args);
+      if (self.logLevel !== 'DEBUG') return;
+      self.originalConsole.info(...args);
     };
   }
 
@@ -161,32 +155,32 @@ class DebugLogger {
     }
   }
 
-  log(level, message, data = {}) {
-    if (!this.isEnabled) return;
-    
+  log(level, ...args) {
     const logEntry = {
       level,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-      elapsed: Date.now() - this.startTime
+      message: args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ).join(' '),
+      timestamp: new Date().toISOString()
     };
-    
+
+    // Store logs with a maximum limit
     this.logs.push(logEntry);
-    
-    // Keep only last 1000 logs
-    if (this.logs.length > 1000) {
-      this.logs = this.logs.slice(-1000);
+    if (this.logs.length > this.MAX_LOGS) {
+      this.logs.shift(); // Remove oldest log
     }
-    
+
     // Log critical events immediately
     if (level === 'CRITICAL') {
       this.originalConsole.error('🚨 CRITICAL EVENT:', logEntry);
     }
   }
 
-  getLogs() {
-    return this.logs;
+  // Additional methods to manage logs
+  getLogs(level = null) {
+    return level 
+      ? this.logs.filter(log => log.level === level)
+      : this.logs;
   }
 
   getLogsByLevel(level) {
@@ -206,24 +200,11 @@ class DebugLogger {
   }
 
   exportLogs() {
-    return {
-      summary: {
-        totalLogs: this.logs.length,
-        criticalEvents: this.getCriticalEvents().length,
-        intervals: this.getIntervals().length,
-        timeouts: this.getTimeouts().length,
-        duration: Date.now() - this.startTime
-      },
-      logs: this.logs,
-      criticalEvents: this.getCriticalEvents(),
-      intervals: this.getIntervals(),
-      timeouts: this.getTimeouts()
-    };
+    return JSON.stringify(this.logs, null, 2);
   }
 
   clearLogs() {
     this.logs = [];
-    this.startTime = Date.now();
   }
 
   disable() {
@@ -235,8 +216,4 @@ class DebugLogger {
   }
 }
 
-// Create global instance
-window.debugLogger = new DebugLogger();
-
-// Export for use in components
-export default window.debugLogger;
+export default new DebugLogger();

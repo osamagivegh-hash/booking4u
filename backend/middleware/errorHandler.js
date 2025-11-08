@@ -1,201 +1,60 @@
 import { logError } from '../utils/logger.js';
-import ApiResponse from '../utils/apiResponse.js';
-import mongoose from 'mongoose';
 
-/**
- * Enhanced Error Handling Middleware
- * Provides comprehensive error handling with proper classification and logging
- */
-
-// Custom error classes
+// Custom error class for more detailed error handling
 class AppError extends Error {
-  constructor(message, statusCode, code = null) {
+  constructor(message, statusCode, errorCode = 'UNKNOWN_ERROR') {
     super(message);
     this.statusCode = statusCode;
-    this.code = code;
+    this.errorCode = errorCode;
     this.isOperational = true;
-
+    
     Error.captureStackTrace(this, this.constructor);
   }
 }
 
-class ValidationError extends AppError {
-  constructor(message, errors) {
-    super(message, 422, 'VALIDATION_ERROR');
-    this.errors = errors;
-  }
-}
-
-class AuthenticationError extends AppError {
-  constructor(message = 'غير مصرح لك بالوصول إلى هذا المورد') {
-    super(message, 401, 'AUTHENTICATION_ERROR');
-  }
-}
-
-class AuthorizationError extends AppError {
-  constructor(message = 'غير مصرح لك بالوصول إلى هذا المورد') {
-    super(message, 403, 'AUTHORIZATION_ERROR');
-  }
-}
-
-class NotFoundError extends AppError {
-  constructor(message = 'المورد المطلوب غير موجود') {
-    super(message, 404, 'NOT_FOUND');
-  }
-}
-
-class ConflictError extends AppError {
-  constructor(message = 'تعارض في البيانات') {
-    super(message, 409, 'CONFLICT');
-  }
-}
-
-class RateLimitError extends AppError {
-  constructor(message = 'عدد الطلبات كبير جداً، يرجى المحاولة لاحقاً') {
-    super(message, 429, 'RATE_LIMIT_EXCEEDED');
-  }
-}
-
-// Error handler middleware
+// Global error handler middleware
 const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
-
-  // Log the error
-  logError('Unhandled Error', err, {
+  // Log the full error for backend debugging
+  logError('Unhandled Error', {
+    message: err.message,
+    stack: err.stack,
+    path: req.path,
     method: req.method,
-    url: req.url,
-    ip: req.ip,
-    userId: req.user?._id,
-    body: req.body,
-    params: req.params,
-    query: req.query
+    user: req.user ? req.user._id : 'Unauthenticated'
   });
 
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError') {
-    const message = 'معرف غير صحيح';
-    error = new NotFoundError(message);
-  }
-
-  // Mongoose duplicate key
-  if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
-    const message = `قيمة ${field} موجودة مسبقاً`;
-    error = new ConflictError(message);
-  }
-
-  // Mongoose validation error
-  if (err.name === 'ValidationError') {
-    const message = 'بيانات غير صحيحة';
-    const errors = Object.values(err.errors).map(val => ({
-      field: val.path,
-      message: val.message,
-      value: val.value
-    }));
-    error = new ValidationError(message, errors);
-  }
-
-  // JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    const message = 'رمز مصادقة غير صحيح';
-    error = new AuthenticationError(message);
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    const message = 'انتهت صلاحية رمز المصادقة';
-    error = new AuthenticationError(message);
-  }
-
-  // Rate limiting errors
-  if (err.status === 429) {
-    error = new RateLimitError();
-  }
-
-  // Default error
-  if (!error.statusCode) {
-    error.statusCode = 500;
-    error.message = 'خطأ داخلي في الخادم';
-  }
+  // Determine error details
+  const statusCode = err.statusCode || 500;
+  const errorResponse = {
+    success: false,
+    message: err.isOperational 
+      ? err.message 
+      : 'حدث خطأ غير متوقع في النظام',
+    errorCode: err.errorCode || 'INTERNAL_SERVER_ERROR',
+    ...(process.env.NODE_ENV === 'development' && { 
+      stack: err.stack,
+      originalError: err.toString() 
+    })
+  };
 
   // Send error response
-  if (error instanceof ValidationError) {
-    return ApiResponse.validationError(res, error.errors, error.message);
-  }
-
-  if (error instanceof AuthenticationError) {
-    return ApiResponse.unauthorized(res, error.message);
-  }
-
-  if (error instanceof AuthorizationError) {
-    return ApiResponse.forbidden(res, error.message);
-  }
-
-  if (error instanceof NotFoundError) {
-    return ApiResponse.notFound(res, error.message);
-  }
-
-  if (error instanceof ConflictError) {
-    return ApiResponse.conflict(res, error.message);
-  }
-
-  if (error instanceof RateLimitError) {
-    return ApiResponse.tooManyRequests(res, error.message);
-  }
-
-  // Generic error response
-  return ApiResponse.internalError(res, error.message, error);
+  res.status(statusCode).json(errorResponse);
 };
 
-// Async error wrapper
-const asyncHandler = (fn) => {
-  return (req, res, next) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
+// Async error wrapper to reduce try-catch boilerplate
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// 404 handler for undefined routes
-const notFoundHandler = (req, res) => {
-  return ApiResponse.notFound(res, `المسار ${req.originalUrl} غير موجود`);
-};
-
-// Graceful shutdown handler
-const gracefulShutdown = (server) => {
-  return (signal) => {
-    console.log(`\n🔄 Received ${signal}. Starting graceful shutdown...`);
-    
-    server.close(() => {
-      console.log('✅ HTTP server closed');
-      
-      // Close database connection
-      if (mongoose.connection.readyState === 1) {
-        mongoose.connection.close(false, () => {
-          console.log('✅ Database connection closed');
-          process.exit(0);
-        });
-      } else {
-        process.exit(0);
-      }
-    });
-
-    // Force close after 10 seconds
-    setTimeout(() => {
-      console.error('❌ Could not close connections in time, forcefully shutting down');
-      process.exit(1);
-    }, 10000);
-  };
+// Handle 404 Not Found errors
+const notFoundHandler = (req, res, next) => {
+  const error = new AppError(`المسار ${req.originalUrl} غير موجود`, 404, 'NOT_FOUND');
+  next(error);
 };
 
 export {
   AppError,
-  ValidationError,
-  AuthenticationError,
-  AuthorizationError,
-  NotFoundError,
-  ConflictError,
-  RateLimitError,
   errorHandler,
   asyncHandler,
-  notFoundHandler,
-  gracefulShutdown
+  notFoundHandler
 };
