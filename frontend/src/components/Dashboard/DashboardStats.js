@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  CalendarIcon, 
-  CurrencyDollarIcon, 
-  UserGroupIcon, 
+import {
+  CalendarIcon,
+  CurrencyDollarIcon,
+  UserGroupIcon,
   ChartBarIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
@@ -40,52 +40,70 @@ const DashboardStats = ({ userRole = 'customer' }) => {
     fetchStats();
   }, [timeRange, userRole]);
 
+  // Calculate stats from bookings data as fallback
+  const calculateStatsFromBookings = (bookings) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    return {
+      totalBookings: bookings.length,
+      todayBookings: bookings.filter(b => {
+        const bookingDate = new Date(b.date);
+        return bookingDate >= today && ['pending', 'confirmed'].includes(b.status);
+      }).length,
+      monthlyBookings: bookings.filter(b => new Date(b.createdAt || b.date) >= thisMonth).length,
+      totalRevenue: bookings
+        .filter(b => ['confirmed', 'completed'].includes(b.status))
+        .reduce((sum, b) => sum + (b.totalPrice || b.price || 0), 0),
+      monthlyRevenue: bookings
+        .filter(b => {
+          const bookingDate = new Date(b.date);
+          return b.status === 'completed' && bookingDate >= thisMonth;
+        })
+        .reduce((sum, b) => sum + (b.totalPrice || b.price || 0), 0),
+      totalServices: 0,
+      totalCustomers: 0,
+      pendingBookings: bookings.filter(b => b.status === 'pending').length,
+      completedBookings: bookings.filter(b => b.status === 'completed').length,
+      cancelledBookings: bookings.filter(b => b.status === 'cancelled').length,
+      averageRating: 0,
+      totalReviews: 0,
+      conversionRate: bookings.length > 0
+        ? (bookings.filter(b => b.status === 'completed').length / bookings.length) * 100
+        : 0,
+      growthRate: 0
+    };
+  };
+
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/bookings/stats?timeRange=${timeRange}`);
-      
-      if (response.data?.success) {
-        setStats(response.data.data);
-      } else {
-        // If API returns success: false, use default stats
-        console.warn('Stats API returned success: false, using default stats');
-        setStats({
-          totalBookings: 0,
-          todayBookings: 0,
-          monthlyBookings: 0,
-          totalRevenue: 0,
-          monthlyRevenue: 0,
-          totalServices: 0,
-          totalCustomers: 0,
-          pendingBookings: 0,
-          completedBookings: 0,
-          cancelledBookings: 0,
-          averageRating: 0,
-          totalReviews: 0,
-          conversionRate: 0,
-          growthRate: 0
-        });
+
+      // Try stats API first
+      try {
+        const response = await api.get(`/bookings/stats?timeRange=${timeRange}`);
+        if (response.data?.success && response.data.data) {
+          setStats(response.data.data);
+          return;
+        }
+      } catch (statsError) {
+        console.warn('Stats API failed, falling back to bookings calculation:', statsError.message);
+      }
+
+      // Fallback: fetch bookings and calculate stats
+      try {
+        const bookingsResponse = await api.get('/bookings/my-bookings');
+        const bookings = bookingsResponse.data.data || bookingsResponse.data || [];
+        const calculatedStats = calculateStatsFromBookings(bookings);
+        setStats(calculatedStats);
+        console.log('Stats calculated from bookings:', calculatedStats);
+      } catch (bookingsError) {
+        console.warn('Bookings fetch also failed:', bookingsError.message);
+        // Keep default stats (already set in initial state)
       }
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      // Use default stats instead of showing error toast
-      setStats({
-        totalBookings: 0,
-        todayBookings: 0,
-        monthlyBookings: 0,
-        totalRevenue: 0,
-        monthlyRevenue: 0,
-        totalServices: 0,
-        totalCustomers: 0,
-        pendingBookings: 0,
-        completedBookings: 0,
-        cancelledBookings: 0,
-        averageRating: 0,
-        totalReviews: 0,
-        conversionRate: 0,
-        growthRate: 0
-      });
+      console.error('Error in fetchStats:', error);
     } finally {
       setLoading(false);
     }
@@ -244,12 +262,12 @@ const DashboardStats = ({ userRole = 'customer' }) => {
                 </div>
               )}
             </div>
-            
+
             <div className="mb-2">
               <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
               <p className="text-sm text-gray-600">{stat.title}</p>
             </div>
-            
+
             <p className="text-xs text-gray-500">{stat.subtitle}</p>
           </div>
         ))}
@@ -290,9 +308,8 @@ const DashboardStats = ({ userRole = 'customer' }) => {
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className={`w-4 h-4 rounded-full ${
-                      i < Math.floor(stats.averageRating || 0) ? 'bg-yellow-400' : 'bg-gray-200'
-                    }`}
+                    className={`w-4 h-4 rounded-full ${i < Math.floor(stats.averageRating || 0) ? 'bg-yellow-400' : 'bg-gray-200'
+                      }`}
                   />
                 ))}
               </div>

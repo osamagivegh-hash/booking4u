@@ -26,13 +26,12 @@ const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
 
-  // COMPLETELY DISABLED: No API calls on homepage to prevent backend components
+  // Load latest services on component mount
   useEffect(() => {
-    // DISABLED: No services loading to prevent backend components from showing
-    console.log('🛡️ HomePage: Services loading completely disabled to prevent backend components');
-    setLatestServices([]);
-    setLoading(false);
-    window.homePageServicesLoaded = true; // Mark as loaded without making API calls
+    // Only load if not already loaded to prevent duplicate calls
+    if (!window.homePageServicesLoaded) {
+      loadLatestServices();
+    }
   }, []);
 
   const loadLatestServices = async () => {
@@ -235,20 +234,7 @@ const HomePage = () => {
               </div>
             </div>
             
-            <div className="relative">
-              <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-12 shadow-2xl border border-white/20 animate-fade-in-up">
-                <div className="text-center space-y-6">
-                  <div className="text-8xl animate-bounce-gentle">📅</div>
-                  <h3 className="text-3xl font-bold">حجز فوري</h3>
-                  <p className="text-gray-200 text-lg">اختر الخدمة والوقت المناسب لك</p>
-                  <div className="flex justify-center space-x-2 space-x-reverse">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="w-3 h-3 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: `${i * 0.2}s` }}></div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
       </section>

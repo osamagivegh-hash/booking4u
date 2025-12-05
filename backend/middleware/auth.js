@@ -52,7 +52,6 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    console.log('✅ User authenticated:', req.user.email);
     next();
   } catch (error) {
     console.error('❌ Auth middleware error:', error.message);

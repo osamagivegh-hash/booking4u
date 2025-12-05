@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import LoadingSpinner from '../../components/LoadingSpinner';
-import { 
-  UserIcon, 
-  CogIcon, 
-  CalendarIcon, 
+import api from '../../services/api';
+import {
+  UserIcon,
+  CogIcon,
+  CalendarIcon,
   ChartBarIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
@@ -13,15 +14,42 @@ import {
 const DashboardPage = () => {
   const { user, isAuthenticated, isLoading } = useAuthStore();
   const [isInitializing, setIsInitializing] = useState(true);
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    completedBookings: 0,
+    pendingBookings: 0,
+    cancelledBookings: 0
+  });
+
+  // Fetch stats for the default dashboard
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/bookings/my-bookings');
+      const bookings = response.data.data || [];
+
+      setStats({
+        totalBookings: bookings.length,
+        completedBookings: bookings.filter(b => b.status === 'completed').length,
+        pendingBookings: bookings.filter(b => b.status === 'pending').length,
+        cancelledBookings: bookings.filter(b => b.status === 'cancelled').length
+      });
+    } catch (error) {
+      console.warn('Failed to fetch stats:', error);
+    }
+  };
 
   useEffect(() => {
     // Add a small delay to prevent rapid re-renders
     const timer = setTimeout(() => {
       setIsInitializing(false);
+      // Fetch stats after initialization
+      if (user && !['business', 'customer', 'admin'].includes(user.role)) {
+        fetchStats();
+      }
     }, 300);
-    
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [user]);
 
   // Show loading while initializing or loading
   if (isInitializing || isLoading) {
@@ -42,6 +70,9 @@ const DashboardPage = () => {
   } else if (user?.role === 'customer') {
     console.log('🔍 DashboardPage: Customer user, redirecting to customer dashboard');
     return <Navigate to="/dashboard/customer" replace />;
+  } else if (user?.role === 'admin') {
+    console.log('🔍 DashboardPage: Admin user, redirecting to admin panel');
+    return <Navigate to="/dashboard/admin" replace />;
   } else {
     console.log('🔍 DashboardPage: Unknown role, showing default dashboard');
     return (
@@ -69,8 +100,8 @@ const DashboardPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
               {/* Business Dashboard */}
               <div className="group">
-                <a 
-                  href="/dashboard/business" 
+                <a
+                  href="/dashboard/business"
                   className="block bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-200/50"
                 >
                   <div className="text-center">
@@ -95,8 +126,8 @@ const DashboardPage = () => {
 
               {/* Customer Dashboard */}
               <div className="group">
-                <a 
-                  href="/dashboard/customer" 
+                <a
+                  href="/dashboard/customer"
                   className="block bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border border-gray-200/50"
                 >
                   <div className="text-center">
@@ -129,19 +160,19 @@ const DashboardPage = () => {
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gradient-primary mb-2">0</div>
+                    <div className="text-3xl font-bold text-gradient-primary mb-2">{stats.totalBookings}</div>
                     <div className="text-gray-600">إجمالي الحجوزات</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gradient-success mb-2">0</div>
+                    <div className="text-3xl font-bold text-gradient-success mb-2">{stats.completedBookings}</div>
                     <div className="text-gray-600">الحجوزات المكتملة</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gradient-warning mb-2">0</div>
+                    <div className="text-3xl font-bold text-gradient-warning mb-2">{stats.pendingBookings}</div>
                     <div className="text-gray-600">الحجوزات المعلقة</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-3xl font-bold text-gradient-danger mb-2">0</div>
+                    <div className="text-3xl font-bold text-gradient-danger mb-2">{stats.cancelledBookings}</div>
                     <div className="text-gray-600">الحجوزات الملغاة</div>
                   </div>
                 </div>
