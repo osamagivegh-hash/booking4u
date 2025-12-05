@@ -27,6 +27,8 @@ import DashboardPage from './pages/Dashboard/DashboardPage';
 import BusinessDashboardPage from './pages/Dashboard/BusinessDashboardPage';
 import CustomerDashboardPage from './pages/Dashboard/CustomerDashboardPage';
 import AdminPanelPage from './pages/Dashboard/AdminPanelPage';
+import AdminUsersPage from './pages/Dashboard/AdminUsersPage';
+import AdminBookingsPage from './pages/Dashboard/AdminBookingsPage';
 import CreateBusinessPage from './pages/Dashboard/CreateBusinessPage';
 import EditBusinessPage from './pages/Dashboard/EditBusinessPage';
 import ServicesPage from './pages/Services/ServicesPage';
@@ -51,13 +53,13 @@ function App() {
   useEffect(() => {
     // Initialize comprehensive auto-refresh prevention
     console.log('🛡️ Initializing comprehensive auto-refresh prevention...');
-    
+
     debugLogger.log('APP', '🚀 App component mounted', {
       timestamp: new Date().toISOString(),
       userAgent: navigator.userAgent,
       url: window.location.href
     });
-    
+
     // Log debug info to console for immediate visibility
     console.log('🔍 DEBUG: App mounted, debug logger active');
     console.log('🔍 DEBUG: Use window.debugLogger.getLogs() to see all logs');
@@ -76,17 +78,17 @@ function App() {
   useEffect(() => {
     console.log('🔍 App: Component mounted, initializing auth');
     debugLogger.log('AUTH', '🔐 Initializing authentication');
-    
+
     // Set global flag to prevent multiple API calls
     window.appInitialized = true;
-    
+
     // Only initialize once on mount
     const initializeOnce = async () => {
       try {
         await initializeAuth();
         console.log('🔍 App: Auth initialization completed');
         debugLogger.log('AUTH', '✅ Auth initialization completed');
-        
+
         // COMPLETELY DISABLED: Backend health service removed to prevent any automatic API calls
         console.log('🔍 App: Backend health service completely disabled to prevent 30-second refresh');
       } catch (error) {
@@ -94,7 +96,7 @@ function App() {
         debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });
       }
     };
-    
+
     initializeOnce();
   }, [initializeAuth]);
 
@@ -109,7 +111,7 @@ function App() {
     };
 
     window.addEventListener('auth:logout', handleAuthLogout);
-    
+
     return () => {
       window.removeEventListener('auth:logout', handleAuthLogout);
     };
@@ -121,71 +123,73 @@ function App() {
         <ResourceErrorBoundary>
           <ImageErrorBoundary>
             <div className="App">
-            <ServiceWorkerUpdateNotification />
-            <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<HomePage />} />
-          <Route path="login" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
-          } />
-          <Route path="register" element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />
-          } />
-          <Route path="services" element={<PublicServicesPage />} />
-          <Route path="services/browse" element={<PublicServicesPage />} />
-          <Route path="services/:businessId" element={<ServicesPage />} />
-          <Route path="services/:businessId/:serviceId" element={<ServiceDetailsPage />} />
-          <Route path="services/book/:serviceId" element={<BookingPage />} />
-          <Route path="services/add" element={<AddServicePage />} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="debug" element={<ApiDebugger />} />
-          <Route path="admin/diagnostics" element={<DiagnosticsPage />} />
-        </Route>
+              <ServiceWorkerUpdateNotification />
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<HomePage />} />
+                  <Route path="login" element={
+                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />
+                  } />
+                  <Route path="register" element={
+                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />
+                  } />
+                  <Route path="services" element={<PublicServicesPage />} />
+                  <Route path="services/browse" element={<PublicServicesPage />} />
+                  <Route path="services/:businessId" element={<ServicesPage />} />
+                  <Route path="services/:businessId/:serviceId" element={<ServiceDetailsPage />} />
+                  <Route path="services/book/:serviceId" element={<BookingPage />} />
+                  <Route path="services/add" element={<AddServicePage />} />
+                  <Route path="news" element={<NewsPage />} />
+                  <Route path="debug" element={<ApiDebugger />} />
+                  <Route path="admin/diagnostics" element={<DiagnosticsPage />} />
+                </Route>
 
-        {/* Protected Routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<DashboardPage />} />
-          <Route path="business" element={<BusinessDashboardPage />} />
-          <Route path="business/create" element={<CreateBusinessPage />} />
-          <Route path="business/edit" element={<EditBusinessPage />} />
-          <Route path="customer" element={<CustomerDashboardPage />} />
-          <Route path="admin" element={<AdminPanelPage />} />
-          <Route path="admin/services/add" element={<AddServicePage />} />
-          <Route path="services" element={<ServicesPage />} />
-          <Route path="services/add" element={<AddServicePage />} />
-          <Route path="bookings" element={<MyBookingsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="messages" element={<MessagesPage />} />
-          <Route path="reviews/:businessId" element={<ReviewsPage />} />
-          <Route path="reviews/:businessId/:serviceId" element={<ReviewsPage />} />
-        </Route>
+                {/* Protected Routes */}
+                <Route path="/dashboard" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<DashboardPage />} />
+                  <Route path="business" element={<BusinessDashboardPage />} />
+                  <Route path="business/create" element={<CreateBusinessPage />} />
+                  <Route path="business/edit" element={<EditBusinessPage />} />
+                  <Route path="customer" element={<CustomerDashboardPage />} />
+                  <Route path="admin" element={<AdminPanelPage />} />
+                  <Route path="admin/users" element={<AdminUsersPage />} />
+                  <Route path="admin/bookings" element={<AdminBookingsPage />} />
+                  <Route path="admin/services/add" element={<AddServicePage />} />
+                  <Route path="services" element={<ServicesPage />} />
+                  <Route path="services/add" element={<AddServicePage />} />
+                  <Route path="bookings" element={<MyBookingsPage />} />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="messages" element={<MessagesPage />} />
+                  <Route path="reviews/:businessId" element={<ReviewsPage />} />
+                  <Route path="reviews/:businessId/:serviceId" element={<ReviewsPage />} />
+                </Route>
 
-        {/* Direct My Bookings Route */}
-        <Route path="/my-bookings" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route index element={<MyBookingsPage />} />
-        </Route>
+                {/* Direct My Bookings Route */}
+                <Route path="/my-bookings" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route index element={<MyBookingsPage />} />
+                </Route>
 
-        {/* Booking Routes */}
-        <Route path="/booking" element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }>
-          <Route path=":businessId/:serviceId" element={<BookingPage />} />
-        </Route>
+                {/* Booking Routes */}
+                <Route path="/booking" element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }>
+                  <Route path=":businessId/:serviceId" element={<BookingPage />} />
+                </Route>
 
-        {/* 404 Route */}
-        <Route path="*" element={<NotFoundPage />} />
-            </Routes>
+                {/* 404 Route */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
             </div>
           </ImageErrorBoundary>
         </ResourceErrorBoundary>
