@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import useAuthStore from '../../stores/authStore';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import statePreservation from '../../utils/statePreservation';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,53 +29,43 @@ const RegisterPage = () => {
   });
 
   const password = watch('password');
-  
+
   // Watch all form values for state preservation
   const watchedValues = watch();
 
   // Restore form state on component mount
   useEffect(() => {
     const formId = 'register-form';
-    
+
     // Try to restore form state from sessionStorage
     try {
       const savedState = sessionStorage.getItem(`form-state-${formId}`);
       if (savedState) {
         const formData = JSON.parse(savedState);
-        
+
         // Restore form values using react-hook-form setValue
         Object.entries(formData).forEach(([name, value]) => {
           if (name && value !== undefined && value !== null) {
             setValue(name, value);
           }
         });
-        
+
         console.log('🔧 Registration form state restored:', formData);
-        toast.success('تم استعادة بيانات النموذج المحفوظة', {
-          duration: 3000,
-          position: 'top-center'
-        });
       }
     } catch (error) {
       console.warn('Could not restore form state:', error);
-    }
-    
-    // Restore scroll position
-    const scrollRestored = statePreservation.restoreScrollPosition();
-    if (scrollRestored) {
-      console.log('🔧 Scroll position restored');
     }
   }, [setValue]);
 
   // Save form state on changes
   useEffect(() => {
     const formId = 'register-form';
-    
+
     // Only save if there are actual values (not just default empty values)
-    const hasValues = Object.values(watchedValues).some(value => 
+    const hasValues = Object.values(watchedValues).some(value =>
       value !== undefined && value !== null && value !== ''
     );
-    
+
     if (hasValues) {
       try {
         sessionStorage.setItem(`form-state-${formId}`, JSON.stringify(watchedValues));
@@ -92,18 +81,13 @@ const RegisterPage = () => {
     if (event) {
       event.preventDefault();
     }
-    
+
     try {
-      console.log('🔍 Attempting registration with:', { ...data, password: '[HIDDEN]' });
-      
-      // Save form state before submission in case of error
-      statePreservation.saveAllFormStates();
-      
       await registerUser(data);
-      
+
       // Clear form state after successful registration
-      statePreservation.clearFormState('register-form');
-      
+      sessionStorage.removeItem('form-state-register-form');
+
       toast.success('تم إنشاء الحساب بنجاح');
       navigate('/dashboard');
     } catch (error) {
@@ -113,7 +97,7 @@ const RegisterPage = () => {
         response: error.response?.data,
         status: error.response?.status
       });
-      
+
       // Handle different types of errors
       if (error.response?.status === 422) {
         // Validation errors from backend
@@ -346,7 +330,7 @@ const RegisterPage = () => {
             />
             <label htmlFor="agree-terms" className="mr-2 block text-sm text-gray-900">
               أوافق على{' '}
-              <button 
+              <button
                 type="button"
                 className="text-primary-600 hover:text-primary-500 underline"
                 onClick={() => alert('الشروط والأحكام - سيتم فتح صفحة الشروط والأحكام')}
@@ -354,7 +338,7 @@ const RegisterPage = () => {
                 الشروط والأحكام
               </button>{' '}
               و{' '}
-              <button 
+              <button
                 type="button"
                 className="text-primary-600 hover:text-primary-500 underline"
                 onClick={() => alert('سياسة الخصوصية - سيتم فتح صفحة سياسة الخصوصية')}
@@ -436,7 +420,7 @@ const RegisterPage = () => {
               className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956-.925-1.956-1.874v-3.23h3.906l-.447 3.47h-3.46v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956-.925-1.956-1.874v-3.23h3.906l-.447 3.47h-3.46v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
               <span className="mr-2">Facebook</span>
             </button>

@@ -6,14 +6,6 @@ import ApiErrorBoundary from './components/ErrorBoundary/ApiErrorBoundary';
 import ResourceErrorBoundary from './components/ErrorBoundary/ResourceErrorBoundary';
 import ImageErrorBoundary from './components/ErrorBoundary/ImageErrorBoundary';
 import debugLogger from './utils/debugLogger';
-import autoRefreshTest from './utils/autoRefreshTest';
-import statePreservation from './utils/statePreservation';
-import autoRefreshTestSuite from './utils/autoRefreshTestSuite';
-import autoRefreshPrevention from './utils/autoRefreshPrevention';
-import disableAutoRefresh from './utils/disableAutoRefresh';
-import completeAutoRefreshElimination from './utils/completeAutoRefreshElimination';
-import './utils/aggressiveImageFix'; // Import aggressive image fix
-// DISABLED: import backendHealthService from './services/backendHealthService';
 
 // Components
 import Layout from './components/Layout/Layout';
@@ -49,50 +41,21 @@ import DiagnosticsPage from './pages/Admin/DiagnosticsPage';
 function App() {
   const { isAuthenticated, initializeAuth, logout } = useAuthStore();
 
-  // Initialize debug logging and auto-refresh prevention
+  // Initialize app
   useEffect(() => {
-    // Initialize comprehensive auto-refresh prevention
-    console.log('🛡️ Initializing comprehensive auto-refresh prevention...');
-
     debugLogger.log('APP', '🚀 App component mounted', {
       timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
       url: window.location.href
     });
-
-    // Log debug info to console for immediate visibility
-    console.log('🔍 DEBUG: App mounted, debug logger active');
-    console.log('🔍 DEBUG: Use window.debugLogger.getLogs() to see all logs');
-    console.log('🔍 DEBUG: Use window.debugLogger.exportLogs() to export logs');
-    console.log('🔍 DEBUG: Use window.autoRefreshTest.logStatus() to check auto-refresh status');
-    console.log('🔍 DEBUG: Use window.autoRefreshTest.runTest() to run auto-refresh test');
-    console.log('🔍 DEBUG: Image URL handling simplified - using relative paths directly');
-    console.log('🔍 DEBUG: State preservation active:', window.statePreservation ? 'Yes' : 'No');
-    console.log('🔍 DEBUG: Auto-refresh prevention active:', window.autoRefreshPrevention ? 'Yes' : 'No');
-    console.log('🔍 DEBUG: Use window.autoRefreshTestSuite.runAllTests() to run comprehensive tests');
-    console.log('🔍 DEBUG: Use window.autoRefreshPrevention.getReport() to see auto-refresh monitoring data');
-    console.log('🔍 DEBUG: Image URLs now use relative paths directly from backend');
   }, []);
 
   // Initialize authentication on app load
   useEffect(() => {
-    console.log('🔍 App: Component mounted, initializing auth');
-    debugLogger.log('AUTH', '🔐 Initializing authentication');
-
-    // Set global flag to prevent multiple API calls
-    window.appInitialized = true;
-
-    // Only initialize once on mount
     const initializeOnce = async () => {
       try {
         await initializeAuth();
-        console.log('🔍 App: Auth initialization completed');
         debugLogger.log('AUTH', '✅ Auth initialization completed');
-
-        // COMPLETELY DISABLED: Backend health service removed to prevent any automatic API calls
-        console.log('🔍 App: Backend health service completely disabled to prevent 30-second refresh');
       } catch (error) {
-        console.log('🔍 App: Auth initialization error:', error.message);
         debugLogger.log('AUTH', '❌ Auth initialization error', { error: error.message });
       }
     };
@@ -103,18 +66,13 @@ function App() {
   // Listen for auth:logout events from API interceptor
   useEffect(() => {
     const handleAuthLogout = () => {
-      console.log('🔍 App: Received auth:logout event, logging out user');
       logout();
-      // Navigate to login page using React Router (no page reload)
       window.history.pushState(null, '', '/login');
       window.dispatchEvent(new PopStateEvent('popstate'));
     };
 
     window.addEventListener('auth:logout', handleAuthLogout);
-
-    return () => {
-      window.removeEventListener('auth:logout', handleAuthLogout);
-    };
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
   }, [logout]);
 
   return (
