@@ -91,10 +91,27 @@ const __dirname = path.dirname(__filename);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from frontend build directory
-app.use(express.static(path.join(__dirname, 'frontend-build')));
+app.use(express.static(path.join(__dirname, 'frontend-build'), {
+  // Enable proper caching for static assets
+  maxAge: '1d',
+  // Don't fallback to index.html for missing files
+  fallthrough: true
+}));
 
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
+// Handle React routing - only for routes that don't match API or static files
+app.get('*', (req, res, next) => {
+  // Skip if it's an API request
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+
+  // Skip if it looks like a static file request (has file extension)
+  if (req.path.match(/\.[a-zA-Z0-9]+$/)) {
+    // Return 404 for missing static files instead of index.html
+    return res.status(404).send('File not found');
+  }
+
+  // For all other routes, serve React app
   res.sendFile(path.join(__dirname, 'frontend-build', 'index.html'));
 });
 
@@ -125,19 +142,19 @@ server.listen(PORT, async () => {
     console.log(`📱 Socket stats: http://0.0.0.0:${PORT}/api/socket/stats`);
     console.log(`📁 Frontend build path: ${path.join(__dirname, 'frontend-build')}`);
     console.log(`📁 Uploads path: ${path.join(__dirname, 'uploads')}`);
-    
+
     // Log available static files for debugging
     try {
       const fs = await import('fs');
       const staticFiles = fs.readdirSync(path.join(path.join(__dirname, 'frontend-build'), 'static', 'js'));
       console.log(`📄 Available JS files: ${staticFiles.join(', ')}`);
-      
+
       // Check if the expected main.js file exists
       const expectedMainJs = 'main.36a1ea66.js';
       const mainJsPath = path.join(path.join(__dirname, 'frontend-build'), 'static', 'js', expectedMainJs);
       const mainJsExists = fs.existsSync(mainJsPath);
       console.log(`📄 Expected main.js (${expectedMainJs}) exists: ${mainJsExists}`);
-      
+
       // List all main.*.js files
       const mainJsFiles = staticFiles.filter(file => file.startsWith('main.') && file.endsWith('.js'));
       console.log(`📄 All main.*.js files: ${mainJsFiles.join(', ')}`);
