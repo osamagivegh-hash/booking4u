@@ -4,6 +4,7 @@ import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import QuickMessage from '../../components/QuickMessage';
+import { DashboardSkeleton } from '../../components/Dashboard/DashboardSkeleton';
 import {
   CalendarIcon,
   ClockIcon,
@@ -34,14 +35,14 @@ const CustomerDashboardPage = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     return {
       totalBookings: bookings.length,
       todayBookings: bookings.filter(booking => {
         try {
           const bookingDate = new Date(booking.date);
-          return bookingDate >= today && 
-                 ['pending', 'confirmed'].includes(booking.status);
+          return bookingDate >= today &&
+            ['pending', 'confirmed'].includes(booking.status);
         } catch (dateError) {
           console.warn('Invalid date in booking:', booking.date);
           return false;
@@ -58,8 +59,8 @@ const CustomerDashboardPage = () => {
       }).length,
       upcomingBookings: bookings.filter(booking => {
         try {
-          return new Date(booking.date) > now && 
-                 ['pending', 'confirmed'].includes(booking.status);
+          return new Date(booking.date) > now &&
+            ['pending', 'confirmed'].includes(booking.status);
         } catch (dateError) {
           console.warn('Invalid date in booking:', booking.date);
           return false;
@@ -76,8 +77,8 @@ const CustomerDashboardPage = () => {
         .filter(booking => {
           try {
             const bookingDate = new Date(booking.date);
-            return booking.status === 'completed' && 
-                   bookingDate >= thisMonth;
+            return booking.status === 'completed' &&
+              bookingDate >= thisMonth;
           } catch (dateError) {
             return false;
           }
@@ -105,11 +106,11 @@ const CustomerDashboardPage = () => {
   const fetchCustomerData = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch bookings first
       const bookingsResponse = await api.get('/bookings/my-bookings');
       setBookings(bookingsResponse.data.data || []);
-      
+
       // Fetch latest services
       try {
         const latestServicesResponse = await api.get('/services/latest?limit=6');
@@ -120,7 +121,7 @@ const CustomerDashboardPage = () => {
         console.warn('Failed to fetch latest services:', latestServicesError);
         setLatestServices([]);
       }
-      
+
       // Try to fetch stats (optional - we'll calculate from bookings if it fails)
       let statsResponse = null;
       try {
@@ -135,7 +136,7 @@ const CustomerDashboardPage = () => {
         console.warn('Stats API failed, will calculate from bookings data:', statsError.message);
         statsResponse = null; // Ensure we fall back to calculation
       }
-      
+
       // Load unread message count
       try {
         const unreadResponse = await api.get('/messages/unread-count');
@@ -145,7 +146,7 @@ const CustomerDashboardPage = () => {
         console.warn('Failed to fetch unread message count:', unreadError);
         setUnreadMessageCount(0);
       }
-      
+
       // If stats API failed, calculate stats from bookings data
       if (!statsResponse) {
         console.log('Calculating stats from bookings data');
@@ -157,7 +158,7 @@ const CustomerDashboardPage = () => {
     } catch (error) {
       console.error('Error fetching customer data:', error);
       toast.error('حدث خطأ في جلب البيانات');
-      
+
       // Set default values on complete failure
       setStats(calculateStatsFromBookings([]));
     } finally {
@@ -217,51 +218,51 @@ const CustomerDashboardPage = () => {
 
     // Prepare booking data outside try block for error logging
     let bookingData = null;
-    
+
     try {
       setIsCreatingBooking(true);
-      
+
       // Ensure we have valid IDs
       const businessId = selectedService.businessId?._id || selectedService.businessId;
       const serviceId = selectedService._id;
-      
+
       if (!businessId) {
         console.error('Missing businessId:', selectedService);
         toast.error('خطأ في بيانات النشاط التجاري');
         return;
       }
-      
+
       if (!serviceId) {
         console.error('Missing serviceId:', selectedService);
         toast.error('خطأ في بيانات الخدمة');
         return;
       }
-      
+
       // Validate date format
       const bookingDateObj = new Date(bookingDate);
       if (isNaN(bookingDateObj.getTime())) {
         toast.error('تاريخ غير صحيح');
         return;
       }
-      
+
       // Ensure date is in ISO format for backend
       const isoDate = bookingDateObj.toISOString();
       console.log('Date conversion:', { bookingDate, bookingDateObj, isoDate });
-      
+
       // Validate time format
       if (!/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(bookingTime)) {
         toast.error('وقت غير صحيح');
         return;
       }
-      
-      console.log('Creating booking with:', { 
-        businessId: String(businessId), 
-        serviceId: String(serviceId), 
-        date: bookingDate, 
+
+      console.log('Creating booking with:', {
+        businessId: String(businessId),
+        serviceId: String(serviceId),
+        date: bookingDate,
         startTime: bookingTime,
         selectedService: selectedService
       });
-      
+
       bookingData = {
         businessId: String(businessId),
         serviceId: String(serviceId),
@@ -271,11 +272,11 @@ const CustomerDashboardPage = () => {
           customer: bookingNotes || ''
         }
       };
-      
+
       console.log('Sending booking data:', bookingData);
 
       const response = await api.post('/bookings', bookingData);
-      
+
       if (response.data && response.data.success) {
         toast.success('تم إنشاء الحجز بنجاح');
         setShowBookingModal(false);
@@ -294,9 +295,9 @@ const CustomerDashboardPage = () => {
         status: error.response?.status,
         bookingData: bookingData
       });
-      
+
       let errorMessage = 'حدث خطأ في إنشاء الحجز';
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.errors) {
@@ -312,7 +313,7 @@ const CustomerDashboardPage = () => {
       } else if (error.response?.status === 500) {
         errorMessage = 'خطأ في الخادم، يرجى المحاولة مرة أخرى';
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setIsCreatingBooking(false);
@@ -341,7 +342,7 @@ const CustomerDashboardPage = () => {
       'completed': { color: 'bg-blue-100 text-blue-800', text: 'مكتمل' },
       'cancelled': { color: 'bg-red-100 text-red-800', text: 'ملغي' }
     };
-    
+
     const config = statusConfig[status] || statusConfig['pending'];
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
@@ -351,11 +352,7 @@ const CustomerDashboardPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -705,7 +702,7 @@ const CustomerDashboardPage = () => {
             <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
               <div className="mt-3">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">حجز خدمة: {selectedService.name}</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
@@ -717,7 +714,7 @@ const CustomerDashboardPage = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">الوقت</label>
                     <input
@@ -727,7 +724,7 @@ const CustomerDashboardPage = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
                     <textarea
@@ -738,7 +735,7 @@ const CustomerDashboardPage = () => {
                       placeholder="أضف أي ملاحظات خاصة..."
                     />
                   </div>
-                  
+
                   <div className="bg-gray-50 p-3 rounded-md">
                     <h4 className="text-sm font-medium text-gray-900 mb-2">تفاصيل الخدمة</h4>
                     <div className="text-sm text-gray-600 space-y-1">
@@ -748,7 +745,7 @@ const CustomerDashboardPage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end space-x-3 space-x-reverse mt-6">
                   <button
                     onClick={() => {

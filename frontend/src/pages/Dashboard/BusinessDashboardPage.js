@@ -4,6 +4,7 @@ import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import QuickMessage from '../../components/QuickMessage';
 import DashboardStats from '../../components/Dashboard/DashboardStats';
+import { DashboardSkeleton } from '../../components/Dashboard/DashboardSkeleton';
 import AdvancedFilters from '../../components/Dashboard/AdvancedFilters';
 import toast from 'react-hot-toast';
 import {
@@ -40,7 +41,7 @@ const BusinessDashboardPage = () => {
   const fetchBusinessData = async () => {
     try {
       setLoading(true);
-      
+
       // Check if user has a business first
       const businessResponse = await api.get('/businesses/check-business');
       if (businessResponse.data && businessResponse.data.success) {
@@ -48,7 +49,7 @@ const BusinessDashboardPage = () => {
           const businessData = businessResponse.data.data;
           setBusiness(businessData);
           console.log('Business data loaded successfully:', businessData);
-          
+
           // Fetch services for this business
           try {
             const servicesResponse = await api.get(`/services/${businessData._id}`);
@@ -60,29 +61,29 @@ const BusinessDashboardPage = () => {
             console.warn('Failed to fetch services:', servicesError);
             setServices([]);
           }
-          
+
           // Fetch bookings for this business
           try {
             const bookingsResponse = await api.get(`/bookings/business/${businessData._id}`);
             if (bookingsResponse.data && bookingsResponse.data.success) {
               const bookingsData = bookingsResponse.data.data;
               setBookings(bookingsData);
-              
+
               // Calculate stats
               const today = new Date().toISOString().split('T')[0];
-              const todayBookings = bookingsData.filter(booking => 
+              const todayBookings = bookingsData.filter(booking =>
                 new Date(booking.date).toISOString().split('T')[0] === today
               );
-              
+
               const pendingBookings = bookingsData.filter(booking => booking.status === 'pending');
               const confirmedBookings = bookingsData.filter(booking => booking.status === 'confirmed');
               const completedBookings = bookingsData.filter(booking => booking.status === 'completed');
               const cancelledBookings = bookingsData.filter(booking => booking.status === 'cancelled');
-              
+
               const totalRevenue = bookingsData
                 .filter(booking => ['confirmed', 'completed'].includes(booking.status))
                 .reduce((sum, booking) => sum + (booking.totalPrice || 0), 0);
-              
+
               setStats(prev => ({
                 ...prev,
                 totalBookings: bookingsData.length,
@@ -98,13 +99,13 @@ const BusinessDashboardPage = () => {
             console.warn('Failed to fetch bookings:', bookingsError);
             setBookings([]);
           }
-          
+
         } else {
           setBusiness(null);
           console.log('No business found for user');
         }
       }
-      
+
       // Set default values if no data was fetched
       if (!business) {
         setBookings([]);
@@ -120,7 +121,7 @@ const BusinessDashboardPage = () => {
           totalServices: 0
         });
       }
-      
+
       // Load unread message count
       try {
         const unreadResponse = await api.get('/messages/unread-count');
@@ -130,11 +131,11 @@ const BusinessDashboardPage = () => {
         console.warn('Failed to fetch unread message count:', unreadError);
         setUnreadMessageCount(0);
       }
-      
+
     } catch (error) {
       console.error('Error fetching business data:', error);
       toast.error('حدث خطأ في جلب البيانات');
-      
+
       // Set default values on complete failure
       setBookings([]);
       setServices([]);
@@ -160,7 +161,7 @@ const BusinessDashboardPage = () => {
       'completed': { color: 'bg-blue-100 text-blue-800', text: 'مكتمل' },
       'cancelled': { color: 'bg-red-100 text-red-800', text: 'ملغي' }
     };
-    
+
     const config = statusConfig[status] || statusConfig['pending'];
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
@@ -180,11 +181,7 @@ const BusinessDashboardPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Show message if no business exists
@@ -224,7 +221,7 @@ const BusinessDashboardPage = () => {
         <DashboardStats userRole="business" />
 
         {/* Advanced Filters */}
-        <AdvancedFilters 
+        <AdvancedFilters
           onFiltersChange={setFilters}
           filters={filters}
           showDateRange={true}
@@ -469,9 +466,8 @@ const BusinessDashboardPage = () => {
                       {service.duration} دقيقة
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {service.isActive ? 'نشط' : 'غير نشط'}
                       </span>
                     </td>

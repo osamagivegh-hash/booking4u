@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import useAuthStore from '../../stores/authStore';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { DashboardSkeleton } from '../../components/Dashboard/DashboardSkeleton';
 import {
   CalendarIcon,
   CogIcon,
@@ -59,7 +60,7 @@ const AdminPanelPage = () => {
       'completed': { color: 'bg-blue-100 text-blue-800', text: 'مكتمل' },
       'cancelled': { color: 'bg-red-100 text-red-800', text: 'ملغي' }
     };
-    
+
     const config = statusConfig[status] || statusConfig['pending'];
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
@@ -93,11 +94,7 @@ const AdminPanelPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600"></div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -265,20 +262,18 @@ const AdminPanelPage = () => {
                       {service.duration} دقيقة
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${service.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {service.isActive ? 'نشط' : 'غير نشط'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleServiceStatusToggle(service._id, service.isActive)}
-                        className={`${
-                          service.isActive 
-                            ? 'text-red-600 hover:text-red-900' 
+                        className={`${service.isActive
+                            ? 'text-red-600 hover:text-red-900'
                             : 'text-green-600 hover:text-green-900'
-                        }`}
+                          }`}
                       >
                         {service.isActive ? 'إيقاف' : 'تفعيل'}
                       </button>
@@ -339,29 +334,26 @@ const AdminPanelPage = () => {
                       {user.phone || 'غير محدد'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === 'business' 
-                          ? 'bg-blue-100 text-blue-800' 
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'business'
+                          ? 'bg-blue-100 text-blue-800'
                           : 'bg-green-100 text-green-800'
-                      }`}>
+                        }`}>
                         {user.role === 'business' ? 'تاجر' : 'عميل'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
                         {user.isActive ? 'نشط' : 'غير نشط'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => handleUserStatusToggle(user._id, user.isActive)}
-                        className={`${
-                          user.isActive 
-                            ? 'text-red-600 hover:text-red-900' 
+                        className={`${user.isActive
+                            ? 'text-red-600 hover:text-red-900'
                             : 'text-green-600 hover:text-green-900'
-                        }`}
+                          }`}
                       >
                         {user.isActive ? 'إيقاف' : 'تفعيل'}
                       </button>
