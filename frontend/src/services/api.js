@@ -45,6 +45,21 @@ api.interceptors.request.use(
   }
 );
 
+// Track if we're currently refreshing to prevent concurrent refresh attempts
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Response Interceptor for global error handling
 api.interceptors.response.use(
   response => {
@@ -61,8 +76,28 @@ api.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    // Handle 401 (Unauthorized) errors with refresh token flow
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Don't retry if:
+    // 1. Already retried this request
+    // 2. This IS a refresh request (prevents infinite loop)
+    // 3. No 401 status
+    const isRefreshRequest = originalRequest?.url?.includes('/auth/refresh');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
       debugLogger.log('CRITICAL', '🔒 401 Unauthorized - Attempting refresh token flow');
 
       try {
@@ -81,23 +116,31 @@ api.interceptors.response.use(
         api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         originalRequest.headers['Authorization'] = `Bearer ${token}`;
 
+        processQueue(null, token);
+
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
+        processQueue(refreshError, null);
+
         // Force logout if refresh fails
         debugLogger.log('CRITICAL', '🚨 Token refresh failed, logging out');
         localStorage.removeItem('auth-storage');
         window.dispatchEvent(new CustomEvent('auth:logout'));
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
-    // Log other errors
-    debugLogger.log('ERROR', '❌ API Error:', {
-      status: error.response?.status,
-      message: error.response?.data?.message || error.message,
-      url: error.config?.url
-    });
+    // Log other errors (but don't spam logs for refresh failures)
+    if (!isRefreshRequest) {
+      debugLogger.log('ERROR', '❌ API Error:', {
+        status: error.response?.status,
+        message: error.response?.data?.message || error.message,
+        url: error.config?.url
+      });
+    }
 
     return Promise.reject(error);
   }
