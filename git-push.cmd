@@ -1,9 +1,0 @@
-@echo off
-echo Adding all changes...
-git add .
-echo Committing changes...
-git commit -m "Integrated frontend-backend deployment - eliminates CORS issues"
-echo Pushing to repository...
-git push origin main
-echo Done!
-pause

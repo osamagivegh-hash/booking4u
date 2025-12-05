@@ -1,3 +1,0 @@
-[33mec64150[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m COMPREHENSIVE FIX: Disable ALL API calls and backend components on homepage - HomePage, NewsTicker, NotificationCenter, AuthStore, UnifiedSearch all disabled
-[33m506de5d[m Complete fix: Disable ALL backend auto-checks and API connectivity testing to prevent backend components on homepage
-[33m0b544b5[m Fix: Remove backend component from homepage - ApiErrorBoundary no longer shows backend info

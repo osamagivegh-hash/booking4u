@@ -1,9 +1,0 @@
-@echo off
-echo Adding all files...
-git add .
-echo Committing changes...
-git commit -m "DEEP FIX: Eliminate backend status display and auto-refresh issues"
-echo Pushing to remote...
-git push origin main
-echo Done!
-pause
