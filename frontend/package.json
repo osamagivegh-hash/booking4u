@@ -34,7 +34,7 @@
     "deploy": "gh-pages -d build",
     "deploy:github": "npm run build && gh-pages -d build -b gh-pages"
   },
-  "homepage": ".",
+  "homepage": "/",
   "public_url": "./",
   "proxy": "http://localhost:10000",
   "eslintConfig": {
