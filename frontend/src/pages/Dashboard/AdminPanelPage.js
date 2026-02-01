@@ -9,7 +9,8 @@ import {
   CogIcon,
   PlusIcon,
   CurrencyDollarIcon,
-  UsersIcon
+  UsersIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 
 const AdminPanelPage = () => {
@@ -203,6 +204,21 @@ const AdminPanelPage = () => {
               </div>
             </div>
           </Link>
+
+          <Link
+            to="/dashboard/admin/activity"
+            className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-2 border-indigo-100"
+          >
+            <div className="flex items-center">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <ChartBarIcon className="h-6 w-6 text-indigo-600" />
+              </div>
+              <div className="mr-4">
+                <h3 className="text-lg font-medium text-gray-900">📊 مراقبة النشاط</h3>
+                <p className="text-sm text-gray-600">تتبع نشاط المستخدمين وتقارير الأمان</p>
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Services Management */}
@@ -271,8 +287,8 @@ const AdminPanelPage = () => {
                       <button
                         onClick={() => handleServiceStatusToggle(service._id, service.isActive)}
                         className={`${service.isActive
-                            ? 'text-red-600 hover:text-red-900'
-                            : 'text-green-600 hover:text-green-900'
+                          ? 'text-red-600 hover:text-red-900'
+                          : 'text-green-600 hover:text-green-900'
                           }`}
                       >
                         {service.isActive ? 'إيقاف' : 'تفعيل'}
@@ -335,8 +351,8 @@ const AdminPanelPage = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.role === 'business'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-green-100 text-green-800'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-green-100 text-green-800'
                         }`}>
                         {user.role === 'business' ? 'تاجر' : 'عميل'}
                       </span>
@@ -351,8 +367,8 @@ const AdminPanelPage = () => {
                       <button
                         onClick={() => handleUserStatusToggle(user._id, user.isActive)}
                         className={`${user.isActive
-                            ? 'text-red-600 hover:text-red-900'
-                            : 'text-green-600 hover:text-green-900'
+                          ? 'text-red-600 hover:text-red-900'
+                          : 'text-green-600 hover:text-green-900'
                           }`}
                       >
                         {user.isActive ? 'إيقاف' : 'تفعيل'}

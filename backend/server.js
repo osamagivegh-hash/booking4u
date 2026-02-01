@@ -8,6 +8,14 @@ import { fileURLToPath } from "url";
 import { createServer } from "http";
 import SocketServer from "./socket/socketServer.js";
 
+// Activity Logging Middleware
+import {
+  requestLogger,
+  sessionTracker,
+  httpStatusTracker,
+  errorTracker
+} from "./middleware/activityLogger.js";
+
 dotenv.config();
 
 const app = express();
@@ -25,6 +33,11 @@ app.use(
     credentials: true,
   })
 );
+
+// 📊 Activity Logging Middleware (before routes)
+app.use(sessionTracker);
+app.use(httpStatusTracker);
+app.use(requestLogger);
 
 // MongoDB Connection
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/booking4u';
@@ -69,6 +82,9 @@ app.use("/api/messages", (await import("./routes/messages.js")).default);
 app.use("/api/reviews", (await import("./routes/reviews.js")).default);
 app.use("/api/news", (await import("./routes/news.js")).default);
 app.use("/api/notifications", (await import("./routes/notifications.js")).default);
+
+// 📊 Activity Monitoring & Reporting Routes
+app.use("/api/activity", (await import("./routes/activity.js")).default);
 
 // ✅ Info route (instead of `/`)
 app.get("/api/info", (req, res) => {

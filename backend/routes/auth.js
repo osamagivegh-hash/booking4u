@@ -7,6 +7,7 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import ApiResponse from '../utils/apiResponse.js';
 import { logInfo, logError } from '../utils/logger.js';
 import jwt from 'jsonwebtoken';
+import { authEventHooks, loginRateLimiter } from '../middleware/activityLogger.js';
 
 const router = express.Router();
 
@@ -14,96 +15,96 @@ const router = express.Router();
 // @route   POST /api/auth/register
 // @access  Public
 router.post('/register', validateUser, asyncHandler(async (req, res) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: Request received', {
-        body: { ...req.body, password: '[HIDDEN]' },
-        headers: req.headers,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const { name, email, password, phone, role } = req.body;
-
-    // Log registration attempt
-    logInfo('Registration attempt', {
-      email,
-      role,
-      hasName: !!name,
-      hasPassword: !!password,
-      hasPhone: !!phone
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: Request received', {
+      body: { ...req.body, password: '[HIDDEN]' },
+      headers: req.headers,
+      timestamp: new Date().toISOString()
     });
+  }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return ApiResponse.conflict(res, 'البريد الإلكتروني مسجل مسبقاً');
-    }
+  const { name, email, password, phone, role } = req.body;
 
-    // Create user
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: Creating user in database');
-    }
-    const user = await User.create({
-      name,
-      email,
-      password,
-      phone,
-      role
-    });
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: User created successfully', {
-        userId: user._id,
-        email: user.email,
-        role: user.role
-      });
-    }
+  // Log registration attempt
+  logInfo('Registration attempt', {
+    email,
+    role,
+    hasName: !!name,
+    hasPassword: !!password,
+    hasPhone: !!phone
+  });
 
-    // Create token
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: Generating JWT token');
-    }
-    const token = user.getSignedJwtToken();
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: Token generated', {
-        tokenLength: token.length,
-        tokenPreview: token.substring(0, 20) + '...'
-      });
-    }
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return ApiResponse.conflict(res, 'البريد الإلكتروني مسجل مسبقاً');
+  }
 
-    // Log successful registration
-    logInfo('User registered successfully', {
+  // Create user
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: Creating user in database');
+  }
+  const user = await User.create({
+    name,
+    email,
+    password,
+    phone,
+    role
+  });
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: User created successfully', {
       userId: user._id,
       email: user.email,
       role: user.role
     });
+  }
 
-    const responseData = {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        avatar: user.avatar
-      },
-      token
-    };
+  // Create token
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: Generating JWT token');
+  }
+  const token = user.getSignedJwtToken();
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: Token generated', {
+      tokenLength: token.length,
+      tokenPreview: token.substring(0, 20) + '...'
+    });
+  }
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH REGISTER: Sending response', {
-        userId: responseData.user.id,
-        userEmail: responseData.user.email,
-        tokenLength: responseData.token.length
-      });
-    }
+  // Log successful registration
+  logInfo('User registered successfully', {
+    userId: user._id,
+    email: user.email,
+    role: user.role
+  });
 
-    return ApiResponse.created(res, responseData, 'تم التسجيل بنجاح');
+  const responseData = {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      avatar: user.avatar
+    },
+    token
+  };
+
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH REGISTER: Sending response', {
+      userId: responseData.user.id,
+      userEmail: responseData.user.email,
+      tokenLength: responseData.token.length
+    });
+  }
+
+  return ApiResponse.created(res, responseData, 'تم التسجيل بنجاح');
 }));
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
-router.post('/login', [
+router.post('/login', loginRateLimiter, [
   body('email')
     .isEmail()
     .normalizeEmail()
@@ -112,95 +113,104 @@ router.post('/login', [
     .notEmpty()
     .withMessage('كلمة المرور مطلوبة')
 ], asyncHandler(async (req, res) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Request received', {
-        body: { ...req.body, password: '[HIDDEN]' },
-        headers: req.headers,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const { email, password } = req.body;
-
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      console.log('🔍 AUTH LOGIN: Validation errors', errors.array());
-      return ApiResponse.validationError(res, errors.array(), 'بيانات غير صحيحة');
-    }
-
-    // Check if user exists
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Looking up user in database');
-    }
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      console.log('🔍 AUTH LOGIN: User not found');
-      return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
-    }
-    console.log('🔍 AUTH LOGIN: User found', {
-      userId: user._id,
-      email: user.email,
-      isActive: user.isActive
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Request received', {
+      body: { ...req.body, password: '[HIDDEN]' },
+      headers: req.headers,
+      timestamp: new Date().toISOString()
     });
+  }
 
-    // Check if password matches
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Checking password');
-    }
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      console.log('🔍 AUTH LOGIN: Password mismatch');
-      return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
-    }
-    console.log('🔍 AUTH LOGIN: Password verified');
+  const { email, password } = req.body;
 
-    // Check if user is active
-    if (!user.isActive) {
-      console.log('🔍 AUTH LOGIN: User account is inactive');
-      return ApiResponse.unauthorized(res, 'الحساب معطل');
-    }
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log('🔍 AUTH LOGIN: Validation errors', errors.array());
+    return ApiResponse.validationError(res, errors.array(), 'بيانات غير صحيحة');
+  }
 
-    // Create token
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Generating JWT token');
-    }
-    const token = user.getSignedJwtToken();
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Token generated', {
-        tokenLength: token.length,
-        tokenPreview: token.substring(0, 20) + '...'
-      });
-    }
+  // Check if user exists
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Looking up user in database');
+  }
+  const user = await User.findOne({ email }).select('+password');
+  if (!user) {
+    console.log('🔍 AUTH LOGIN: User not found');
+    // Log failed login attempt
+    await authEventHooks.onLoginFailed(req, email, 'invalid_email');
+    return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
+  }
+  console.log('🔍 AUTH LOGIN: User found', {
+    userId: user._id,
+    email: user.email,
+    isActive: user.isActive
+  });
 
-    // Log successful login
-    logInfo('User logged in successfully', {
-      userId: user._id,
-      email: user.email,
-      role: user.role
+  // Check if password matches
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Checking password');
+  }
+  const isMatch = await user.matchPassword(password);
+  if (!isMatch) {
+    console.log('🔍 AUTH LOGIN: Password mismatch');
+    // Log failed login attempt
+    await authEventHooks.onLoginFailed(req, email, 'invalid_password');
+    return ApiResponse.unauthorized(res, 'بيانات الدخول غير صحيحة');
+  }
+  console.log('🔍 AUTH LOGIN: Password verified');
+
+  // Check if user is active
+  if (!user.isActive) {
+    console.log('🔍 AUTH LOGIN: User account is inactive');
+    // Log failed login attempt
+    await authEventHooks.onLoginFailed(req, email, 'account_disabled');
+    return ApiResponse.unauthorized(res, 'الحساب معطل');
+  }
+
+  // Create token
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Generating JWT token');
+  }
+  const token = user.getSignedJwtToken();
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Token generated', {
+      tokenLength: token.length,
+      tokenPreview: token.substring(0, 20) + '...'
     });
+  }
 
-    const responseData = {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        avatar: user.avatar
-      },
-      token
-    };
+  // Log successful login
+  logInfo('User logged in successfully', {
+    userId: user._id,
+    email: user.email,
+    role: user.role
+  });
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('🔍 AUTH LOGIN: Sending response', {
-        userId: responseData.user.id,
-        userEmail: responseData.user.email,
-        tokenLength: responseData.token.length
-      });
-    }
+  const responseData = {
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      avatar: user.avatar
+    },
+    token
+  };
 
-    return ApiResponse.success(res, responseData, 'تم تسجيل الدخول بنجاح');
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🔍 AUTH LOGIN: Sending response', {
+      userId: responseData.user.id,
+      userEmail: responseData.user.email,
+      tokenLength: responseData.token.length
+    });
+  }
+
+  // Log successful login activity
+  await authEventHooks.onLoginSuccess(req, user);
+
+  return ApiResponse.success(res, responseData, 'تم تسجيل الدخول بنجاح');
 }));
 
 // @desc    Get current logged in user
@@ -247,6 +257,21 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
   return ApiResponse.success(res, responseData, 'تم جلب بيانات المستخدم بنجاح');
 }));
 
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+router.post('/logout', protect, asyncHandler(async (req, res) => {
+  // Log logout activity
+  await authEventHooks.onLogout(req);
+
+  logInfo('User logged out successfully', {
+    userId: req.user._id,
+    email: req.user.email
+  });
+
+  return ApiResponse.success(res, null, 'تم تسجيل الخروج بنجاح');
+}));
+
 // @desc    Refresh access token
 // @route   POST /api/auth/refresh
 // @access  Public (needs special handling for expired tokens)
@@ -259,7 +284,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
   }
 
   let token;
-  
+
   // Extract token from headers
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     token = req.headers.authorization.split(' ')[1];
@@ -279,7 +304,7 @@ router.post('/refresh', asyncHandler(async (req, res) => {
 
     // Verify token (allow expired tokens for refresh)
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    
+
     // Get user from token
     const user = await User.findById(decoded.id);
     if (!user) {

@@ -37,6 +37,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import ApiDebugger from './components/ApiDebugger';
 import ServiceWorkerUpdateNotification from './components/ServiceWorkerUpdateNotification';
 import DiagnosticsPage from './pages/Admin/DiagnosticsPage';
+import AdminActivityDashboard from './pages/Dashboard/AdminActivityDashboard';
 
 function App() {
   const { isAuthenticated, initializeAuth, logout } = useAuthStore();
@@ -117,6 +118,7 @@ function App() {
                   <Route path="admin" element={<AdminPanelPage />} />
                   <Route path="admin/users" element={<AdminUsersPage />} />
                   <Route path="admin/bookings" element={<AdminBookingsPage />} />
+                  <Route path="admin/activity" element={<AdminActivityDashboard />} />
                   <Route path="admin/services/add" element={<AddServicePage />} />
                   <Route path="services" element={<ServicesPage />} />
                   <Route path="services/add" element={<AddServicePage />} />
