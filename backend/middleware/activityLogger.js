@@ -1,6 +1,6 @@
 import ActivityLogger from '../utils/activityLogger.js';
 import FailedLogin from '../models/FailedLogin.js';
-import { logWarning } from '../utils/logger.js';
+import { logWarn } from '../utils/logger.js';
 
 /**
  * Activity Logging Middleware
@@ -119,7 +119,7 @@ export const loginRateLimiter = async (req, res, next) => {
         const isBlocked = await ActivityLogger.isIPBlocked(ipAddress);
         if (isBlocked) {
             ActivityLogger.logRateLimitExceeded(req);
-            logWarning('Blocked IP attempted login', { ipAddress });
+            logWarn('Blocked IP attempted login', { ipAddress });
 
             return res.status(429).json({
                 success: false,
@@ -133,7 +133,7 @@ export const loginRateLimiter = async (req, res, next) => {
         if (email) {
             const isUnderAttack = await FailedLogin.isIdentifierUnderAttack(email);
             if (isUnderAttack) {
-                logWarning('Identifier under attack', { email, ipAddress });
+                logWarn('Identifier under attack', { email, ipAddress });
                 // Add a small delay to slow down attacks
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
